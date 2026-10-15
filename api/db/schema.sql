@@ -138,6 +138,55 @@ CREATE INDEX IF NOT EXISTS idx_appointments_master ON appointments (master_id, s
 CREATE INDEX IF NOT EXISTS idx_appointments_client ON appointments (client_user_id, starts_at_utc);
 CREATE INDEX IF NOT EXISTS idx_appointments_status ON appointments (status);
 
+-- Последний рубеж против двойной записи: пересечение визитов одного мастера
+-- запрещено на уровне БД, даже если проверка в приложении не сработала или
+-- запись пришла в обход API.
+--
+-- Пересечение: NEW.starts < существующий.ends AND NEW.ends > существующий.starts.
+-- Визиты встык (15:00-16:00 и 16:00-17:00) пересечением НЕ считаются:
+-- при равенстве границ оба строгих сравнения ложны.
+--
+-- Сравнение строковое, и это корректно: starts_at_utc/ends_at_utc всегда
+-- хранятся в одном формате 'YYYY-MM-DDTHH:MM:SSZ' фиксированной длины,
+-- поэтому лексикографический порядок совпадает с хронологическим.
+--
+-- Отменённые и завершённые визиты слот не держат, поэтому и в NEW (WHEN),
+-- и в проверяемых строках учитываются только 'pending' и 'confirmed'.
+
+CREATE TRIGGER IF NOT EXISTS appointments_no_overlap_insert
+BEFORE INSERT ON appointments
+FOR EACH ROW
+WHEN NEW.status IN ('pending', 'confirmed')
+BEGIN
+  SELECT RAISE(ABORT, 'appointment_overlap')
+  WHERE EXISTS (
+    SELECT 1 FROM appointments a
+     WHERE a.master_id = NEW.master_id
+       AND a.status IN ('pending', 'confirmed')
+       AND a.starts_at_utc < NEW.ends_at_utc
+       AND a.ends_at_utc > NEW.starts_at_utc
+  );
+END;
+
+-- Отдельный триггер на UPDATE: перенос времени и смена мастера проходят
+-- через него же. Строка исключает саму себя (a.id <> NEW.id), иначе любая
+-- правка активной записи конфликтовала бы со своим прежним интервалом.
+CREATE TRIGGER IF NOT EXISTS appointments_no_overlap_update
+BEFORE UPDATE ON appointments
+FOR EACH ROW
+WHEN NEW.status IN ('pending', 'confirmed')
+BEGIN
+  SELECT RAISE(ABORT, 'appointment_overlap')
+  WHERE EXISTS (
+    SELECT 1 FROM appointments a
+     WHERE a.id <> NEW.id
+       AND a.master_id = NEW.master_id
+       AND a.status IN ('pending', 'confirmed')
+       AND a.starts_at_utc < NEW.ends_at_utc
+       AND a.ends_at_utc > NEW.starts_at_utc
+  );
+END;
+
 CREATE TABLE IF NOT EXISTS appointment_services (
   id                        INTEGER PRIMARY KEY AUTOINCREMENT,
   appointment_id            INTEGER NOT NULL REFERENCES appointments (id) ON DELETE CASCADE,

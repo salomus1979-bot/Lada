@@ -602,6 +602,136 @@ async function main() {
   const deleteMaster = await call('DELETE', `/api/admin/masters/${newMasterId}`, { token: adminToken });
   check('мягкое удаление свободного мастера -> 200', deleteMaster.status === 200);
 
+  console.log('');
+  console.log('— Защита от двойной записи —');
+
+  // Уровень 1: триггеры БД. Пишем мимо API, напрямую в таблицу.
+  const liveAppt = db.one(
+    `SELECT id, master_id, client_user_id, starts_at_utc, ends_at_utc
+       FROM appointments WHERE status IN ('pending','confirmed') ORDER BY id LIMIT 1`,
+  );
+  check('есть активная запись для проверки триггеров', !!liveAppt);
+
+  const rawInsert = (masterId, startsAt, endsAt, status = 'pending') => db.run(
+    `INSERT INTO appointments
+       (client_user_id, master_id, starts_at_utc, ends_at_utc, service_duration_min,
+        total_price_kopecks, status, created_at_utc, updated_at_utc)
+     VALUES (?, ?, ?, ?, 60, 100000, ?, ?, ?)`,
+    [liveAppt.client_user_id, masterId, startsAt, endsAt, status,
+      '2026-01-01T00:00:00Z', '2026-01-01T00:00:00Z'],
+  );
+  const shiftIso = (iso, minutes) =>
+    new Date(new Date(iso).getTime() + minutes * 60000).toISOString().replace(/\.\d{3}Z$/, 'Z');
+
+  let overlapBlocked = false;
+  try {
+    // Ровно поверх существующего визита.
+    rawInsert(liveAppt.master_id, liveAppt.starts_at_utc, liveAppt.ends_at_utc);
+  } catch (err) {
+    overlapBlocked = err.message === 'appointment_overlap';
+  }
+  check('триггер INSERT: полное совпадение интервалов отклонено', overlapBlocked);
+
+  let partialBlocked = false;
+  try {
+    // Частичное наложение: начинается внутри существующего визита.
+    rawInsert(liveAppt.master_id,
+      shiftIso(liveAppt.starts_at_utc, 15), shiftIso(liveAppt.ends_at_utc, 15));
+  } catch (err) {
+    partialBlocked = err.message === 'appointment_overlap';
+  }
+  check('триггер INSERT: частичное наложение отклонено', partialBlocked);
+
+  // Встык — пересечением НЕ считается: границы равны, строгие сравнения ложны.
+  let adjacentId = null;
+  try {
+    const info = rawInsert(liveAppt.master_id,
+      liveAppt.ends_at_utc, shiftIso(liveAppt.ends_at_utc, 60));
+    adjacentId = Number(info.lastInsertRowid);
+  } catch {
+    adjacentId = null;
+  }
+  check('триггер INSERT: визит встык разрешён', adjacentId !== null);
+
+  // Отменённая запись слот не держит — поверх неё вставить можно.
+  db.run("UPDATE appointments SET status = 'cancelled_by_client' WHERE id = ?", [adjacentId]);
+  let overCancelledId = null;
+  try {
+    const info = rawInsert(liveAppt.master_id,
+      liveAppt.ends_at_utc, shiftIso(liveAppt.ends_at_utc, 60));
+    overCancelledId = Number(info.lastInsertRowid);
+  } catch {
+    overCancelledId = null;
+  }
+  check('триггер INSERT: поверх отменённой записи вставка проходит', overCancelledId !== null);
+
+  // Уровень 1, UPDATE: перенос на чужое время.
+  let updateBlocked = false;
+  try {
+    db.run('UPDATE appointments SET starts_at_utc = ?, ends_at_utc = ? WHERE id = ?',
+      [liveAppt.starts_at_utc, liveAppt.ends_at_utc, overCancelledId]);
+  } catch (err) {
+    updateBlocked = err.message === 'appointment_overlap';
+  }
+  check('триггер UPDATE: перенос на занятое время отклонён', updateBlocked);
+
+  // Смена мастера тоже проходит через триггер.
+  const otherMaster = db.one(
+    'SELECT id FROM masters WHERE id <> ? AND is_active = 1 LIMIT 1', [liveAppt.master_id],
+  );
+  db.run('UPDATE appointments SET master_id = ? WHERE id = ?', [otherMaster.id, overCancelledId]);
+  let masterSwapBlocked = false;
+  try {
+    db.run('UPDATE appointments SET master_id = ?, starts_at_utc = ?, ends_at_utc = ? WHERE id = ?',
+      [liveAppt.master_id, liveAppt.starts_at_utc, liveAppt.ends_at_utc, overCancelledId]);
+  } catch (err) {
+    masterSwapBlocked = err.message === 'appointment_overlap';
+  }
+  check('триггер UPDATE: смена мастера на занятое время отклонена', masterSwapBlocked);
+
+  // Запись не мешает сама себе: правка без смены времени проходит.
+  let selfUpdateOk = true;
+  try {
+    db.run("UPDATE appointments SET client_comment = 'правка' WHERE id = ?", [liveAppt.id]);
+  } catch {
+    selfUpdateOk = false;
+  }
+  check('триггер UPDATE: правка самой записи не считается конфликтом', selfUpdateOk);
+
+  db.run('DELETE FROM appointments WHERE id = ?', [overCancelledId]);
+
+  // Уровень 2: транзакция создания берёт блокировку сразу.
+  const dbSource = require('node:fs').readFileSync(
+    require('node:path').join(__dirname, '..', 'src', 'lib', 'db.js'), 'utf8',
+  );
+  check('транзакция открывается как BEGIN IMMEDIATE, а не DEFERRED',
+    dbSource.includes("exec('BEGIN IMMEDIATE')")
+    && !dbSource.includes("exec('BEGIN')")
+    && !dbSource.includes("exec('BEGIN DEFERRED')"));
+
+  // Уровень 3: API отдаёт 409 с подсказками, без текста SQLite.
+  const occupied = db.one(
+    'SELECT starts_at_utc, ends_at_utc, master_id FROM appointments WHERE id = ?', [liveAppt.id],
+  );
+  const dupe = await call('POST', '/api/appointments', {
+    token: marinaToken,
+    body: {
+      master_id: occupied.master_id,
+      service_ids: [manicure.id, brows.id],
+      starts_at: occupied.starts_at_utc,
+      consent: true,
+    },
+  });
+  check('повторная запись на занятое время -> 409', dupe.status === 409, dupe.json);
+  check('сообщение понятное, без текста SQLite',
+    typeof dupe.json.error.message === 'string'
+    && !dupe.json.error.message.includes('appointment_overlap')
+    && !dupe.json.error.message.toUpperCase().includes('SQLITE'), dupe.json.error.message);
+  check('в ответе есть ближайшие свободные слоты',
+    Array.isArray(dupe.json.error.details.nearest_slots)
+    && dupe.json.error.details.nearest_slots.every((x) => x.at_utc && x.local_time),
+    dupe.json.error.details);
+
   console.log('\n— Отмена и выход —');
   const foreignCancel = await call('POST', `/api/appointments/${appointmentId}/cancel`,
     { token: marinaToken, body: {} });

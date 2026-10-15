@@ -40,8 +40,19 @@ function run(sql, params = []) {
 }
 
 /**
- * Транзакция IMMEDIATE — нужна там, где проверка «слот свободен» и запись
- * должны быть атомарными (создание записи, удержание слота, перенос).
+ * Транзакция в режиме IMMEDIATE.
+ *
+ * Именно IMMEDIATE, а не BEGIN (DEFERRED) по умолчанию: в DEFERRED SQLite
+ * берёт блокировку на запись только при ПЕРВОМ изменяющем операторе. Между
+ * нашей проверкой «слот свободен» (SELECT) и вставкой записи туда успевает
+ * вклиниться другое соединение — и либо оба клиента занимают один слот, либо
+ * повышение блокировки падает с SQLITE_BUSY_SNAPSHOT, и транзакцию всё равно
+ * приходится откатывать и повторять целиком.
+ *
+ * BEGIN IMMEDIATE берёт блокировку на запись сразу, на первом же операторе
+ * транзакции. Поэтому последовательность «проверить занятость → вставить»
+ * целиком выполняется только одним писателем за раз, и проверка не успевает
+ * устареть к моменту вставки.
  */
 function transaction(fn) {
   const handle = get();
@@ -60,6 +71,21 @@ function transaction(fn) {
   }
 }
 
+/**
+ * Сообщение, которым триггеры appointments_no_overlap_* помечают пересечение
+ * визитов. Текст из RAISE(ABORT, ...) приходит в err.message как есть.
+ */
+const OVERLAP_ERROR = 'appointment_overlap';
+
+/**
+ * Сработал ли триггер запрета пересечения. Нужен, чтобы отличить его
+ * от любой другой ошибки БД: наружу уходит 409 с понятным текстом,
+ * а сообщение SQLite пользователю не показывается.
+ */
+function isOverlapError(err) {
+  return !!err && err.code === 'ERR_SQLITE_ERROR' && err.message === OVERLAP_ERROR;
+}
+
 /** Настройки студии (одна строка, id = 1). */
 function settings() {
   const row = one('SELECT * FROM salon_settings WHERE id = 1');
@@ -67,4 +93,7 @@ function settings() {
   return row;
 }
 
-module.exports = { open, get, one, all, run, transaction, settings, DB_PATH };
+module.exports = {
+  open, get, one, all, run, transaction, settings, DB_PATH,
+  OVERLAP_ERROR, isOverlapError,
+};

@@ -126,7 +126,7 @@ router.post('/appointments/:id/status', (req, res) => {
 
   const settings = db.settings();
 
-  db.transaction(() => {
+  const applyStatus = () => db.transaction(() => {
     const row = db.one(
       'SELECT id, client_user_id, status FROM appointments WHERE id = ?', [id],
     );
@@ -159,6 +159,18 @@ router.post('/appointments/:id/status', (req, res) => {
       );
     }
   });
+
+  try {
+    applyStatus();
+  } catch (err) {
+    // Подтверждение визита тоже проходит через триггер пересечения.
+    // Альтернативы здесь не предлагаем: решение за администратором.
+    if (db.isOverlapError(err)) {
+      throw conflict('Время визита пересекается с другой записью этого мастера',
+        { reason: 'overlap' });
+    }
+    throw err;
+  }
 
   res.json({ ok: true, id, status: input.status });
 });

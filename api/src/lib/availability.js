@@ -7,7 +7,7 @@
 const db = require('./db');
 const { badRequest, conflict, notFound } = require('./errors');
 const {
-  nowUtc, toUtcIso, zonedToUtc, utcToZoned, weekdayOfDate, addMonths,
+  nowUtc, toUtcIso, zonedToUtc, utcToZoned, weekdayOfDate, addDays, addMonths,
 } = require('./time');
 
 const ACTIVE_STATUSES = ['pending', 'confirmed'];
@@ -195,18 +195,13 @@ function bookingHorizonDate(settings) {
  * @returns {{ slots: string[], occupied_min: number, service_duration_min: number }}
  *          slots — UTC-метки возможного начала
  */
-function availableSlots({ masterId, date, serviceIds, settings, holdOwnerUserId = null, excludeAppointmentId = null }) {
-  purgeExpiredHolds();
-
-  const { serviceDurationMin, occupiedMin, totalPriceKopecks } = loadServices(serviceIds);
+/**
+ * Начала визита на одну дату для уже посчитанной длительности.
+ * Возвращает массив UTC-меток.
+ */
+function slotsForDate({ masterId, date, occupiedMin, settings, holdOwnerUserId = null, excludeAppointmentId = null }) {
   const windows = workWindowsForDate(masterId, date);
-  const result = {
-    slots: [],
-    service_duration_min: serviceDurationMin,
-    occupied_min: occupiedMin,
-    total_price_kopecks: totalPriceKopecks,
-  };
-  if (windows.length === 0) return result;
+  if (windows.length === 0) return [];
 
   const { timezone, slot_step_min: step } = settings;
   const dayStartUtc = zonedToUtc(date, windows[0].startMin, timezone);
@@ -216,6 +211,7 @@ function availableSlots({ masterId, date, serviceIds, settings, holdOwnerUserId 
     holdOwnerUserId,
   });
 
+  const slots = [];
   const nowMs = Date.now();
   for (const w of windows) {
     // Сетка привязана к началу рабочего окна, а не к началу свободного промежутка.
@@ -225,10 +221,51 @@ function availableSlots({ masterId, date, serviceIds, settings, holdOwnerUserId 
       const endMs = startMs + occupiedMin * 60000;
       if (startMs <= nowMs) continue;
       if (overlapsBusy(startMs, endMs, busy)) continue;
-      result.slots.push(toUtcIso(startUtc));
+      slots.push(toUtcIso(startUtc));
     }
   }
-  return result;
+  return slots;
+}
+
+/**
+ * Свободное начало визита на дату.
+ * @returns {{ slots: string[], occupied_min: number, service_duration_min: number }}
+ *          slots — UTC-метки возможного начала
+ */
+function availableSlots({ masterId, date, serviceIds, settings, holdOwnerUserId = null, excludeAppointmentId = null }) {
+  purgeExpiredHolds();
+
+  const { serviceDurationMin, occupiedMin, totalPriceKopecks } = loadServices(serviceIds);
+  return {
+    slots: slotsForDate({
+      masterId, date, occupiedMin, settings, holdOwnerUserId, excludeAppointmentId,
+    }),
+    service_duration_min: serviceDurationMin,
+    occupied_min: occupiedMin,
+    total_price_kopecks: totalPriceKopecks,
+  };
+}
+
+/**
+ * Ближайшие свободные начала, начиная с указанной даты и дальше по дням.
+ * Нужна, чтобы при конфликте 409 предложить клиенту альтернативу,
+ * а не просто сказать «занято».
+ */
+function nearestSlots({ masterId, fromDate, occupiedMin, settings, holdOwnerUserId = null, excludeAppointmentId = null, limit = 5, daysAhead = 14 }) {
+  const horizon = bookingHorizonDate(settings);
+  const found = [];
+  let date = fromDate;
+  for (let i = 0; i < daysAhead && found.length < limit; i += 1) {
+    if (date > horizon) break;
+    for (const slot of slotsForDate({
+      masterId, date, occupiedMin, settings, holdOwnerUserId, excludeAppointmentId,
+    })) {
+      found.push(slot);
+      if (found.length >= limit) break;
+    }
+    date = addDays(date, 1);
+  }
+  return found;
 }
 
 /**
@@ -279,7 +316,9 @@ function assertSlotBookable({ masterId, startAtUtc, occupiedMin, settings, holdO
     excludeHoldToken,
   });
   if (overlapsBusy(startMs, endMs, busy)) {
-    throw conflict('Это время уже занято');
+    // reason помечает конфликт как пересечение: роут дополнит ответ
+    // ближайшими свободными слотами — так же, как и для ошибки триггера.
+    throw conflict('Это время уже занято', { reason: 'overlap' });
   }
 
   return { endAtUtc: toUtcIso(new Date(endMs)) };
@@ -292,7 +331,9 @@ module.exports = {
   assertMasterPerformsServices,
   workWindowsForDate,
   busyIntervals,
+  slotsForDate,
   availableSlots,
+  nearestSlots,
   assertSlotBookable,
   bookingHorizonDate,
 };

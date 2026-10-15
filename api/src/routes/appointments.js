@@ -4,15 +4,57 @@ const express = require('express');
 const db = require('../lib/db');
 const { requireAuth, isStaff } = require('../lib/auth');
 const { Validator, requireIdParam } = require('../lib/validate');
-const { badRequest, conflict, forbidden, notFound } = require('../lib/errors');
+const { ApiError, badRequest, conflict, forbidden, notFound } = require('../lib/errors');
 const {
   ACTIVE_STATUSES, purgeExpiredHolds, loadServices,
-  assertMasterPerformsServices, assertSlotBookable,
+  assertMasterPerformsServices, assertSlotBookable, nearestSlots,
 } = require('../lib/availability');
-const { nowUtc, diffMinutes } = require('../lib/time');
+const { nowUtc, diffMinutes, utcToZoned, presentInstant } = require('../lib/time');
 const { appointmentView, appointmentAdminView } = require('../lib/presenters');
 
 const router = express.Router();
+
+/**
+ * Превращает срабатывание триггера appointments_no_overlap_* в 409.
+ *
+ * Триггер — последний рубеж: в норме конфликт ловит assertSlotBookable внутри
+ * той же транзакции. Сюда управление попадает, если слот заняли между нашей
+ * проверкой и вставкой, либо если запись пришла в обход обычного пути.
+ *
+ * Наружу уходит понятный текст и список ближайших свободных начал этого же
+ * мастера; сообщение SQLite клиенту не показывается.
+ */
+function overlapConflict({ masterId, startAtUtc, occupiedMin, settings, excludeAppointmentId = null }) {
+  // Длительность могла не успеть посчитаться — тогда просто не предлагаем варианты.
+  const suggestions = occupiedMin > 0
+    ? nearestSlots({
+      masterId,
+      fromDate: utcToZoned(new Date(startAtUtc), settings.timezone).date,
+      occupiedMin,
+      settings,
+      excludeAppointmentId,
+    })
+    : [];
+  return conflict('Это время уже занято, выберите другое', {
+    reason: 'overlap',
+    nearest_slots: suggestions.map((iso) => presentInstant(iso, settings.timezone)),
+  });
+}
+
+/**
+ * Приводит оба источника конфликта к одному ответу.
+ *   - прикладная проверка assertSlotBookable (обычный путь);
+ *   - триггер БД appointments_no_overlap_* (гонка или запись в обход API).
+ * В обоих случаях клиент получает 409 с подсказками, а текст SQLite наружу
+ * не уходит. Прочие ошибки пробрасываются как есть.
+ */
+function rethrowAsConflict(err, context) {
+  const fromTrigger = db.isOverlapError(err);
+  const fromCheck = err instanceof ApiError && err.status === 409
+    && err.details && err.details.reason === 'overlap';
+  if (fromTrigger || fromCheck) throw overlapConflict(context);
+  throw err;
+}
 
 const APPOINTMENT_COLUMNS = `
   a.id, a.client_user_id, a.master_id, a.starts_at_utc, a.ends_at_utc,
@@ -98,7 +140,11 @@ router.post('/', requireAuth, (req, res) => {
 
   const settings = db.settings();
 
-  const appointmentId = db.transaction(() => {
+  // Длительность нужна и снаружи транзакции — чтобы предложить альтернативы,
+  // если триггер отклонит вставку.
+  let occupiedForSuggest = 0;
+
+  const createAppointment = () => db.transaction(() => {
     purgeExpiredHolds();
 
     const active = db.one(
@@ -114,6 +160,7 @@ router.post('/', requireAuth, (req, res) => {
     assertMasterPerformsServices(input.master_id, input.service_ids);
     const { rows: serviceRows, serviceDurationMin, occupiedMin, totalPriceKopecks } =
       loadServices(input.service_ids);
+    occupiedForSuggest = occupiedMin;
 
     const { endAtUtc } = assertSlotBookable({
       masterId: input.master_id,
@@ -149,6 +196,19 @@ router.post('/', requireAuth, (req, res) => {
     db.run('DELETE FROM slot_holds WHERE user_id = ?', [req.user.id]);
     return newId;
   });
+
+  let appointmentId;
+  try {
+    appointmentId = createAppointment();
+  } catch (err) {
+    // Триггер БД — последний рубеж: слот заняли между проверкой и вставкой.
+    rethrowAsConflict(err, {
+      masterId: input.master_id,
+      startAtUtc: input.starts_at,
+      occupiedMin: occupiedForSuggest,
+      settings,
+    });
+  }
 
   const row = fetchAppointment(appointmentId);
   res.status(201).json({
@@ -237,8 +297,9 @@ router.post('/:id/reschedule', requireAuth, (req, res) => {
     .done();
 
   const settings = db.settings();
+  let occupiedForSuggest = 0;
 
-  db.transaction(() => {
+  const applyReschedule = () => db.transaction(() => {
     purgeExpiredHolds();
 
     const row = fetchAppointment(id);
@@ -267,6 +328,7 @@ router.post('/:id/reschedule', requireAuth, (req, res) => {
     const occupiedMin = services.reduce(
       (sum, s) => sum + s.duration_min_snapshot + s.buffer_after_min_snapshot, 0,
     );
+    occupiedForSuggest = occupiedMin;
 
     const { endAtUtc } = assertSlotBookable({
       masterId: row.master_id,
@@ -287,6 +349,19 @@ router.post('/:id/reschedule', requireAuth, (req, res) => {
     );
     db.run('DELETE FROM slot_holds WHERE user_id = ?', [req.user.id]);
   });
+
+  try {
+    applyReschedule();
+  } catch (err) {
+    // Переносимая запись себя не блокирует, поэтому исключаем её из подсказок.
+    rethrowAsConflict(err, {
+      masterId: db.one('SELECT master_id FROM appointments WHERE id = ?', [id]).master_id,
+      startAtUtc: input.starts_at,
+      occupiedMin: occupiedForSuggest,
+      settings,
+      excludeAppointmentId: id,
+    });
+  }
 
   const updated = fetchAppointment(id);
   res.json({
