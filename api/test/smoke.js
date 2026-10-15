@@ -188,6 +188,57 @@ async function main() {
   const slot = day.slots[0];
   const slotCount = day.slots.length;
 
+  console.log('');
+  console.log('— Постоянные блокировки из сида —');
+  // Ближайшая дата нужного дня недели (ISO: 1 = Пн).
+  const nextWeekday = (iso) => {
+    for (let i = 1; i <= 14; i += 1) {
+      const d = new Date(Date.now() + i * 86400000);
+      const weekday = d.getUTCDay() === 0 ? 7 : d.getUTCDay();
+      if (weekday === iso) return d.toISOString().slice(0, 10);
+    }
+    return null;
+  };
+  const localTimes = (res) => res.json.slots.map((x) => x.local_time);
+
+  const anna = mastersAll.json.masters.find((m) => m.display_name === 'Анна Ковалева');
+  const marina = mastersAll.json.masters.find((m) => m.display_name === 'Марина Орлова');
+  const elena = mastersAll.json.masters.find((m) => m.display_name === 'Елена Смирнова');
+  const lamination = services.json.services.find((s) => s.name === 'Ламинирование бровей');
+  check('все три мастера на месте', !!anna && !!marina && !!elena);
+
+  // Анна: четверг 13:00–14:00 — обед. Маникюр занимает 100 мин с буфером,
+  // поэтому исчезают все начала с 11:30 по 13:30.
+  const annaThu = await call('GET',
+    `/api/masters/${anna.id}/availability?date=${nextWeekday(4)}&service_ids=${manicure.id}`);
+  const annaSlots = localTimes(annaThu);
+  check('Анна, чт: обед 13:00–14:00 вырезан из сетки',
+    annaThu.status === 200
+    && !annaSlots.some((t) => t >= '11:30' && t < '14:00')
+    && annaSlots.includes('11:00') && annaSlots.includes('14:00'), annaSlots);
+
+  // Марина: пятница 15:00–17:00 — личное время. Ламинирование занимает 65 мин.
+  const marinaFri = await call('GET',
+    `/api/masters/${marina.id}/availability?date=${nextWeekday(5)}&service_ids=${lamination.id}`);
+  const marinaSlots = localTimes(marinaFri);
+  check('Марина, пт: личное время 15:00–17:00 вырезано из сетки',
+    marinaFri.status === 200
+    && !marinaSlots.some((t) => t >= '14:00' && t < '17:00')
+    && marinaSlots.includes('13:30') && marinaSlots.includes('17:00'), marinaSlots);
+
+  // Елена: суббота заблокирована целиком, хотя по графику она работает.
+  const elenaSat = await call('GET',
+    `/api/masters/${elena.id}/availability?date=${nextWeekday(6)}&service_ids=${manicure.id}`);
+  check('Елена, сб: день закрыт блокировкой, хотя по графику рабочий',
+    elenaSat.status === 200 && elenaSat.json.slots.length === 0, elenaSat.json.slots);
+
+  // Блокировка действует только на свой день недели и своего мастера.
+  const annaFri = await call('GET',
+    `/api/masters/${anna.id}/availability?date=${nextWeekday(5)}&service_ids=${manicure.id}`);
+  check('у Анны в пятницу обеда нет — блокировка только на четверг',
+    annaFri.json.slots.length > 0
+    && localTimes(annaFri).some((t) => t >= '11:30' && t < '14:00'), localTimes(annaFri));
+
   console.log('\n— Удержание слота —');
   const anonHold = await call('POST', '/api/holds',
     { body: { master_id: master.id, service_ids: [manicure.id, brows.id], starts_at: slot.at_utc } });

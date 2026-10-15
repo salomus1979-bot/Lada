@@ -6,9 +6,25 @@
 
 const db = require('./lib/db');
 const { hashPassword } = require('./lib/auth');
-const { nowUtc } = require('./lib/time');
+const {
+  nowUtc, toUtcIso, zonedToUtc, utcToZoned, weekdayOfDate, addDays, addMonths,
+} = require('./lib/time');
 
 const TEST_PASSWORD = 'Lada12345';
+
+// Часы работы студии: вт–сб, 10:00–20:00.
+const SALON_START_MIN = 600;
+const SALON_END_MIN = 1200;
+const SALON_CLOSED_WEEKDAYS = [1, 7];
+
+// Постоянные блокировки времени — фикстуры для проверки расчёта слотов.
+// Повторяются каждую неделю, а time_blocks хранит конкретные моменты,
+// поэтому строки генерируются на весь горизонт записи (см. seedTimeBlocks).
+const TIME_BLOCKS = [
+  { master: 'Анна', weekday: 4, start_min: 780, end_min: 840, type: 'break', comment: 'Обед' },
+  { master: 'Марина', weekday: 5, start_min: 900, end_min: 1020, type: 'time_off', comment: 'Личное время' },
+  { master: 'Елена', weekday: 6, all_day: true, type: 'time_off', comment: 'Выходной' },
+];
 
 const CATEGORIES = [
   { slug: 'nails', title: 'Ногти', description: 'Маникюр, педикюр, наращивание и дизайн.', sort_order: 1 },
@@ -78,6 +94,41 @@ function reset() {
   for (const table of tables) db.run(`DELETE FROM ${table}`);
 }
 
+/**
+ * Раскладывает недельные блокировки TIME_BLOCKS в конкретные строки time_blocks
+ * на весь горизонт записи. Границы переводятся в UTC отдельно для каждой даты,
+ * поэтому переход на летнее время не сдвигает блокировку.
+ */
+function seedTimeBlocks(masterIds, adminUserId, timestamp) {
+  const settings = db.settings();
+  const today = utcToZoned(new Date(), settings.timezone).date;
+  const until = addMonths(today, settings.booking_horizon_months);
+
+  let count = 0;
+  for (const block of TIME_BLOCKS) {
+    const masterId = masterIds.get(block.master);
+    if (!masterId) throw new Error(`Блокировка ссылается на неизвестного мастера: ${block.master}`);
+
+    const startMin = block.all_day ? SALON_START_MIN : block.start_min;
+    const endMin = block.all_day ? SALON_END_MIN : block.end_min;
+
+    for (let date = today; date <= until; date = addDays(date, 1)) {
+      if (weekdayOfDate(date) !== block.weekday) continue;
+      db.run(
+        `INSERT INTO time_blocks
+           (master_id, type, starts_at_utc, ends_at_utc, comment, created_by_user_id, created_at_utc)
+         VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        [masterId, block.type,
+          toUtcIso(zonedToUtc(date, startMin, settings.timezone)),
+          toUtcIso(zonedToUtc(date, endMin, settings.timezone)),
+          block.comment, adminUserId, timestamp],
+      );
+      count += 1;
+    }
+  }
+  return count;
+}
+
 function seed() {
   const timestamp = nowUtc();
 
@@ -93,11 +144,12 @@ function seed() {
   // Студия работает со вторника по субботу, 10:00–20:00.
   // Воскресенье и понедельник закрыты.
   for (let weekday = 1; weekday <= 7; weekday += 1) {
-    const isClosed = weekday === 1 || weekday === 7;
+    const isClosed = SALON_CLOSED_WEEKDAYS.includes(weekday);
     db.run(
       `INSERT INTO salon_hours (weekday, is_closed, start_min, end_min)
        VALUES (?, ?, ?, ?)`,
-      [weekday, isClosed ? 1 : 0, isClosed ? null : 600, isClosed ? null : 1200],
+      [weekday, isClosed ? 1 : 0,
+        isClosed ? null : SALON_START_MIN, isClosed ? null : SALON_END_MIN],
     );
   }
   db.run(
@@ -133,14 +185,17 @@ function seed() {
     { role: 'admin', name: 'Елена Крылова', email: 'admin@lada.local', phone: '+79991234501' },
     { role: 'client', name: 'Анна Соколова', email: 'client@lada.local', phone: '+79991112233' },
   ];
+  let adminUserId = null;
   for (const user of users) {
-    db.run(
+    const info = db.run(
       `INSERT INTO users (role, name, email, phone, password_hash, created_at_utc)
        VALUES (?, ?, ?, ?, ?, ?)`,
       [user.role, user.name, user.email, user.phone, hashPassword(TEST_PASSWORD), timestamp],
     );
+    if (user.role === 'admin') adminUserId = Number(info.lastInsertRowid);
   }
 
+  const masterIds = new Map();
   for (const master of MASTERS) {
     const info = db.run(
       `INSERT INTO masters
@@ -151,6 +206,7 @@ function seed() {
         master.experience_years, master.bio, master.sort_order, timestamp],
     );
     const masterId = Number(info.lastInsertRowid);
+    masterIds.set(master.first_name, masterId);
 
     for (const serviceName of master.services) {
       db.run('INSERT INTO master_services (master_id, service_id) VALUES (?, ?)',
@@ -170,8 +226,11 @@ function seed() {
     }
   }
 
+  const blockCount = seedTimeBlocks(masterIds, adminUserId, timestamp);
+
   console.log('[seed] готово:');
   console.log(`  категорий: ${CATEGORIES.length}, услуг: ${SERVICES.length}, мастеров: ${MASTERS.length}`);
+  console.log(`  блокировок времени: ${blockCount} (${TIME_BLOCKS.length} недельных правила на горизонт записи)`);
   console.log(`  владелец: owner@lada.local, админ: admin@lada.local, клиент: client@lada.local`);
   console.log(`  тестовый пароль для всех: ${TEST_PASSWORD}`);
 }
