@@ -11,72 +11,61 @@ const { nowUtc } = require('./lib/time');
 const TEST_PASSWORD = 'Lada12345';
 
 const CATEGORIES = [
-  { slug: 'manicure', title: 'Маникюр', description: 'Обработка, укрепление и покрытие — классика и дизайн.', sort_order: 1 },
-  { slug: 'pedicure', title: 'Педикюр', description: 'Аппаратный и комбинированный уход за стопами.', sort_order: 2 },
-  { slug: 'brows', title: 'Брови', description: 'Коррекция формы, окрашивание, долговременная укладка.', sort_order: 3 },
-  { slug: 'lashes', title: 'Ресницы', description: 'Наращивание и ламинирование для выразительного взгляда.', sort_order: 4 },
+  { slug: 'nails', title: 'Ногти', description: 'Маникюр, педикюр, наращивание и дизайн.', sort_order: 1 },
+  { slug: 'brows', title: 'Брови', description: 'Коррекция, окрашивание и долговременная укладка.', sort_order: 2 },
 ];
 
 // Цены — целые копейки: 1 800 ₽ = 180000.
+// buffer_after_min — время на уборку рабочего места, клиенту не показывается,
+// но занимает время мастера.
 const SERVICES = [
-  { category: 'manicure', name: 'Маникюр с покрытием', description: 'Обработка, укрепление, гель-лак', duration_min: 90, buffer_after_min: 10, price_kopecks: 180000 },
-  { category: 'manicure', name: 'Дизайн ногтей', description: 'Художественная роспись, 1–2 ногтя', duration_min: 30, buffer_after_min: 5, price_kopecks: 80000 },
-  { category: 'manicure', name: 'Снятие покрытия', description: 'Аккуратное снятие предыдущего покрытия', duration_min: 20, buffer_after_min: 5, price_kopecks: 40000 },
-  { category: 'pedicure', name: 'Аппаратный педикюр', description: 'Обработка стоп, удаление загрубевшей кожи', duration_min: 90, buffer_after_min: 15, price_kopecks: 240000 },
-  { category: 'pedicure', name: 'Комбинированный педикюр', description: 'Классика и аппарат, с покрытием', duration_min: 100, buffer_after_min: 15, price_kopecks: 270000 },
-  { category: 'pedicure', name: 'Экспресс-педикюр', description: 'Без покрытия, базовый уход', duration_min: 45, buffer_after_min: 10, price_kopecks: 150000 },
-  { category: 'brows', name: 'Коррекция формы', description: 'Пинцет и нить, подбор формы', duration_min: 30, buffer_after_min: 5, price_kopecks: 80000 },
-  { category: 'brows', name: 'Окрашивание бровей', description: 'Хна или краска, стойкий цвет', duration_min: 40, buffer_after_min: 5, price_kopecks: 90000 },
-  { category: 'brows', name: 'Ламинирование бровей', description: 'Укладка волосков, эффект объёма', duration_min: 60, buffer_after_min: 5, price_kopecks: 120000 },
-  { category: 'lashes', name: 'Классическое наращивание', description: 'Один объём, натуральный эффект', duration_min: 120, buffer_after_min: 15, price_kopecks: 220000 },
-  { category: 'lashes', name: 'Объёмное наращивание 2D–3D', description: 'Плотный эффект, длительная носка', duration_min: 150, buffer_after_min: 15, price_kopecks: 280000 },
-  { category: 'lashes', name: 'Ламинирование ресниц', description: 'Изгиб и укладка без наращивания', duration_min: 60, buffer_after_min: 10, price_kopecks: 160000 },
+  { category: 'nails', name: 'Маникюр с покрытием гель-лаком', description: 'Обработка, укрепление, покрытие гель-лаком', duration_min: 90, buffer_after_min: 10, price_kopecks: 180000 },
+  { category: 'nails', name: 'Маникюр и педикюр', description: 'Комплекс: руки и стопы с покрытием', duration_min: 150, buffer_after_min: 10, price_kopecks: 320000 },
+  { category: 'nails', name: 'Наращивание ногтей', description: 'Наращивание с последующим покрытием', duration_min: 150, buffer_after_min: 10, price_kopecks: 280000 },
+  // Заявлено «+15–30 минут». В duration_min берём верхнюю границу: если
+  // резервировать 15, визит рискует наехать на следующего клиента.
+  { category: 'nails', name: 'Дизайн ногтей', description: 'Художественная роспись, цена за два ногтя', duration_min: 30, buffer_after_min: 0, price_kopecks: 30000 },
+  { category: 'brows', name: 'Коррекция и окрашивание бровей', description: 'Подбор формы, коррекция и стойкое окрашивание', duration_min: 40, buffer_after_min: 5, price_kopecks: 120000 },
+  { category: 'brows', name: 'Ламинирование бровей', description: 'Укладка волосков, эффект объёма', duration_min: 60, buffer_after_min: 5, price_kopecks: 180000 },
 ];
 
+// Каждый мастер работает в свои дни; остальные дни недели — выходные.
+// Время — минуты от полуночи в поясе салона. Все графики лежат внутри
+// режима студии (вт–сб, 10:00–20:00).
 const MASTERS = [
   {
-    first_name: 'Ольга', last_name: 'Белова', specialization: 'Маникюр, дизайн', experience_years: 6,
-    bio: 'Работаю с 2020 года, специализируюсь на долговременных покрытиях и аккуратном дизайне.',
+    first_name: 'Анна', last_name: 'Ковалева',
+    specialization: 'Маникюр и педикюр', experience_years: 6,
+    bio: 'Маникюр, педикюр, наращивание и дизайн ногтей.',
     sort_order: 1,
-    services: ['Маникюр с покрытием', 'Дизайн ногтей', 'Снятие покрытия', 'Ламинирование бровей'],
+    services: [
+      'Маникюр с покрытием гель-лаком', 'Маникюр и педикюр',
+      'Наращивание ногтей', 'Дизайн ногтей',
+    ],
+    // Вторник–пятница, 10:00–18:00.
+    schedule: { weekdays: [2, 3, 4, 5], start_min: 600, end_min: 1080 },
   },
   {
-    first_name: 'Дарья', last_name: 'Левина', specialization: 'Маникюр', experience_years: 3,
-    bio: 'Аккуратный маникюр и стойкое покрытие.', sort_order: 2,
-    services: ['Маникюр с покрытием', 'Снятие покрытия'],
+    first_name: 'Марина', last_name: 'Орлова',
+    specialization: 'Брови', experience_years: 5,
+    bio: 'Коррекция и окрашивание бровей, долговременная укладка.',
+    sort_order: 2,
+    services: ['Коррекция и окрашивание бровей', 'Ламинирование бровей'],
+    // Среда–суббота, 11:00–20:00.
+    schedule: { weekdays: [3, 4, 5, 6], start_min: 660, end_min: 1200 },
   },
   {
-    first_name: 'Ирина', last_name: 'Волкова', specialization: 'Педикюр', experience_years: 8,
-    bio: 'Аппаратный педикюр, работа с проблемной кожей стоп.', sort_order: 3,
-    services: ['Аппаратный педикюр', 'Комбинированный педикюр', 'Экспресс-педикюр'],
+    first_name: 'Елена', last_name: 'Смирнова',
+    specialization: 'Универсальный мастер', experience_years: 8,
+    bio: 'Маникюр и наращивание ногтей, коррекция, окрашивание и ламинирование бровей.',
+    sort_order: 3,
+    services: [
+      'Маникюр с покрытием гель-лаком', 'Наращивание ногтей',
+      'Коррекция и окрашивание бровей', 'Ламинирование бровей',
+    ],
+    // Вторник, четверг, суббота, 10:00–19:00.
+    schedule: { weekdays: [2, 4, 6], start_min: 600, end_min: 1140 },
   },
-  {
-    first_name: 'Елена', last_name: 'Нечаева', specialization: 'Педикюр', experience_years: 4,
-    bio: 'Базовый и экспресс-уход за стопами.', sort_order: 4,
-    services: ['Аппаратный педикюр', 'Экспресс-педикюр'],
-  },
-  {
-    first_name: 'Светлана', last_name: 'Руднева', specialization: 'Брови', experience_years: 5,
-    bio: 'Подбор формы под черты лица, окрашивание и укладка.', sort_order: 5,
-    services: ['Коррекция формы', 'Окрашивание бровей', 'Ламинирование бровей', 'Ламинирование ресниц'],
-  },
-  {
-    first_name: 'Мария', last_name: 'Зайцева', specialization: 'Ресницы', experience_years: 7,
-    bio: 'Наращивание от классики до объёма 3D.', sort_order: 6,
-    services: ['Классическое наращивание', 'Объёмное наращивание 2D–3D', 'Ламинирование ресниц'],
-  },
-];
-
-// График из прототипа: Пн/Вт 10–19, Ср/Чт 12–21, Пт 10–19, Сб 11–18, Вс — выходной.
-// Перерыв 14:00–15:00 ежедневно, кроме выходных.
-const WEEK = [
-  { weekday: 1, start_min: 600, end_min: 1140 },
-  { weekday: 2, start_min: 600, end_min: 1140 },
-  { weekday: 3, start_min: 720, end_min: 1260 },
-  { weekday: 4, start_min: 720, end_min: 1260 },
-  { weekday: 5, start_min: 600, end_min: 1140 },
-  { weekday: 6, start_min: 660, end_min: 1080 },
-  { weekday: 7, is_day_off: true },
 ];
 
 function reset() {
@@ -101,11 +90,14 @@ function seed() {
              'Europe/Moscow', 30, 4, 3, 3, 2, 3, 7)`,
   );
 
-  // Студия работает ежедневно 10:00–21:00.
+  // Студия работает со вторника по субботу, 10:00–20:00.
+  // Воскресенье и понедельник закрыты.
   for (let weekday = 1; weekday <= 7; weekday += 1) {
+    const isClosed = weekday === 1 || weekday === 7;
     db.run(
-      'INSERT INTO salon_hours (weekday, is_closed, start_min, end_min) VALUES (?, 0, 600, 1260)',
-      [weekday],
+      `INSERT INTO salon_hours (weekday, is_closed, start_min, end_min)
+       VALUES (?, ?, ?, ?)`,
+      [weekday, isClosed ? 1 : 0, isClosed ? null : 600, isClosed ? null : 1200],
     );
   }
   db.run(
@@ -165,16 +157,15 @@ function seed() {
         [masterId, serviceIds.get(serviceName)]);
     }
 
-    for (const day of WEEK) {
+    for (let weekday = 1; weekday <= 7; weekday += 1) {
+      const works = master.schedule.weekdays.includes(weekday);
       db.run(
         `INSERT INTO master_work_schedule
            (master_id, weekday, is_day_off, start_min, end_min, break_start_min, break_end_min)
-         VALUES (?, ?, ?, ?, ?, ?, ?)`,
-        [masterId, day.weekday, day.is_day_off ? 1 : 0,
-          day.is_day_off ? null : day.start_min,
-          day.is_day_off ? null : day.end_min,
-          day.is_day_off ? null : 840,
-          day.is_day_off ? null : 900],
+         VALUES (?, ?, ?, ?, ?, NULL, NULL)`,
+        [masterId, weekday, works ? 0 : 1,
+          works ? master.schedule.start_min : null,
+          works ? master.schedule.end_min : null],
       );
     }
   }

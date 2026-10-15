@@ -56,12 +56,12 @@
 
 ## 3. `service_categories` — категории каталога
 
-Прототип: Маникюр / Педикюр / Брови / Ресницы.
+В сиде: Ногти (`nails`), Брови (`brows`).
 
 | Колонка | Тип | Ограничения |
 |---|---|---|
 | `id` | INTEGER | PK |
-| `slug` | TEXT | NOT NULL UNIQUE (`manicure`, `pedicure`, `brows`, `lashes`) |
+| `slug` | TEXT | NOT NULL UNIQUE (в сиде: `nails`, `brows`) |
 | `title` | TEXT | NOT NULL |
 | `description` | TEXT | NULL |
 | `sort_order` | INTEGER | NOT NULL DEFAULT 0 |

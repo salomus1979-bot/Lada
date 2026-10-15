@@ -60,20 +60,21 @@ async function main() {
 
   console.log('\n— Каталог —');
   const services = await call('GET', '/api/services');
-  check('GET /api/services -> 200, 12 услуг',
-    services.status === 200 && services.json.services.length === 12);
+  check('GET /api/services -> 200, 6 услуг',
+    services.status === 200 && services.json.services.length === 6);
   check('цена целым числом копеек',
     services.json.services.every((s) => Number.isInteger(s.price_kopecks)));
   check('в каталоге нет служебного буфера',
     services.json.services.every((s) => s.buffer_after_min === undefined));
 
-  const manicure = services.json.services.find((s) => s.name === 'Маникюр с покрытием');
+  const manicure = services.json.services.find((s) => s.name === 'Маникюр с покрытием гель-лаком');
   const brows = services.json.services.find((s) => s.name === 'Ламинирование бровей');
-  const lashes = services.json.services.find((s) => s.name === 'Классическое наращивание');
+  // Услуга, которую выбранный ниже мастер не выполняет — для проверки 409.
+  const foreignService = services.json.services.find((s) => s.name === 'Дизайн ногтей');
 
   const mastersAll = await call('GET', '/api/masters');
-  check('GET /api/masters -> 200, 6 мастеров',
-    mastersAll.status === 200 && mastersAll.json.masters.length === 6);
+  check('GET /api/masters -> 200, 3 мастера',
+    mastersAll.status === 200 && mastersAll.json.masters.length === 3);
   check('в списке мастеров нет контактов',
     mastersAll.json.masters.every((m) => m.email === undefined && m.phone === undefined));
 
@@ -81,7 +82,7 @@ async function main() {
   const mastersBoth = await call('GET', `/api/masters?service_ids=${bothServices}`);
   check('фильтр по двум услугам оставляет только тех, кто делает обе',
     mastersBoth.status === 200 && mastersBoth.json.masters.length === 1
-      && mastersBoth.json.masters[0].display_name === 'Ольга Белова',
+      && mastersBoth.json.masters[0].display_name === 'Елена Смирнова',
     mastersBoth.json.masters.map((m) => m.display_name));
 
   const badFilter = await call('GET', '/api/masters?service_ids=abc');
@@ -164,7 +165,7 @@ async function main() {
   const noServices = await call('GET', `/api/masters/${master.id}/availability?date=2026-10-23`);
   check('без service_ids -> 400', noServices.status === 400, noServices.json);
 
-  const wrongMaster = await call('GET', `/api/masters/${master.id}/availability?date=2026-10-23&service_ids=${lashes.id}`);
+  const wrongMaster = await call('GET', `/api/masters/${master.id}/availability?date=2026-10-23&service_ids=${foreignService.id}`);
   check('мастер не делает услугу -> 409', wrongMaster.status === 409, wrongMaster.json);
 
   // Ищем ближайшую дату, где есть окно нужной длины.
@@ -178,7 +179,7 @@ async function main() {
   check('нашлось свободное время на ближайшие две недели', day !== null);
   check('суммарная длительность = 90 + 60',
     day.service_duration_min === 150, day && day.service_duration_min);
-  check('сумма = 180000 + 120000 копеек', day.total_price_kopecks === 300000);
+  check('сумма = 180000 + 180000 копеек', day.total_price_kopecks === 360000);
   check('слоты отданы в UTC с локальным временем салона',
     day.slots.every((s) => s.at_utc.endsWith('Z') && s.local_time && s.timezone === 'Europe/Moscow'));
   check('шаг сетки 30 минут соблюдён',
@@ -279,7 +280,7 @@ async function main() {
   check('создание записи -> 201', created.status === 201, created.json);
   const appointmentId = created.json.appointment.id;
   check('статус новой записи — pending', created.json.appointment.status === 'pending');
-  check('сумма записи в копейках', created.json.appointment.total_price_kopecks === 300000);
+  check('сумма записи в копейках', created.json.appointment.total_price_kopecks === 360000);
   check('в записи зафиксированы 2 услуги', created.json.appointment.services.length === 2);
   check('запись не содержит данных других клиентов',
     created.json.appointment.client === undefined);
