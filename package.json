@@ -1,0 +1,17 @@
+{
+  "name": "lada-salon",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Сервис записи студии «Лада»: API поверх SQLite по docs/db-schema.md",
+  "engines": {
+    "node": ">=22.5.0"
+  },
+  "scripts": {
+    "start": "node api/src/server.js",
+    "seed": "node api/src/seed.js",
+    "smoke": "node api/test/smoke.js"
+  },
+  "dependencies": {
+    "express": "^4.21.2"
+  }
+}
