@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta charset="utf-8">
+<title>Лада — Ошибка сервера</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@700;800&family=Manrope:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  body{margin:0;-webkit-font-smoothing:antialiased;}
+  * { box-sizing: border-box; }
+  ::selection{ background:#F2C2C0; color:#2A1C1A; }
+</style>
+</helmet>
+
+<div style="font-family:'Manrope',sans-serif; background:#241A18; color:#F5EBE8; min-height:100vh; display:flex; align-items:center; justify-content:center; text-align:center; padding:24px;">
+  <div style="max-width:440px;">
+    <div style="font-family:'Oswald',sans-serif; font-weight:800; font-size:clamp(96px,16vw,160px); line-height:0.9; color:#F2C2C0; margin-bottom:12px;">500</div>
+    <h1 style="font-family:'Oswald',sans-serif; font-weight:700; text-transform:uppercase; font-size:24px; margin:0 0 12px;">Что-то пошло не так</h1>
+    <p style="font-size:14.5px; color:#9A807A; line-height:1.6; margin:0 0 32px;">Сервис временно недоступен. Мы уже работаем над исправлением — попробуйте обновить страницу через пару минут.</p>
+    <div style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin-bottom:28px;">
+      <button style="background:#F2C2C0; color:#2A1C1A; border:none; border-radius:16px; padding:13px 26px; font-size:14px; font-weight:700; font-family:'Manrope',sans-serif;">Обновить страницу</button>
+      <button style="background:transparent; color:#F5EBE8; border:1.5px solid #4A3733; border-radius:16px; padding:13px 26px; font-size:14px; font-weight:700; font-family:'Manrope',sans-serif;">На главную</button>
+    </div>
+    <div style="font-size:12px; color:#6B5852;">Если ошибка повторяется, позвоните нам: +7 495 000-00-00</div>
+  </div>
+</div>
+
+</x-dc>
+</body>
+</html>

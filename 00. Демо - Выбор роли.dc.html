@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta charset="utf-8">
+<title>Лада — Демо: выбор роли</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+<style>
+  body{margin:0;-webkit-font-smoothing:antialiased;}
+  * { box-sizing: border-box; }
+  a{ color:#F2C2C0; }
+  a:hover{ color:#E8AEAC; }
+</style>
+</helmet>
+
+<div style="font-family:'Manrope',sans-serif; background:radial-gradient(ellipse at 75% 10%, rgba(242,194,192,0.08), transparent 55%), #241A18; color:#F5EBE8; width:100%; min-height:100vh; padding:64px 96px; display:flex; flex-direction:column; align-items:center;">
+
+  <div style="display:flex; flex-direction:column; align-items:center; text-align:center; margin-bottom:56px;">
+    <div style="font-family:'Oswald',sans-serif; font-weight:700; letter-spacing:.04em; font-size:22px; color:#F2C2C0; margin-bottom:28px;">ЛАДА</div>
+    <div style="font-size:12px; font-weight:700; letter-spacing:.16em; color:#F2C2C0; text-transform:uppercase; margin-bottom:16px;">Служебный экран · без авторизации</div>
+    <h1 style="font-family:'Oswald',sans-serif; font-weight:800; text-transform:uppercase; letter-spacing:-0.01em; font-size:48px; line-height:1.05; margin:0 0 14px; color:#F5EBE8;">Прототип сервиса записи</h1>
+    <p style="font-size:16px; line-height:1.5; color:#9A807A; margin:0;">Выберите роль для просмотра</p>
+  </div>
+
+  <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:20px; width:100%; max-width:960px; margin-bottom:48px;">
+    <sc-for list="{{ roles }}" as="r" hint-placeholder-count="4">
+      <div style="background:#2B201D; border:1px solid #4A3733; border-radius:24px; padding:28px 24px; display:flex; flex-direction:column;">
+        <div style="width:48px; height:48px; border-radius:14px; background:rgba(242,194,192,.14); display:flex; align-items:center; justify-content:center; margin-bottom:20px;">
+          <i data-lucide="{{ r.icon }}" width="24" height="24" stroke-width="1.5" style="color:#F2C2C0;"></i>
+        </div>
+        <div style="font-family:'Oswald',sans-serif; font-weight:700; text-transform:uppercase; letter-spacing:.02em; font-size:17px; color:#F5EBE8; margin-bottom:10px;">{{ r.title }}</div>
+        <div style="font-size:13.5px; line-height:1.5; color:#9A807A; margin-bottom:24px; flex:1;">{{ r.desc }}</div>
+        <sc-if value="{{ r.href }}">
+          <a href="{{ r.href }}" style="display:block; text-align:center; background:#F2C2C0; color:#2A1C1A; border-radius:16px; padding:11px; font-size:13.5px; font-weight:700; text-decoration:none;" style-hover="background:#E8AEAC;">Открыть</a>
+        </sc-if>
+        <sc-if value="{{ !r.href }}">
+          <button style="background:transparent; color:#6B5852; border:1.5px solid #4A3733; border-radius:16px; padding:11px; font-size:13.5px; font-weight:700; cursor:not-allowed;" disabled="{{ true }}">Открыть</button>
+        </sc-if>
+      </div>
+    </sc-for>
+  </div>
+
+  <div style="width:100%; max-width:1248px; border-top:1px solid #4A3733; padding-top:24px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px;">
+    <a href="./Лада%20-%20Дизайн-система.dc.html" style="font-size:13px; font-weight:600; text-decoration:none; display:flex; align-items:center; gap:6px;">
+      <i data-lucide="book-open" width="15" height="15" stroke-width="1.5"></i>Дизайн-система
+    </a>
+    <div style="font-size:12px; color:#6B5852;">Демонстрационный экран. В рабочем сервисе роль определяется при входе.</div>
+  </div>
+
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  componentDidMount(){ this.renderIcons(); }
+  componentDidUpdate(){ this.renderIcons(); }
+  renderIcons(){ if(window.lucide) window.lucide.createIcons(); }
+
+  renderVals(){
+    const roles = [
+      { icon:'user', title:'Гость и клиент', desc:'Лендинг, запись, личный кабинет', href:'./Лада%20-%20Лендинг.dc.html' },
+      { icon:'scissors', title:'Мастер', desc:'Мобильный кабинет: расписание, визиты, клиенты', href:'./36.%20Мастер%20-%20Мой%20день.dc.html' },
+      { icon:'layout-dashboard', title:'Администратор', desc:'Расписание студии, записи, услуги, мастера', href:'./21.%20Админ%20-%20Дашборд%20дня.dc.html' },
+    ];
+    return { roles };
+  }
+}
+</script>
+</body>
+</html>

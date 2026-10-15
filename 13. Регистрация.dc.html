@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta charset="utf-8">
+<title>Лада — Регистрация</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+<style>
+  body{margin:0;-webkit-font-smoothing:antialiased;background:#241A18;}
+  * { box-sizing: border-box; }
+  ::selection{ background:#F2C2C0; color:#2A1C1A; }
+  a{ color:#F2C2C0; text-decoration:none; }
+  a:hover{ color:#E8AEAC; }
+  @media (prefers-reduced-motion: reduce){ * { animation:none !important; transition:none !important; } }
+</style>
+</helmet>
+
+<div style="font-family:'Manrope',sans-serif; background:#241A18; color:#F5EBE8; min-height:100vh; display:grid; grid-template-columns:minmax(0,480px) minmax(0,1fr); position:relative;">
+
+  <div style="display:flex; align-items:center; justify-content:center; padding:48px 32px;">
+    <div style="width:100%; max-width:380px;">
+      <a href="Лада - Лендинг.dc.html" style="display:block; font-family:'Oswald',sans-serif; font-weight:800; font-size:22px; color:#F2C2C0; margin-bottom:36px;">ЛАДА</a>
+      <h1 style="font-family:'Oswald',sans-serif; font-weight:700; text-transform:uppercase; font-size:26px; margin:0 0 6px;">Регистрация</h1>
+      <p style="font-size:13.5px; color:#9A807A; margin:0 0 26px;">Займёт меньше минуты</p>
+
+      <label style="display:block; font-size:12px; font-weight:600; color:#C4ADA8; margin-bottom:6px;">Имя</label>
+      <input placeholder="Анна Соколова" style="width:100%; background:#332522; border:1px solid #4A3733; border-radius:8px; padding:12px 14px; font-size:14px; color:#F5EBE8; font-family:'Manrope',sans-serif; margin-bottom:14px;" />
+
+      <label style="display:block; font-size:12px; font-weight:600; color:#C4ADA8; margin-bottom:6px;">E-mail</label>
+      <input placeholder="anna@mail.ru" style="width:100%; background:#332522; border:1px solid #4A3733; border-radius:8px; padding:12px 14px; font-size:14px; color:#F5EBE8; font-family:'Manrope',sans-serif; margin-bottom:14px;" />
+
+      <label style="display:block; font-size:12px; font-weight:600; color:#C4ADA8; margin-bottom:6px;">Телефон</label>
+      <input placeholder="+7 (___) ___-__-__" style="width:100%; background:#332522; border:1px solid #4A3733; border-radius:8px; padding:12px 14px; font-size:14px; color:#F5EBE8; font-family:'Manrope',sans-serif; margin-bottom:14px;" />
+
+      <label style="display:block; font-size:12px; font-weight:600; color:#C4ADA8; margin-bottom:6px;">Пароль</label>
+      <div style="position:relative; margin-bottom:6px;">
+        <input type="password" placeholder="••••••••" style="width:100%; background:#332522; border:1px solid #4A3733; border-radius:8px; padding:12px 40px 12px 14px; font-size:14px; color:#F5EBE8; font-family:'Manrope',sans-serif;" />
+        <i data-lucide="eye" width="17" height="17" stroke-width="1.5" style="position:absolute; right:12px; top:50%; transform:translateY(-50%); color:#9A807A;"></i>
+      </div>
+      <div style="display:flex; gap:4px; margin-bottom:6px;">
+        <sc-for list="{{ strengthBars }}" as="b" hint-placeholder-count="4"><div style="height:4px; flex:1; border-radius:2px; background:{{ b }};"></div></sc-for>
+      </div>
+      <div style="font-size:11px; color:#9A807A; margin-bottom:14px;">Минимум 8 символов, буквы и цифры</div>
+
+      <label style="display:block; font-size:12px; font-weight:600; color:#C4ADA8; margin-bottom:6px;">Повторите пароль</label>
+      <input type="password" placeholder="••••••••" style="width:100%; background:#332522; border:1px solid #4A3733; border-radius:8px; padding:12px 14px; font-size:14px; color:#F5EBE8; font-family:'Manrope',sans-serif; margin-bottom:18px;" />
+
+      <div style="display:flex; align-items:flex-start; gap:10px; margin-bottom:22px;">
+        <div style="width:18px; height:18px; border-radius:5px; border:1.5px solid #4A3733; flex:none; margin-top:1px;"></div>
+        <span style="font-size:12.5px; color:#C4ADA8; line-height:1.4;">Согласен(на) на <a href="#">обработку персональных данных</a></span>
+      </div>
+
+      <a href="7. Кабинет - Предстоящие записи.dc.html" style="width:100%; background:#F2C2C0; color:#2A1C1A; border:none; border-radius:16px; padding:13px; font-size:14.5px; font-weight:700; font-family:'Manrope',sans-serif; margin-bottom:20px; display:block; text-align:center; text-decoration:none; box-sizing:border-box;">Зарегистрироваться</a>
+
+      <div style="text-align:center; font-size:13.5px; color:#9A807A;">Уже есть аккаунт? <a href="12. Вход.dc.html" style="font-weight:700;">Войти</a></div>
+    </div>
+  </div>
+
+  <div style="position:relative; background:repeating-linear-gradient(135deg,#332522,#332522 12px,#3D2B28 12px,#3D2B28 24px);">
+    <div style="position:absolute; top:24px; left:24px; font-family:monospace; font-size:11px; color:#9A807A;">фото интерьера студии</div>
+
+    <div style="position:absolute; right:40px; bottom:40px; width:300px; display:flex; flex-direction:column; gap:16px;">
+      <div>
+        <div style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:#F5EBE8; margin-bottom:10px; text-shadow:0 2px 8px rgba(0,0,0,.5);">Состояние: e-mail занят</div>
+        <div style="background:#2B201D; border:1px solid #4A3733; border-radius:20px; padding:16px;">
+          <input readonly="{{ true }}" value="anna@mail.ru" style="width:100%; background:#332522; border:1px solid #E58078; border-radius:8px; padding:9px 12px; font-size:13px; color:#F5EBE8; margin-bottom:8px;" />
+          <div style="font-size:12px; color:#E58078; line-height:1.4;">Такой e-mail уже зарегистрирован. <a href="#" style="font-weight:700;">Войти</a></div>
+        </div>
+      </div>
+
+      <div>
+        <div style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:#F5EBE8; margin-bottom:10px; text-shadow:0 2px 8px rgba(0,0,0,.5);">Состояние: пароли не совпадают</div>
+        <div style="background:#2B201D; border:1px solid #4A3733; border-radius:20px; padding:16px;">
+          <input readonly="{{ true }}" type="password" value="12345678" style="width:100%; background:#332522; border:1px solid #4A3733; border-radius:8px; padding:9px 12px; font-size:13px; color:#F5EBE8; margin-bottom:8px;" />
+          <input readonly="{{ true }}" type="password" value="1234567" style="width:100%; background:#332522; border:1px solid #E58078; border-radius:8px; padding:9px 12px; font-size:13px; color:#F5EBE8; margin-bottom:6px;" />
+          <div style="font-size:12px; color:#E58078;">Пароли не совпадают</div>
+        </div>
+      </div>
+
+      <div>
+        <div style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:#F5EBE8; margin-bottom:10px; text-shadow:0 2px 8px rgba(0,0,0,.5);">Состояние: слабый пароль</div>
+        <div style="background:#2B201D; border:1px solid #4A3733; border-radius:20px; padding:16px;">
+          <div style="display:flex; gap:4px; margin-bottom:6px;">
+            <sc-for list="{{ weakBars }}" as="wb" hint-placeholder-count="4"><div style="height:4px; flex:1; border-radius:2px; background:{{ wb }};"></div></sc-for>
+          </div>
+          <div style="font-size:12px; color:#E3A548;">Слабый пароль — добавьте цифры</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="grid-column:1 / -1; padding:14px 48px; background:rgba(140,169,190,.12); border-top:1px solid rgba(140,169,190,.3); display:flex; align-items:center; gap:10px;">
+    <i data-lucide="info" width="16" height="16" stroke-width="1.5" style="color:#8CA9BE; flex:none;"></i>
+    <span style="font-size:13px; color:#C4ADA8;">Состояние: регистрация из воронки записи — «После регистрации вернёмся к вашей записи на 23 октября, 14:00»</span>
+  </div>
+
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  componentDidMount(){ this.renderIcons(); }
+  renderIcons(){ if(window.lucide) window.lucide.createIcons(); }
+  renderVals(){
+    return {
+      strengthBars: ['#8FBF78','#8FBF78','#8FBF78','#4A3733'],
+      weakBars: ['#E3A548','#4A3733','#4A3733','#4A3733'],
+    };
+  }
+}
+
+</script>
+</body>
+</html>

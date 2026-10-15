@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+<template id="__bundler_thumbnail" data-bg-color="#FDF8F6">
+  <svg viewBox="0 0 120 56" xmlns="http://www.w3.org/2000/svg">
+    <rect width="120" height="56" fill="#FDF8F6"/>
+    <rect x="0" y="0" width="34" height="56" fill="#2A1C1A"/>
+    <text x="17" y="20" font-family="Georgia, serif" font-weight="700" font-size="11" fill="#F2C2C0" text-anchor="middle">ЛАДА</text>
+    <circle cx="48" cy="22" r="6" fill="#A65451"/>
+    <rect x="58" y="18" width="50" height="8" rx="4" fill="#E8DAD6"/>
+    <rect x="40" y="36" width="68" height="6" rx="3" fill="#F3E9E6"/>
+  </svg>
+</template>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta charset="utf-8">
+<title>Лада — Админ: Клиенты</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+<style>
+  body{margin:0;-webkit-font-smoothing:antialiased;background:#FDF8F6;}
+  * { box-sizing: border-box; }
+  ::selection{ background:#F2C2C0; color:#2A1C1A; }
+  a{ color:#A65451; text-decoration:none; }
+  a:hover{ color:#8A423F; }
+  @media (prefers-reduced-motion: reduce){ * { animation:none !important; transition:none !important; } }
+</style>
+</helmet>
+
+<div style="font-family:'Manrope',sans-serif; background:#FDF8F6; color:#2A1C1A; min-height:100vh; display:flex;">
+
+  <aside style="width:240px; flex:none; background:#2A1C1A; display:flex; flex-direction:column; padding:24px 16px; position:sticky; top:0; height:100vh;">
+    <div style="padding:0 8px; margin-bottom:6px;"><span onClick="{{ goToDashboard }}" style="font-family:'Oswald',sans-serif; font-weight:800; font-size:20px; color:#F2C2C0; cursor:pointer;">ЛАДА</span></div>
+    <div style="padding:0 8px; margin-bottom:24px;"><span style="font-size:10.5px; font-weight:700; padding:3px 9px; border-radius:999px; background:rgba(242,194,192,.16); color:#F2C2C0;">Администратор</span></div>
+    <nav style="display:flex; flex-direction:column; gap:2px; flex:1;">
+      <sc-for list="{{ sidebarItems }}" as="si" hint-placeholder-count="8">
+        <div onClick="{{ si.onClick }}" style="display:flex; align-items:center; justify-content:space-between; gap:10px; padding:10px 12px; border-radius:10px; background:{{ si.bg }}; color:{{ si.fg }}; font-size:13.5px; font-weight:600; cursor:pointer;">
+          <div style="display:flex; align-items:center; gap:10px;"><i data-lucide="{{ si.icon }}" width="17" height="17" stroke-width="1.5"></i>{{ si.label }}</div>
+          <sc-if value="{{ si.badge }}"><span style="width:18px; height:18px; border-radius:999px; background:#F2C2C0; color:#2A1C1A; font-size:10px; font-weight:800; display:flex; align-items:center; justify-content:center;">{{ si.badge }}</span></sc-if>
+        </div>
+      </sc-for>
+    </nav>
+    <div style="display:flex; align-items:center; gap:10px; padding:10px 8px; border-top:1px solid #3D2B28; margin-top:8px; padding-top:16px;">
+      <div style="width:32px; height:32px; border-radius:999px; background:#F2C2C0; color:#2A1C1A; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:12px; flex:none;">ЕК</div>
+      <div style="flex:1; min-width:0;">
+        <div style="font-size:13px; font-weight:600; color:#F5EBE8; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Елена Крылова</div>
+        <a href="Лада - Лендинг.dc.html" style="font-size:11.5px; color:#9A807A;">Выйти</a>
+      </div>
+    </div>
+  </aside>
+
+  <div style="flex:1; min-width:0;">
+    <main style="padding:32px;">
+
+      <div style="display:flex; align-items:center; gap:14px; flex-wrap:wrap; margin-bottom:22px;">
+        <h1 style="font-family:'Oswald',sans-serif; font-weight:700; text-transform:uppercase; font-size:28px; margin:0;">Клиенты</h1>
+        <span style="font-size:13px; color:#8A726D; font-variant-numeric:tabular-nums;">284 клиента</span>
+        <div style="flex:1;"></div>
+        <button onClick="{{ goToNewBooking }}" style="background:#2A1C1A; color:#F2C2C0; border:none; border-radius:14px; padding:9px 18px; font-size:12.5px; font-weight:700; font-family:'Manrope',sans-serif; display:flex; align-items:center; gap:6px; white-space:nowrap; cursor:pointer;"><i data-lucide="plus" width="14" height="14" stroke-width="2"></i>Добавить клиента</button>
+      </div>
+
+      <div style="background:#FFFFFF; border:1px solid #E8DAD6; border-radius:18px; padding:14px 16px; margin-bottom:16px; display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+        <div style="flex:1; min-width:200px; background:#FDF8F6; border:1px solid #E8DAD6; border-radius:10px; padding:8px 12px; display:flex; align-items:center; gap:7px;">
+          <i data-lucide="search" width="14" height="14" stroke-width="1.5" style="color:#8A726D; flex:none;"></i>
+          <span style="font-size:12.5px; color:#8A726D; white-space:nowrap;">Имя, телефон или e-mail</span>
+        </div>
+        <sc-for list="{{ filterControls }}" as="fc" hint-placeholder-count="3">
+          <div style="position:relative;">
+            <select style="background:#FDF8F6; border:1px solid #E8DAD6; border-radius:10px; padding:8px 30px 8px 12px; font-size:12.5px; color:#2A1C1A; font-family:'Manrope',sans-serif; appearance:none; white-space:nowrap;"><option>{{ fc.label }}</option></select>
+            <i data-lucide="chevron-down" width="13" height="13" stroke-width="1.5" style="position:absolute; right:10px; top:50%; transform:translateY(-50%); color:#8A726D; pointer-events:none;"></i>
+          </div>
+        </sc-for>
+      </div>
+
+      <div style="background:#FFFFFF; border:1px solid #E8DAD6; border-radius:18px; overflow:hidden;">
+        <div style="display:grid; grid-template-columns:minmax(0,1.3fr) minmax(0,1fr) minmax(0,1.2fr) 70px 70px 90px 100px 100px 20px; gap:8px; padding:11px 16px; font-size:10.5px; font-weight:700; text-transform:uppercase; letter-spacing:.02em; color:#8A726D; border-bottom:1px solid #E8DAD6;">
+          <div>Клиент</div><div>Телефон</div><div>E-mail</div><div>Визитов</div><div>Неявок</div><div>Последний</div><div>Ближайшая</div><div>Статус</div><div></div>
+        </div>
+        <sc-for list="{{ clients }}" as="c" hint-placeholder-count="9">
+          <div onClick="{{ goToClientCard }}" style="display:grid; grid-template-columns:minmax(0,1.3fr) minmax(0,1fr) minmax(0,1.2fr) 70px 70px 90px 100px 100px 20px; gap:8px; padding:12px 16px; border-bottom:1px solid #F3E9E6; align-items:center; opacity:{{ c.opacity }}; cursor:pointer;">
+            <div style="display:flex; align-items:center; gap:10px; min-width:0;">
+              <div style="width:30px; height:30px; border-radius:999px; background:#F3E9E6; color:#A65451; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:11px; flex:none;">{{ c.initials }}</div>
+              <span style="font-size:13px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ c.name }}</span>
+            </div>
+            <div style="font-size:12px; color:#5C4440; font-variant-numeric:tabular-nums; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ c.phone }}</div>
+            <div style="font-size:12px; color:#5C4440; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ c.email }}</div>
+            <div style="font-size:12.5px; color:#2A1C1A; font-variant-numeric:tabular-nums;">{{ c.visits }}</div>
+            <div style="font-size:12.5px; font-variant-numeric:tabular-nums; color:{{ c.noShowColor }};">{{ c.noShows }}</div>
+            <div style="font-size:12px; color:#5C4440; font-variant-numeric:tabular-nums; white-space:nowrap;">{{ c.lastVisit }}</div>
+            <div style="font-size:12px; color:#5C4440; font-variant-numeric:tabular-nums; white-space:nowrap;">{{ c.nextVisit }}</div>
+            <div><span style="font-size:10.5px; font-weight:700; padding:3px 8px; border-radius:999px; background:{{ c.badgeBg }}; color:{{ c.badgeColor }}; white-space:nowrap;">{{ c.status }}</span></div>
+            <i data-lucide="more-horizontal" width="15" height="15" stroke-width="1.5" style="color:#8A726D; cursor:pointer;"></i>
+          </div>
+        </sc-for>
+      </div>
+
+      <div style="margin-top:14px; display:flex; justify-content:flex-end;">
+        <div style="background:#FFFFFF; border:1px solid #E8DAD6; border-radius:14px; box-shadow:0 8px 20px rgba(42,28,26,.1); overflow:hidden; width:220px;">
+          <div onClick="{{ goToClientCard }}" style="padding:10px 14px; font-size:12.5px; font-weight:600; border-bottom:1px solid #F3E9E6; cursor:pointer;">Открыть карточку</div>
+          <div onClick="{{ goToNewBooking }}" style="padding:10px 14px; font-size:12.5px; font-weight:600; border-bottom:1px solid #F3E9E6; cursor:pointer;">Создать запись</div>
+          <div style="padding:10px 14px; font-size:12.5px; font-weight:600; border-bottom:1px solid #F3E9E6; cursor:pointer;">Отправить сброс пароля</div>
+          <div style="padding:10px 14px; font-size:12.5px; font-weight:600; color:#B23A32; cursor:pointer;">Заблокировать</div>
+        </div>
+      </div>
+      <div style="font-size:11px; color:#B9A69F; text-align:right; margin-top:4px;">Раскрытое меню действий «…» — пример</div>
+
+    </main>
+  </div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  componentDidMount(){ this.renderIcons(); }
+  renderIcons(){ if(window.lucide) window.lucide.createIcons(); }
+  renderVals(){
+    const goToDashboard = () => { window.location.href = '21. Админ - Дашборд дня.dc.html'; };
+    const goToSchedule = () => { window.location.href = '22. Админ - Сетка расписания.dc.html'; };
+    const goToBookings = () => { window.location.href = '23. Админ - Записи.dc.html'; };
+    const goToClients = () => { window.location.href = '26. Админ - Клиенты.dc.html'; };
+    const goToMasters = () => { window.location.href = '28. Админ - Мастера.dc.html'; };
+    const goToServices = () => { window.location.href = '31. Админ - Услуги.dc.html'; };
+    const goToSettings = () => { window.location.href = '33. Админ - Настройки студии.dc.html'; };
+    const goToRequests = () => { window.location.href = '34. Админ - Запросы мастеров.dc.html'; };
+    const goToClientCard = () => { window.location.href = '27. Админ - Карточка клиента.dc.html'; };
+    const goToNewBooking = () => { window.location.href = '24. Админ - Новая запись за клиента.dc.html'; };
+    const sidebarItems = [
+      {icon:'layout-dashboard', label:'Дашборд', bg:'transparent', fg:'#C4ADA8', badge:null, onClick:goToDashboard},
+      {icon:'calendar', label:'Расписание', bg:'transparent', fg:'#C4ADA8', badge:null, onClick:goToSchedule},
+      {icon:'list', label:'Записи', bg:'transparent', fg:'#C4ADA8', badge:null, onClick:goToBookings},
+      {icon:'users', label:'Клиенты', bg:'rgba(242,194,192,.14)', fg:'#F2C2C0', badge:null, onClick:null},
+      {icon:'user-cog', label:'Мастера', bg:'transparent', fg:'#C4ADA8', badge:null, onClick:goToMasters},
+      {icon:'droplet', label:'Услуги', bg:'transparent', fg:'#C4ADA8', badge:null, onClick:goToServices},
+      {icon:'settings', label:'Настройки студии', bg:'transparent', fg:'#C4ADA8', badge:null, onClick:goToSettings},
+      {icon:'inbox', label:'Запросы', bg:'transparent', fg:'#C4ADA8', badge:'2', onClick:goToRequests},
+    ];
+    const filterControls = [ {label:'Статус: активные'}, {label:'Последний визит: год'}, {label:'Мастер: все'} ];
+
+    const clientsRaw = [
+      {initials:'АС', name:'Анна Соколова', phone:'+7 999 111-22-33', email:'anna.sokolova@mail.ru', visits:12, noShows:1, noShowColor:'#5C4440', lastVisit:'28 сент.', nextVisit:'23 окт.', status:'Активен', badgeBg:'#EEF6EA', badgeColor:'#4F7A3D'},
+      {initials:'ДМ', name:'Дарья Миронова', phone:'+7 905 112-88-40', email:'daria.m@mail.ru', visits:7, noShows:0, noShowColor:'#5C4440', lastVisit:'28 сент.', nextVisit:'—', status:'Активен', badgeBg:'#EEF6EA', badgeColor:'#4F7A3D'},
+      {initials:'КО', name:'Ксения Орлова', phone:'+7 999 555-66-77', email:'ksenia.o@mail.ru', visits:3, noShows:0, noShowColor:'#5C4440', lastVisit:'14 окт.', nextVisit:'—', status:'Активен', badgeBg:'#EEF6EA', badgeColor:'#4F7A3D'},
+      {initials:'ПР', name:'Полина Рябова', phone:'+7 999 444-55-66', email:'polina.r@mail.ru', visits:5, noShows:3, noShowColor:'#8A5A14', lastVisit:'13 окт.', nextVisit:'—', status:'3 неявки', badgeBg:'#FBF2E3', badgeColor:'#8A5A14'},
+      {initials:'МГ', name:'Марина Гусева', phone:'+7 999 222-11-00', email:'marina.g@mail.ru', visits:1, noShows:0, noShowColor:'#5C4440', lastVisit:'2 авг.', nextVisit:'—', status:'Заблокирован', badgeBg:'#F3E9E6', badgeColor:'#8A726D', muted:true},
+      {initials:'ЕФ', name:'Елена Фомина', phone:'+7 999 666-77-88', email:'elena.f@mail.ru', visits:4, noShows:0, noShowColor:'#5C4440', lastVisit:'20 авг.', nextVisit:'—', status:'Активен', badgeBg:'#EEF6EA', badgeColor:'#4F7A3D'},
+      {initials:'СО', name:'Светлана Орлова', phone:'+7 999 777-88-99', email:'svetlana.o@mail.ru', visits:9, noShows:0, noShowColor:'#5C4440', lastVisit:'15 окт.', nextVisit:'29 окт.', status:'Активен', badgeBg:'#EEF6EA', badgeColor:'#4F7A3D'},
+      {initials:'ВБ', name:'Виктория Белых', phone:'+7 999 999-00-11', email:'victoria.b@mail.ru', visits:2, noShows:0, noShowColor:'#5C4440', lastVisit:'3 сент.', nextVisit:'—', status:'Без аккаунта', badgeBg:'#F3E9E6', badgeColor:'#5C4440'},
+      {initials:'МС', name:'Мария Седова', phone:'+7 999 888-99-00', email:'maria.s@mail.ru', visits:6, noShows:0, noShowColor:'#5C4440', lastVisit:'16 окт.', nextVisit:'16 окт.', status:'Активен', badgeBg:'#EEF6EA', badgeColor:'#4F7A3D'},
+    ];
+    const clients = clientsRaw.map(c=>({ ...c, opacity: c.muted ? .55 : 1 }));
+    return { sidebarItems, filterControls, clients };
+  }
+}
+
+</script>
+</body>
+</html>

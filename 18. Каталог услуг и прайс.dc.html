@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta charset="utf-8">
+<title>Лада — Услуги и цены</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+<style>
+  body{margin:0;-webkit-font-smoothing:antialiased;background:#241A18;}
+  * { box-sizing: border-box; }
+  ::selection{ background:#F2C2C0; color:#2A1C1A; }
+  a{ color:#F2C2C0; text-decoration:none; }
+  a:hover{ color:#E8AEAC; }
+  @media (prefers-reduced-motion: reduce){ * { animation:none !important; transition:none !important; } }
+</style>
+</helmet>
+
+<div style="font-family:'Manrope',sans-serif; background:#241A18; color:#F5EBE8; min-height:100vh;">
+
+  <header style="position:sticky; top:0; z-index:40; background:rgba(36,26,24,0.92); backdrop-filter:blur(8px); border-bottom:1px solid #4A3733;">
+    <div style="max-width:1200px; margin:0 auto; padding:16px 48px; display:flex; align-items:center; justify-content:space-between; gap:24px;">
+      <div style="display:flex; align-items:baseline; gap:10px;">
+        <a href="Лада - Лендинг.dc.html" style="font-family:'Oswald',sans-serif; font-weight:800; font-size:22px; letter-spacing:.01em; color:#F2C2C0;">ЛАДА</a>
+        <span style="font-size:12px; color:#9A807A;">студия маникюра и бровей</span>
+      </div>
+      <nav style="display:flex; gap:28px;">
+        <sc-for list="{{ navLinks }}" as="nl" hint-placeholder-count="5"><a href="{{ nl.href }}" style="font-size:13px; font-weight:600; color:#C4ADA8;">{{ nl.label }}</a></sc-for>
+      </nav>
+      <div style="display:flex; align-items:center; gap:10px; flex:none;">
+        <button onClick="{{ goToLogin }}" style="background:transparent; color:#F5EBE8; border:1.5px solid #4A3733; border-radius:16px; padding:9px 18px; font-size:13px; font-weight:700; font-family:'Manrope',sans-serif;">Войти</button>
+        <button onClick="{{ goToBooking }}" style="background:#F2C2C0; color:#2A1C1A; border:none; border-radius:16px; padding:9px 20px; font-size:13px; font-weight:700; font-family:'Manrope',sans-serif;">Записаться</button>
+      </div>
+    </div>
+  </header>
+
+  <section style="max-width:1200px; margin:0 auto; padding:64px 48px 32px;">
+    <h1 style="font-family:'Oswald',sans-serif; font-weight:800; text-transform:uppercase; letter-spacing:-0.01em; font-size:clamp(36px,5vw,56px); line-height:1; margin:0 0 14px;">Услуги и цены</h1>
+    <p style="font-size:15px; color:#9A807A; margin:0 0 28px;">Выберите услуги — дальше покажем свободное время.</p>
+    <div style="display:flex; gap:10px; flex-wrap:wrap;">
+      <sc-for list="{{ catNav }}" as="cn" hint-placeholder-count="4"><a href="{{ cn.href }}" style="font-size:13px; font-weight:700; padding:9px 18px; border-radius:999px; background:transparent; color:#C4ADA8; border:1.5px solid #4A3733;">{{ cn.label }}</a></sc-for>
+    </div>
+  </section>
+
+  <main style="max-width:1200px; margin:0 auto; padding:0 48px 80px;">
+    <sc-for list="{{ categories }}" as="cat" hint-placeholder-count="4">
+      <section id="{{ cat.id }}" style="scroll-margin-top:90px; padding:48px 0; border-top:1px solid #4A3733;">
+        <h2 style="font-family:'Oswald',sans-serif; font-weight:700; text-transform:uppercase; font-size:28px; margin:0 0 6px;">{{ cat.title }}</h2>
+        <p style="font-size:13.5px; color:#9A807A; margin:0 0 24px; max-width:560px;">{{ cat.desc }}</p>
+        <div style="display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:16px;">
+          <sc-for list="{{ cat.items }}" as="it" hint-placeholder-count="3">
+            <div style="background:#2B201D; border:1px solid #4A3733; border-radius:20px; padding:20px; display:flex; flex-direction:column;">
+              <div style="font-size:15px; font-weight:700; color:#F5EBE8; margin-bottom:4px;">{{ it.name }}</div>
+              <div style="font-size:12.5px; color:#9A807A; margin-bottom:14px; flex:1;">{{ it.desc }}</div>
+              <div style="display:flex; align-items:center; gap:6px; font-size:12.5px; color:#C4ADA8; margin-bottom:10px;"><i data-lucide="clock" width="13" height="13" stroke-width="1.5" style="color:#9A807A;"></i>{{ it.duration }}</div>
+              <div style="font-size:17px; font-weight:700; color:#F5EBE8; font-variant-numeric:tabular-nums; margin-bottom:12px;">{{ it.price }}</div>
+              <span style="font-size:11px; font-weight:700; padding:4px 10px; border-radius:999px; background:#3D2B28; color:#C4ADA8; width:fit-content; margin-bottom:14px;">Выполняют: {{ it.masters }}</span>
+              <button onClick="{{ goToBooking }}" style="background:transparent; color:#F2C2C0; border:1.5px solid #F2C2C0; border-radius:16px; padding:9px; font-size:12.5px; font-weight:700; font-family:'Manrope',sans-serif;">Добавить к записи</button>
+            </div>
+          </sc-for>
+        </div>
+      </section>
+    </sc-for>
+
+    <section style="padding:48px 0; border-top:1px solid #4A3733; text-align:center;">
+      <div style="font-size:16px; font-weight:700; color:#F5EBE8; margin-bottom:8px;">Не нашли нужную услугу?</div>
+      <div style="font-size:13.5px; color:#9A807A; margin-bottom:20px;">Позвоните нам — подберём подходящий вариант: +7 (999) 123-45-67</div>
+      <button onClick="{{ goToBooking }}" style="background:#F2C2C0; color:#2A1C1A; border:none; border-radius:16px; padding:13px 26px; font-size:14px; font-weight:700; font-family:'Manrope',sans-serif;">Записаться онлайн</button>
+    </section>
+  </main>
+
+  <div style="position:sticky; bottom:24px; display:flex; justify-content:center; z-index:50; pointer-events:none;">
+    <div style="background:#3D2B28; border:1px solid #4A3733; border-radius:999px; padding:10px 10px 10px 24px; display:flex; align-items:center; gap:16px; box-shadow:0 12px 32px rgba(36,26,24,.4); pointer-events:auto;">
+      <span style="font-size:13.5px; font-weight:600; color:#F5EBE8; white-space:nowrap;">Выбрано 2 услуги <span style="color:#9A807A;">·</span> <span style="font-variant-numeric:tabular-nums; font-weight:700;">2 600 ₽</span> <span style="color:#9A807A;">·</span> <span style="font-variant-numeric:tabular-nums;">2 ч 00 мин</span></span>
+      <button onClick="{{ goToMaster }}" style="background:#F2C2C0; color:#2A1C1A; border:none; border-radius:999px; padding:11px 22px; font-size:13px; font-weight:700; font-family:'Manrope',sans-serif; white-space:nowrap;">Выбрать мастера</button>
+    </div>
+  </div>
+
+  <footer style="max-width:1200px; margin:0 auto; padding:64px 48px 32px;">
+    <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:32px; margin-bottom:40px;">
+      <sc-for list="{{ footerCols }}" as="fc" hint-placeholder-count="4">
+        <div>
+          <div style="width:36px; height:36px; border-radius:10px; background:rgba(242,194,192,.14); display:flex; align-items:center; justify-content:center; margin-bottom:14px;"><i data-lucide="{{ fc.icon }}" width="18" height="18" stroke-width="1.5" style="color:#F2C2C0;"></i></div>
+          <div style="font-size:13px; font-weight:700; color:#F5EBE8; margin-bottom:6px;">{{ fc.title }}</div>
+          <div style="font-size:12.5px; color:#9A807A; line-height:1.5;">{{ fc.text }}</div>
+          <sc-if value="{{ fc.button }}"><button onClick="{{ goToBooking }}" style="margin-top:12px; background:#F2C2C0; color:#2A1C1A; border:none; border-radius:16px; padding:9px 18px; font-size:12.5px; font-weight:700; font-family:'Manrope',sans-serif;">{{ fc.button }}</button></sc-if>
+        </div>
+      </sc-for>
+    </div>
+    <div style="display:flex; align-items:center; justify-content:space-between; padding-top:24px; border-top:1px solid #4A3733; flex-wrap:wrap; gap:12px;">
+      <div style="font-size:12px; color:#6B5852;">© 2026 Лада. Все права защищены. <a href="#" style="color:#6B5852; text-decoration:underline;">Политика конфиденциальности</a></div>
+      <div style="display:flex; gap:12px;">
+        <i data-lucide="camera" width="18" height="18" stroke-width="1.5" style="color:#9A807A;"></i>
+        <i data-lucide="send" width="18" height="18" stroke-width="1.5" style="color:#9A807A;"></i>
+      </div>
+    </div>
+  </footer>
+
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  componentDidMount(){ this.renderIcons(); }
+  renderIcons(){ if(window.lucide) window.lucide.createIcons(); }
+  renderVals(){
+    const navLinks = [
+      {label:'Услуги', href:'18. Каталог услуг и прайс.dc.html'}, {label:'Мастера', href:'Лада - Лендинг.dc.html#masters'},
+      {label:'Как записаться', href:'Лада - Лендинг.dc.html'}, {label:'Отзывы', href:'Лада - Лендинг.dc.html'}, {label:'Контакты', href:'Лада - Лендинг.dc.html'},
+    ];
+    const goToLogin = () => { window.location.href = '12. Вход.dc.html'; };
+    const goToBooking = () => { window.location.href = '1. Запись - Шаг 1. Услуги.dc.html'; };
+    const goToMaster = () => { window.location.href = '2. Запись - Шаг 2. Мастер.dc.html'; };
+    const catNav = [
+      {label:'Маникюр', href:'#manicure'}, {label:'Педикюр', href:'#pedicure'},
+      {label:'Брови', href:'#brows'}, {label:'Ресницы', href:'#lashes'},
+    ];
+    const categories = [
+      { id:'manicure', num:1, title:'Маникюр', desc:'Обработка, укрепление и покрытие — классика и дизайн.', items:[
+        {name:'Маникюр с покрытием', desc:'Обработка, укрепление, гель-лак', duration:'90 мин', price:'от 1 800 ₽', masters:'Ольга, Дарья'},
+        {name:'Дизайн ногтей', desc:'Художественная роспись, 1–2 ногтя', duration:'30 мин', price:'от 800 ₽', masters:'Ольга'},
+        {name:'Снятие покрытия', desc:'Аккуратное снятие предыдущего покрытия', duration:'20 мин', price:'от 400 ₽', masters:'Ольга, Дарья'},
+      ]},
+      { id:'pedicure', num:2, title:'Педикюр', desc:'Аппаратный и комбинированный уход за стопами.', items:[
+        {name:'Аппаратный педикюр', desc:'Обработка стоп, удаление загрубевшей кожи', duration:'90 мин', price:'от 2 400 ₽', masters:'Ирина, Елена'},
+        {name:'Комбинированный педикюр', desc:'Классика и аппарат, с покрытием', duration:'100 мин', price:'от 2 700 ₽', masters:'Ирина'},
+        {name:'Экспресс-педикюр', desc:'Без покрытия, базовый уход', duration:'45 мин', price:'от 1 500 ₽', masters:'Ирина, Елена'},
+      ]},
+      { id:'brows', num:3, title:'Брови', desc:'Коррекция формы, окрашивание, долговременная укладка.', items:[
+        {name:'Коррекция формы', desc:'Пинцет и нить, подбор формы', duration:'30 мин', price:'от 800 ₽', masters:'Светлана'},
+        {name:'Окрашивание бровей', desc:'Хна или краска, стойкий цвет', duration:'40 мин', price:'от 900 ₽', masters:'Светлана'},
+        {name:'Ламинирование бровей', desc:'Укладка волосков, эффект объёма', duration:'60 мин', price:'от 1 200 ₽', masters:'Светлана, Ольга'},
+      ]},
+      { id:'lashes', num:4, title:'Ресницы', desc:'Наращивание и ламинирование для выразительного взгляда.', items:[
+        {name:'Классическое наращивание', desc:'Один объём, натуральный эффект', duration:'120 мин', price:'от 2 200 ₽', masters:'Мария'},
+        {name:'Объёмное наращивание 2D–3D', desc:'Плотный эффект, длительная носка', duration:'150 мин', price:'от 2 800 ₽', masters:'Мария'},
+        {name:'Ламинирование ресниц', desc:'Изгиб и укладка без наращивания', duration:'60 мин', price:'от 1 600 ₽', masters:'Мария, Светлана'},
+      ]},
+    ];
+    const footerCols = [
+      {icon:'map-pin', title:'Адрес', text:'м. Фрунзенская, ул. Студийная, 12', button:null},
+      {icon:'clock', title:'Режим работы', text:'Ежедневно 10:00–21:00', button:null},
+      {icon:'phone', title:'Телефон', text:'+7 (999) 123-45-67', button:null},
+      {icon:'calendar', title:'Запись', text:'Выберите время онлайн', button:'Записаться'},
+    ];
+    return { navLinks, catNav, categories, footerCols, goToLogin, goToBooking, goToMaster };
+  }
+}
+
+</script>
+</body>
+</html>

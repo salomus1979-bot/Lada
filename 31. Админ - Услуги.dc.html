@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta charset="utf-8">
+<title>Лада — Админ: Услуги</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+<style>
+  body{margin:0;-webkit-font-smoothing:antialiased;background:#FDF8F6;}
+  * { box-sizing: border-box; }
+  ::selection{ background:#F2C2C0; color:#2A1C1A; }
+  a{ color:#A65451; text-decoration:none; }
+  a:hover{ color:#8A423F; }
+  @media (prefers-reduced-motion: reduce){ * { animation:none !important; transition:none !important; } }
+</style>
+</helmet>
+
+<div style="font-family:'Manrope',sans-serif; background:#FDF8F6; color:#2A1C1A; min-height:100vh; display:flex;">
+
+  <aside style="width:240px; flex:none; background:#2A1C1A; display:flex; flex-direction:column; padding:24px 16px; position:sticky; top:0; height:100vh;">
+    <div style="padding:0 8px; margin-bottom:6px;"><span onClick="{{ goToDashboard }}" style="font-family:'Oswald',sans-serif; font-weight:800; font-size:20px; color:#F2C2C0; cursor:pointer;">ЛАДА</span></div>
+    <div style="padding:0 8px; margin-bottom:24px;"><span style="font-size:10.5px; font-weight:700; padding:3px 9px; border-radius:999px; background:rgba(242,194,192,.16); color:#F2C2C0;">Администратор</span></div>
+    <nav style="display:flex; flex-direction:column; gap:2px; flex:1;">
+      <sc-for list="{{ sidebarItems }}" as="si" hint-placeholder-count="8">
+        <div onClick="{{ si.onClick }}" style="display:flex; align-items:center; justify-content:space-between; gap:10px; padding:10px 12px; border-radius:10px; background:{{ si.bg }}; color:{{ si.fg }}; font-size:13.5px; font-weight:600; cursor:pointer;">
+          <div style="display:flex; align-items:center; gap:10px;"><i data-lucide="{{ si.icon }}" width="17" height="17" stroke-width="1.5"></i>{{ si.label }}</div>
+          <sc-if value="{{ si.badge }}"><span style="width:18px; height:18px; border-radius:999px; background:#F2C2C0; color:#2A1C1A; font-size:10px; font-weight:800; display:flex; align-items:center; justify-content:center;">{{ si.badge }}</span></sc-if>
+        </div>
+      </sc-for>
+    </nav>
+    <div style="display:flex; align-items:center; gap:10px; padding:10px 8px; border-top:1px solid #3D2B28; margin-top:8px; padding-top:16px;">
+      <div style="width:32px; height:32px; border-radius:999px; background:#F2C2C0; color:#2A1C1A; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:12px; flex:none;">ЕК</div>
+      <div style="flex:1; min-width:0;">
+        <div style="font-size:13px; font-weight:600; color:#F5EBE8; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Елена Крылова</div>
+        <a href="Лада - Лендинг.dc.html" style="font-size:11.5px; color:#9A807A;">Выйти</a>
+      </div>
+    </div>
+  </aside>
+
+  <div style="flex:1; min-width:0;">
+    <main style="padding:32px; max-width:1240px;">
+
+      <div style="display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap; margin-bottom:18px;">
+        <h1 style="font-family:'Oswald',sans-serif; font-weight:700; text-transform:uppercase; font-size:28px; margin:0;">Услуги</h1>
+        <div style="display:flex; gap:10px;">
+          <button style="background:transparent; color:#5C4440; border:1.5px solid #E8DAD6; border-radius:14px; padding:9px 16px; font-size:12.5px; font-weight:700; font-family:'Manrope',sans-serif; white-space:nowrap;">Категории</button>
+          <button onClick="{{ goToServiceForm }}" style="background:#2A1C1A; color:#F2C2C0; border:none; border-radius:14px; padding:9px 18px; font-size:12.5px; font-weight:700; font-family:'Manrope',sans-serif; display:flex; align-items:center; gap:6px; white-space:nowrap; cursor:pointer;"><i data-lucide="plus" width="14" height="14" stroke-width="2"></i>Добавить услугу</button>
+        </div>
+      </div>
+
+      <div style="display:flex; align-items:center; gap:10px; margin-bottom:20px; flex-wrap:wrap;">
+        <div style="display:flex; gap:4px; background:#FFFFFF; border:1px solid #E8DAD6; border-radius:999px; padding:4px;">
+          <sc-for list="{{ tabs }}" as="tb" hint-placeholder-count="3"><div style="padding:7px 15px; border-radius:999px; background:{{ tb.bg }}; color:{{ tb.fg }}; font-size:12px; font-weight:700; white-space:nowrap;">{{ tb.label }}</div></sc-for>
+        </div>
+        <div style="flex:1; min-width:180px; max-width:280px; background:#FFFFFF; border:1px solid #E8DAD6; border-radius:10px; padding:8px 12px; display:flex; align-items:center; gap:7px;">
+          <i data-lucide="search" width="14" height="14" stroke-width="1.5" style="color:#8A726D; flex:none;"></i>
+          <span style="font-size:12.5px; color:#8A726D; white-space:nowrap;">Поиск услуги</span>
+        </div>
+      </div>
+
+      <div style="background:#FFFFFF; border:1px solid #E8DAD6; border-radius:18px; overflow:hidden;">
+        <div style="display:grid; grid-template-columns:22px minmax(0,1fr) minmax(0,1.3fr) 76px 100px minmax(0,0.9fr) 60px 20px; gap:8px; padding:11px 16px; font-size:10.5px; font-weight:700; text-transform:uppercase; letter-spacing:.02em; color:#8A726D; border-bottom:1px solid #E8DAD6;">
+          <div></div><div>Название</div><div>Описание</div><div>Длит.</div><div style="display:flex; align-items:center; gap:4px;">Цена<i data-lucide="lock" width="10" height="10" stroke-width="2"></i></div><div>Выполняют</div><div>Активна</div><div></div>
+        </div>
+
+        <sc-for list="{{ categories }}" as="cat" hint-placeholder-count="4">
+          <div style="padding:9px 16px; background:#FDF8F6; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:#8A726D; border-bottom:1px solid #E8DAD6;">{{ cat.title }}</div>
+          <sc-for list="{{ cat.items }}" as="s" hint-placeholder-count="3">
+            <div onClick="{{ goToServiceForm }}" style="display:grid; grid-template-columns:22px minmax(0,1fr) minmax(0,1.3fr) 76px 100px minmax(0,0.9fr) 60px 20px; gap:8px; padding:12px 16px; border-bottom:1px solid #F3E9E6; align-items:center; opacity:{{ s.opacity }}; cursor:pointer;">
+              <i data-lucide="grip-vertical" width="14" height="14" stroke-width="1.5" style="color:#D9C3BC; cursor:grab;"></i>
+              <div style="min-width:0;">
+                <div style="font-size:13px; font-weight:600; color:#2A1C1A; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ s.name }}</div>
+                <sc-if value="{{ s.hidden }}"><span style="font-size:10px; font-weight:700; padding:2px 7px; border-radius:999px; background:#F3E9E6; color:#8A726D; white-space:nowrap;">Скрыта</span></sc-if>
+              </div>
+              <div style="font-size:12px; color:#5C4440; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ s.desc }}</div>
+              <div style="font-size:12px; color:#5C4440; font-variant-numeric:tabular-nums; white-space:nowrap;">{{ s.duration }}</div>
+              <div style="font-size:13px; font-weight:700; color:#8A726D; font-variant-numeric:tabular-nums; white-space:nowrap; display:flex; align-items:center; gap:5px;" title="Изменение цен доступно владельцу"><i data-lucide="lock" width="11" height="11" stroke-width="1.5"></i>{{ s.price }}</div>
+              <div style="display:flex; gap:-4px;">
+                <sc-for list="{{ s.masters }}" as="mi" hint-placeholder-count="3"><div onClick="{{ goToMasterFormStop }}" style="width:22px; height:22px; border-radius:999px; background:#F3E9E6; color:#A65451; display:flex; align-items:center; justify-content:center; font-size:9px; font-weight:700; border:1.5px solid #FFFFFF; margin-left:-6px; cursor:pointer;">{{ mi }}</div></sc-for>
+              </div>
+              <div style="width:30px; height:18px; border-radius:999px; background:{{ s.switchBg }}; flex:none;"></div>
+              <i data-lucide="more-horizontal" width="15" height="15" stroke-width="1.5" style="color:#8A726D; cursor:pointer;"></i>
+            </div>
+          </sc-for>
+        </sc-for>
+      </div>
+
+      <div style="margin-top:14px; display:flex; justify-content:flex-end;">
+        <div style="background:#FFFFFF; border:1px solid #E8DAD6; border-radius:14px; box-shadow:0 8px 20px rgba(42,28,26,.1); overflow:hidden; width:220px;">
+          <div onClick="{{ goToServiceForm }}" style="padding:10px 14px; font-size:12.5px; font-weight:600; border-bottom:1px solid #F3E9E6; cursor:pointer;">Редактировать</div>
+          <div style="padding:10px 14px; font-size:12.5px; font-weight:600; border-bottom:1px solid #F3E9E6; cursor:pointer;">Дублировать</div>
+          <div style="padding:10px 14px; font-size:12.5px; font-weight:600; border-bottom:1px solid #F3E9E6; cursor:pointer;">Скрыть</div>
+          <div style="padding:10px 14px; font-size:12.5px; font-weight:600; color:#B9A69F; cursor:not-allowed; display:flex; align-items:center; justify-content:space-between;" title="Доступно владельцу">Удалить<i data-lucide="lock" width="12" height="12" stroke-width="1.5"></i></div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  componentDidMount(){ this.renderIcons(); }
+  renderIcons(){ if(window.lucide) window.lucide.createIcons(); }
+  renderVals(){
+    const goToDashboard = () => { window.location.href = '21. Админ - Дашборд дня.dc.html'; };
+    const goToSchedule = () => { window.location.href = '22. Админ - Сетка расписания.dc.html'; };
+    const goToBookings = () => { window.location.href = '23. Админ - Записи.dc.html'; };
+    const goToClients = () => { window.location.href = '26. Админ - Клиенты.dc.html'; };
+    const goToMasters = () => { window.location.href = '28. Админ - Мастера.dc.html'; };
+    const goToServices = () => { window.location.href = '31. Админ - Услуги.dc.html'; };
+    const goToSettings = () => { window.location.href = '33. Админ - Настройки студии.dc.html'; };
+    const goToRequests = () => { window.location.href = '34. Админ - Запросы мастеров.dc.html'; };
+    const goToServiceForm = () => { window.location.href = '32. Админ - Услуга (форма).dc.html'; };
+    const goToMasterFormStop = (e) => { e.stopPropagation(); window.location.href = '29. Админ - Карточка мастера (форма).dc.html'; };
+    const sidebarItems = [
+      {icon:'layout-dashboard', label:'Дашборд', bg:'transparent', fg:'#C4ADA8', badge:null, onClick:goToDashboard},
+      {icon:'calendar', label:'Расписание', bg:'transparent', fg:'#C4ADA8', badge:null, onClick:goToSchedule},
+      {icon:'list', label:'Записи', bg:'transparent', fg:'#C4ADA8', badge:null, onClick:goToBookings},
+      {icon:'users', label:'Клиенты', bg:'transparent', fg:'#C4ADA8', badge:null, onClick:goToClients},
+      {icon:'user-cog', label:'Мастера', bg:'transparent', fg:'#C4ADA8', badge:null, onClick:goToMasters},
+      {icon:'droplet', label:'Услуги', bg:'rgba(242,194,192,.14)', fg:'#F2C2C0', badge:null, onClick:null},
+      {icon:'settings', label:'Настройки студии', bg:'transparent', fg:'#C4ADA8', badge:null, onClick:goToSettings},
+      {icon:'inbox', label:'Запросы', bg:'transparent', fg:'#C4ADA8', badge:'2', onClick:goToRequests},
+    ];
+    const tabs = ['Все','Активные','Скрытые'].map((label,i)=>({ label, bg: i===0?'#2A1C1A':'transparent', fg: i===0?'#FFFFFF':'#5C4440' }));
+
+    const categories = [
+      { title:'Маникюр', items:[
+        {name:'Маникюр с покрытием', desc:'Обработка, укрепление, гель-лак', duration:'90 мин', price:'1 800 ₽', masters:['ОБ','ДН'], switchBg:'#A65451', opacity:1, hidden:false},
+        {name:'Дизайн ногтей', desc:'Художественная роспись, 1–2 ногтя', duration:'30 мин', price:'800 ₽', masters:['ОБ'], switchBg:'#E8DAD6', opacity:.55, hidden:true},
+        {name:'Снятие покрытия', desc:'Аккуратное снятие предыдущего покрытия', duration:'20 мин', price:'400 ₽', masters:['ОБ','ДН'], switchBg:'#A65451', opacity:1, hidden:false},
+      ]},
+      { title:'Педикюр', items:[
+        {name:'Аппаратный педикюр', desc:'Обработка стоп, удаление загрубевшей кожи', duration:'90 мин', price:'2 400 ₽', masters:['ИВ'], switchBg:'#A65451', opacity:1, hidden:false},
+        {name:'Комбинированный педикюр', desc:'Классика и аппарат, с покрытием', duration:'100 мин', price:'2 700 ₽', masters:['ИВ'], switchBg:'#A65451', opacity:1, hidden:false},
+      ]},
+      { title:'Брови', items:[
+        {name:'Коррекция бровей', desc:'Пинцет и нить, подбор формы', duration:'30 мин', price:'800 ₽', masters:['СТ','ОБ'], switchBg:'#A65451', opacity:1, hidden:false},
+        {name:'Окрашивание бровей', desc:'Хна или краска, стойкий цвет', duration:'40 мин', price:'900 ₽', masters:['СТ'], switchBg:'#A65451', opacity:1, hidden:false},
+      ]},
+      { title:'Ресницы', items:[
+        {name:'Наращивание ресниц', desc:'Классика, натуральный эффект', duration:'120 мин', price:'2 200 ₽', masters:['МЗ'], switchBg:'#A65451', opacity:1, hidden:false},
+        {name:'Ламинирование ресниц', desc:'Изгиб и укладка без наращивания', duration:'60 мин', price:'1 600 ₽', masters:['МЗ','СТ'], switchBg:'#A65451', opacity:1, hidden:false},
+      ]},
+    ];
+    return { sidebarItems, tabs, categories };
+  }
+}
+
+</script>
+</body>
+</html>

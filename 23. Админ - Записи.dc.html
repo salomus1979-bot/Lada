@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta charset="utf-8">
+<title>Лада — Админ: Записи</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+<style>
+  body{margin:0;-webkit-font-smoothing:antialiased;background:#FDF8F6;}
+  * { box-sizing: border-box; }
+  ::selection{ background:#F2C2C0; color:#2A1C1A; }
+  a{ color:#A65451; text-decoration:none; }
+  a:hover{ color:#8A423F; }
+  @media (prefers-reduced-motion: reduce){ * { animation:none !important; transition:none !important; } }
+</style>
+</helmet>
+
+<div style="font-family:'Manrope',sans-serif; background:#FDF8F6; color:#2A1C1A; min-height:100vh; display:flex;">
+
+  <aside style="width:240px; flex:none; background:#2A1C1A; display:flex; flex-direction:column; padding:24px 16px; position:sticky; top:0; height:100vh;">
+    <div style="padding:0 8px; margin-bottom:6px;"><span onClick="{{ goToDashboard }}" style="font-family:'Oswald',sans-serif; font-weight:800; font-size:20px; color:#F2C2C0; cursor:pointer;">ЛАДА</span></div>
+    <div style="padding:0 8px; margin-bottom:24px;"><span style="font-size:10.5px; font-weight:700; padding:3px 9px; border-radius:999px; background:rgba(242,194,192,.16); color:#F2C2C0;">Администратор</span></div>
+    <nav style="display:flex; flex-direction:column; gap:2px; flex:1;">
+      <sc-for list="{{ sidebarItems }}" as="si" hint-placeholder-count="8">
+        <div onClick="{{ si.onClick }}" style="display:flex; align-items:center; justify-content:space-between; gap:10px; padding:10px 12px; border-radius:10px; background:{{ si.bg }}; color:{{ si.fg }}; font-size:13.5px; font-weight:600; cursor:pointer;">
+          <div style="display:flex; align-items:center; gap:10px;"><i data-lucide="{{ si.icon }}" width="17" height="17" stroke-width="1.5"></i>{{ si.label }}</div>
+          <sc-if value="{{ si.badge }}"><span style="width:18px; height:18px; border-radius:999px; background:#F2C2C0; color:#2A1C1A; font-size:10px; font-weight:800; display:flex; align-items:center; justify-content:center;">{{ si.badge }}</span></sc-if>
+        </div>
+      </sc-for>
+    </nav>
+    <div style="display:flex; align-items:center; gap:10px; padding:10px 8px; border-top:1px solid #3D2B28; margin-top:8px; padding-top:16px;">
+      <div style="width:32px; height:32px; border-radius:999px; background:#F2C2C0; color:#2A1C1A; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:12px; flex:none;">ЕК</div>
+      <div style="flex:1; min-width:0;">
+        <div style="font-size:13px; font-weight:600; color:#F5EBE8; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Елена Крылова</div>
+        <a href="Лада - Лендинг.dc.html" style="font-size:11.5px; color:#9A807A;">Выйти</a>
+      </div>
+    </div>
+  </aside>
+
+  <div style="flex:1; min-width:0; display:flex; flex-direction:column;">
+
+    <main style="padding:32px; flex:1; max-width:1240px;">
+      <div style="display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap; margin-bottom:22px;">
+        <h1 style="font-family:'Oswald',sans-serif; font-weight:700; text-transform:uppercase; font-size:28px; margin:0;">Записи</h1>
+        <div style="display:flex; gap:10px; align-items:center;">
+          <div style="position:relative;">
+            <button disabled="{{ true }}" style="background:transparent; color:#B9A69F; border:1.5px solid #E8DAD6; border-radius:14px; padding:9px 16px; font-size:12.5px; font-weight:700; font-family:'Manrope',sans-serif; opacity:.7; cursor:not-allowed;">Экспорт</button>
+          </div>
+          <button onClick="{{ goToNewBooking }}" style="background:#2A1C1A; color:#F2C2C0; border:none; border-radius:14px; padding:9px 18px; font-size:12.5px; font-weight:700; font-family:'Manrope',sans-serif; display:flex; align-items:center; gap:6px; cursor:pointer;"><i data-lucide="plus" width="14" height="14" stroke-width="2"></i>Новая запись</button>
+        </div>
+      </div>
+
+      <div style="background:#FFFFFF; border:1px solid #E8DAD6; border-radius:18px; padding:16px 18px; margin-bottom:12px; display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+        <sc-for list="{{ filterControls }}" as="fc" hint-placeholder-count="4">
+          <div style="position:relative;">
+            <select style="background:#FDF8F6; border:1px solid #E8DAD6; border-radius:10px; padding:8px 30px 8px 12px; font-size:12.5px; color:#2A1C1A; font-family:'Manrope',sans-serif; appearance:none;"><option>{{ fc.label }}</option></select>
+            <i data-lucide="chevron-down" width="13" height="13" stroke-width="1.5" style="position:absolute; right:10px; top:50%; transform:translateY(-50%); color:#8A726D; pointer-events:none;"></i>
+          </div>
+        </sc-for>
+        <div style="flex:1; min-width:180px; background:#FDF8F6; border:1px solid #E8DAD6; border-radius:10px; padding:8px 12px; display:flex; align-items:center; gap:7px;">
+          <i data-lucide="search" width="14" height="14" stroke-width="1.5" style="color:#8A726D; flex:none;"></i>
+          <span style="font-size:12.5px; color:#8A726D; white-space:nowrap;">Клиент или телефон</span>
+        </div>
+        <button style="background:transparent; color:#8A726D; border:none; font-size:12px; font-weight:700; font-family:'Manrope',sans-serif; display:flex; align-items:center; gap:5px;"><i data-lucide="x" width="13" height="13" stroke-width="1.5"></i>Сбросить</button>
+      </div>
+
+      <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:14px;">
+        <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+          <sc-for list="{{ activeFilters }}" as="af" hint-placeholder-count="3">
+            <span style="font-size:12px; font-weight:600; padding:5px 10px; border-radius:999px; background:#F3E9E6; color:#5C4440; display:flex; align-items:center; gap:6px;">{{ af }}<i data-lucide="x" width="12" height="12" stroke-width="2"></i></span>
+          </sc-for>
+        </div>
+        <span style="font-size:12.5px; color:#8A726D; font-variant-numeric:tabular-nums;">Найдено: 34</span>
+      </div>
+
+      <div style="background:#2A1C1A; border-radius:14px; padding:12px 18px; display:flex; align-items:center; gap:16px; margin-bottom:12px;">
+        <span style="font-size:13px; font-weight:700; color:#F5EBE8; white-space:nowrap;">Выбрано 3</span>
+        <button style="background:#E58078; color:#2A1C1A; border:none; border-radius:10px; padding:7px 14px; font-size:12px; font-weight:700; font-family:'Manrope',sans-serif; white-space:nowrap; flex:none;">Отменить выбранные</button>
+        <button style="background:transparent; color:#C4ADA8; border:1.5px solid #4A3733; border-radius:10px; padding:7px 14px; font-size:12px; font-weight:700; font-family:'Manrope',sans-serif; white-space:nowrap; flex:none;">Снять выделение</button>
+      </div>
+
+      <div style="background:#FFFFFF; border:1px solid #E8DAD6; border-radius:18px; overflow:hidden;">
+        <div>
+          <div style="display:grid; grid-template-columns:26px 92px minmax(0,1.2fr) minmax(0,0.9fr) minmax(0,1.1fr) 58px 78px 100px 20px; gap:6px; padding:11px 14px; font-size:10.5px; font-weight:700; text-transform:uppercase; letter-spacing:.02em; color:#8A726D; border-bottom:1px solid #E8DAD6;">
+            <div></div>
+            <div style="display:flex; align-items:center; gap:4px;">Дата и время<i data-lucide="chevron-down" width="11" height="11"></i></div>
+            <div>Клиент</div><div>Мастер</div><div>Услуги</div><div>Длит.</div><div style="text-align:right;">Сумма</div><div>Статус</div><div></div>
+          </div>
+          <sc-for list="{{ rows }}" as="r" hint-placeholder-count="9">
+            <div onClick="{{ goToBookingDetails }}" style="display:grid; grid-template-columns:26px 92px minmax(0,1.2fr) minmax(0,0.9fr) minmax(0,1.1fr) 58px 78px 100px 20px; gap:6px; padding:12px 14px; border-bottom:1px solid #F3E9E6; align-items:center; background:{{ r.rowBg }}; opacity:{{ r.opacity }}; cursor:pointer;">
+              <div style="{{ r.checkShape }}"></div>
+              <div style="font-size:12px; font-weight:700; color:#2A1C1A; font-variant-numeric:tabular-nums;">{{ r.datetime }}</div>
+              <div style="min-width:0;">
+                <div onClick="{{ goToClientCard }}" style="font-size:12.5px; font-weight:600; color:#2A1C1A; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; cursor:pointer;">{{ r.client }}</div>
+                <div style="font-size:11px; color:#8A726D; font-variant-numeric:tabular-nums; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ r.phone }}</div>
+              </div>
+              <div style="font-size:12px; color:#5C4440; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ r.master }}</div>
+              <div style="font-size:12px; color:#5C4440; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ r.service }}</div>
+              <div style="font-size:12px; color:#5C4440; font-variant-numeric:tabular-nums; white-space:nowrap;">{{ r.duration }}</div>
+              <div style="font-size:12.5px; font-weight:700; color:#2A1C1A; font-variant-numeric:tabular-nums; text-align:right; white-space:nowrap;">{{ r.price }}</div>
+              <div style="min-width:0;"><span style="font-size:10.5px; font-weight:700; padding:3px 8px; border-radius:999px; background:{{ r.badgeBg }}; color:{{ r.badgeColor }}; white-space:nowrap; display:inline-block; max-width:100%; overflow:hidden; text-overflow:ellipsis;">{{ r.status }}</span></div>
+              <i data-lucide="more-horizontal" width="15" height="15" stroke-width="1.5" onClick="{{ goToBookingDetailsStop }}" style="color:#8A726D; cursor:pointer;"></i>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-top:18px; flex-wrap:wrap; gap:12px;">
+        <div style="position:relative;">
+          <select style="background:#FFFFFF; border:1px solid #E8DAD6; border-radius:10px; padding:8px 30px 8px 12px; font-size:12.5px; color:#2A1C1A; font-family:'Manrope',sans-serif; appearance:none;"><option>Показывать по 25</option></select>
+          <i data-lucide="chevron-down" width="13" height="13" stroke-width="1.5" style="position:absolute; right:10px; top:50%; transform:translateY(-50%); color:#8A726D; pointer-events:none;"></i>
+        </div>
+        <div style="display:flex; gap:4px;">
+          <sc-for list="{{ pages }}" as="p" hint-placeholder-count="4"><div style="width:30px; height:30px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:12.5px; font-weight:700; background:{{ p.bg }}; color:{{ p.fg }};">{{ p.n }}</div></sc-for>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  componentDidMount(){ this.renderIcons(); }
+  renderIcons(){ if(window.lucide) window.lucide.createIcons(); }
+  renderVals(){
+    const goToDashboard = () => { window.location.href = '21. Админ - Дашборд дня.dc.html'; };
+    const goToSchedule = () => { window.location.href = '22. Админ - Сетка расписания.dc.html'; };
+    const goToBookings = () => { window.location.href = '23. Админ - Записи.dc.html'; };
+    const goToClients = () => { window.location.href = '26. Админ - Клиенты.dc.html'; };
+    const goToMasters = () => { window.location.href = '28. Админ - Мастера.dc.html'; };
+    const goToServices = () => { window.location.href = '31. Админ - Услуги.dc.html'; };
+    const goToSettings = () => { window.location.href = '33. Админ - Настройки студии.dc.html'; };
+    const goToRequests = () => { window.location.href = '34. Админ - Запросы мастеров.dc.html'; };
+    const goToNewBooking = () => { window.location.href = '24. Админ - Новая запись за клиента.dc.html'; };
+    const goToBookingDetails = () => { window.location.href = '25. Админ - Детали записи.dc.html'; };
+    const goToBookingDetailsStop = (e) => { e.stopPropagation(); window.location.href = '25. Админ - Детали записи.dc.html'; };
+    const goToClientCard = (e) => { e.stopPropagation(); window.location.href = '27. Админ - Карточка клиента.dc.html'; };
+    const sidebarItems = [
+      {icon:'layout-dashboard', label:'Дашборд', bg:'transparent', fg:'#C4ADA8', badge:null, onClick:goToDashboard},
+      {icon:'calendar', label:'Расписание', bg:'transparent', fg:'#C4ADA8', badge:null, onClick:goToSchedule},
+      {icon:'list', label:'Записи', bg:'rgba(242,194,192,.14)', fg:'#F2C2C0', badge:null, onClick:null},
+      {icon:'users', label:'Клиенты', bg:'transparent', fg:'#C4ADA8', badge:null, onClick:goToClients},
+      {icon:'user-cog', label:'Мастера', bg:'transparent', fg:'#C4ADA8', badge:null, onClick:goToMasters},
+      {icon:'droplet', label:'Услуги', bg:'transparent', fg:'#C4ADA8', badge:null, onClick:goToServices},
+      {icon:'settings', label:'Настройки студии', bg:'transparent', fg:'#C4ADA8', badge:null, onClick:goToSettings},
+      {icon:'inbox', label:'Запросы', bg:'transparent', fg:'#C4ADA8', badge:'2', onClick:goToRequests},
+    ];
+    const filterControls = [ {label:'Период: октябрь'}, {label:'Мастер: все'}, {label:'Услуга: все'}, {label:'Статус: все'} ];
+    const activeFilters = ['Период: 1–31 окт', 'Статус: активные', 'Мастер: Ольга Белова'];
+
+    const checkOn = 'width:17px;height:17px;border-radius:5px;background:#A65451;';
+    const checkOff = 'width:17px;height:17px;border-radius:5px;border:1.5px solid #E8DAD6;';
+
+    const rowsRaw = [
+      {datetime:'14.10, 14:00', client:'Анна Соколова', phone:'+7 999 111-22-33', master:'Ольга Белова', service:'Маникюр, брови', duration:'120 мин', price:'2 600 ₽', status:'Подтверждена', badgeBg:'#EEF6EA', badgeColor:'#4F7A3D', checked:true},
+      {datetime:'14.10, 15:00', client:'Ирина Волкова', phone:'+7 999 222-33-44', master:'Ирина Волкова', service:'Педикюр', duration:'90 мин', price:'2 400 ₽', status:'Ожидает', badgeBg:'#FBF2E3', badgeColor:'#8A5A14', checked:true},
+      {datetime:'14.10, 11:00', client:'Дарья Миронова', phone:'+7 999 333-44-55', master:'Ольга Белова', service:'Маникюр с покрытием', duration:'90 мин', price:'1 800 ₽', status:'Завершена', badgeBg:'#F3E9E6', badgeColor:'#5C4440', checked:true},
+      {datetime:'13.10, 13:00', client:'Полина Рябова', phone:'+7 999 444-55-66', master:'Ирина Волкова', service:'Маникюр с покрытием', duration:'90 мин', price:'1 800 ₽', status:'Клиент не пришёл', badgeBg:'#FBEAE8', badgeColor:'#B23A32', checked:false, muted:true},
+      {datetime:'12.10, 10:00', client:'Ксения Орлова', phone:'+7 999 555-66-77', master:'Мария Зайцева', service:'Наращивание ресниц', duration:'120 мин', price:'2 200 ₽', status:'Завершена', badgeBg:'#F3E9E6', badgeColor:'#5C4440', checked:false},
+      {datetime:'20.08, 16:30', client:'Елена Фомина', phone:'+7 999 666-77-88', master:'Ольга Белова', service:'Коррекция бровей', duration:'30 мин', price:'800 ₽', status:'Отменена студией', badgeBg:'#FBEAE8', badgeColor:'#B23A32', checked:false, muted:true},
+      {datetime:'15.10, 9:00', client:'Светлана Орлова', phone:'+7 999 777-88-99', master:'Мария Зайцева', service:'Ламинирование ресниц', duration:'60 мин', price:'1 600 ₽', status:'Подтверждена', badgeBg:'#EEF6EA', badgeColor:'#4F7A3D', checked:false},
+      {datetime:'16.10, 12:00', client:'Мария Седова', phone:'+7 999 888-99-00', master:'Ольга Белова', service:'Маникюр, дизайн', duration:'120 мин', price:'2 600 ₽', status:'Подтверждена', badgeBg:'#EEF6EA', badgeColor:'#4F7A3D', checked:false},
+      {datetime:'3.09, 10:00', client:'Виктория Белых', phone:'+7 999 999-00-11', master:'Ирина Волкова', service:'Педикюр аппаратный', duration:'90 мин', price:'2 400 ₽', status:'Отменена клиентом', badgeBg:'#F3E9E6', badgeColor:'#8A726D', checked:false, muted:true},
+    ];
+    const rows = rowsRaw.map(r=>({
+      ...r,
+      rowBg: r.checked ? '#FDF3F2' : '#FFFFFF',
+      opacity: r.muted ? .6 : 1,
+      checkShape: r.checked ? checkOn : checkOff,
+    }));
+
+    const pages = [1,2,3,4].map(n=>({n, bg: n===1?'#2A1C1A':'transparent', fg: n===1?'#FFFFFF':'#5C4440'}));
+    return { sidebarItems, filterControls, activeFilters, rows, pages };
+  }
+}
+
+</script>
+</body>
+</html>

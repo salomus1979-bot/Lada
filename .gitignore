@@ -147,3 +147,81 @@ vite.config.ts.timestamp-*
 
 # Turbo Repo
 .turbo
+
+# ─────────────────────────────────────────────
+# Проект «Лада» — дополнения
+# ─────────────────────────────────────────────
+
+# Служебные файлы ОС (Windows / macOS)
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+desktop.ini
+$RECYCLE.BIN/
+
+# Служебные папки редакторов и IDE
+.idea/
+.vscode/
+!.vscode/extensions.json
+*.swp
+*.swo
+*~
+*.sublime-workspace
+
+# Служебные файлы Claude Design / локальных агентов
+.thumbnail
+.claude/settings.local.json
+
+# Секреты: ключи, сертификаты, токены
+# (.env и .env.* уже перечислены выше)
+*.pem
+*.key
+*.ppk
+*.p12
+*.pfx
+*.cer
+*.crt
+*.jks
+*.keystore
+secrets.json
+secrets.yml
+secrets.yaml
+credentials.json
+service-account*.json
+.netrc
+.htpasswd
+id_rsa
+id_rsa.pub
+id_ed25519
+id_ed25519.pub
+
+# Локальная база данных и дампы
+*.sqlite
+*.sqlite3
+*.db
+*.db-journal
+*.db-shm
+*.db-wal
+*.mdb
+*.sdf
+/data/
+/db/data/
+/storage/
+dump.sql
+*.dump
+*.bak
+backup/
+backups/
+
+# Локальные временные файлы и архивы распаковки
+tmp/
+temp/
+.tmp/
+*.zip
+*.rar
+*.7z

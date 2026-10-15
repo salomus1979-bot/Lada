@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta charset="utf-8">
+<title>Лада — Мои записи</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+<style>
+  body{margin:0;-webkit-font-smoothing:antialiased;background:#241A18;}
+  * { box-sizing: border-box; }
+  ::selection{ background:#F2C2C0; color:#2A1C1A; }
+  a{ color:#F2C2C0; text-decoration:none; }
+  a:hover{ color:#E8AEAC; }
+  @media (prefers-reduced-motion: reduce){ * { animation:none !important; transition:none !important; } }
+</style>
+</helmet>
+
+<div style="font-family:'Manrope',sans-serif; background:#241A18; color:#F5EBE8; min-height:100vh; display:flex;">
+
+  <aside style="width:232px; flex:none; background:#2B201D; border-right:1px solid #4A3733; display:flex; flex-direction:column; padding:24px 16px; position:sticky; top:0; height:100vh;">
+    <div onClick="{{ goToLanding }}" style="font-family:'Oswald',sans-serif; font-weight:800; font-size:20px; color:#F2C2C0; padding:0 8px; margin-bottom:28px;">ЛАДА</div>
+    <nav style="display:flex; flex-direction:column; gap:2px; flex:1;">
+      <sc-for list="{{ sidebarItems }}" as="si" hint-placeholder-count="5">
+        <div onClick="{{ si.onClick }}" style="display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:10px; background:{{ si.bg }}; color:{{ si.fg }}; font-size:13.5px; font-weight:600;">
+          <i data-lucide="{{ si.icon }}" width="17" height="17" stroke-width="1.5"></i>{{ si.label }}
+        </div>
+      </sc-for>
+    </nav>
+    <button onClick="{{ goToBooking }}" style="background:#F2C2C0; color:#2A1C1A; border:none; border-radius:16px; padding:12px; font-size:13.5px; font-weight:700; font-family:'Manrope',sans-serif; display:flex; align-items:center; justify-content:center; gap:7px;"><i data-lucide="plus" width="16" height="16" stroke-width="2"></i>Новая запись</button>
+  </aside>
+
+  <div style="flex:1; min-width:0; display:flex; flex-direction:column;">
+
+    <header style="position:sticky; top:0; z-index:30; background:rgba(36,26,24,0.95); backdrop-filter:blur(8px); border-bottom:1px solid #4A3733;">
+      <div style="padding:16px 40px; display:flex; align-items:center; justify-content:space-between; gap:24px;">
+        <nav style="display:flex; gap:24px;">
+          <sc-for list="{{ topNav }}" as="tn" hint-placeholder-count="4"><a href="#" style="font-size:13px; font-weight:600; color:#C4ADA8;">{{ tn }}</a></sc-for>
+        </nav>
+        <div style="display:flex; align-items:center; gap:18px;">
+          <div onClick="{{ goToNotifications }}" style="position:relative;">
+            <i data-lucide="bell" width="19" height="19" stroke-width="1.5" style="color:#C4ADA8;"></i>
+            <div style="position:absolute; top:-5px; right:-6px; width:16px; height:16px; border-radius:999px; background:#F2C2C0; color:#2A1C1A; font-size:9.5px; font-weight:800; display:flex; align-items:center; justify-content:center;">2</div>
+          </div>
+          <div onClick="{{ goToProfile }}" style="display:flex; align-items:center; gap:9px;">
+            <div style="width:32px; height:32px; border-radius:999px; background:#3D2B28; color:#F2C2C0; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:12px;">АС</div>
+            <span style="font-size:13px; font-weight:600; color:#F5EBE8;">Анна Соколова</span>
+            <i data-lucide="chevron-down" width="14" height="14" stroke-width="1.5" style="color:#9A807A;"></i>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main style="padding:40px; flex:1; max-width:920px;">
+      <h1 style="font-family:'Oswald',sans-serif; font-weight:700; text-transform:uppercase; font-size:30px; margin:0 0 20px;">Мои записи</h1>
+
+      <div style="display:flex; gap:4px; background:#2B201D; border-radius:999px; padding:4px; width:fit-content; margin-bottom:28px;">
+        <sc-for list="{{ tabs }}" as="tb" hint-placeholder-count="3">
+          <div onClick="{{ tb.onClick }}" style="padding:9px 18px; border-radius:999px; background:{{ tb.bg }}; color:{{ tb.fg }}; font-size:13px; font-weight:700;">{{ tb.label }}</div>
+        </sc-for>
+      </div>
+
+      <div style="display:flex; flex-direction:column; gap:16px;">
+
+        <div onClick="{{ goToDetails }}" style="background:#2B201D; border:1.5px solid #F2C2C0; border-radius:24px; padding:24px; box-shadow:0 0 0 3px rgba(242,194,192,.12); cursor:pointer;">
+          <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; flex-wrap:wrap; gap:8px;">
+            <span style="font-size:11px; font-weight:700; padding:4px 10px; border-radius:999px; background:#F2C2C0; color:#2A1C1A;">Ближайшая</span>
+            <span style="font-size:12.5px; color:#9A807A;">через 9 дней</span>
+          </div>
+          <div style="font-size:18px; font-weight:700; color:#F5EBE8; margin-bottom:16px; font-variant-numeric:tabular-nums;">Пятница, 23 октября · 14:00–16:00</div>
+          <div style="display:flex; align-items:center; gap:10px; margin-bottom:14px;">
+            <div style="width:32px; height:32px; border-radius:999px; background:#3D2B28; color:#F2C2C0; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:12px; flex:none;">ОБ</div>
+            <span style="font-size:13.5px; font-weight:600; color:#F5EBE8;">Ольга Белова</span>
+          </div>
+          <div style="font-size:13px; color:#C4ADA8; margin-bottom:16px; line-height:1.5;">Маникюр с покрытием, Коррекция бровей</div>
+          <div style="display:flex; align-items:center; justify-content:space-between; padding-top:14px; border-top:1px solid #4A3733;">
+            <span style="font-size:14px; font-weight:700; color:#F5EBE8; font-variant-numeric:tabular-nums;">2 600 ₽ · 2 ч 00 мин</span>
+            <div style="display:flex; align-items:center; gap:10px;">
+              <a href="#" onClick="{{ goToDetails }}" style="font-size:12.5px; font-weight:700;">Подробнее</a>
+              <button onClick="{{ transferClick }}" style="background:transparent; color:#F5EBE8; border:1.5px solid #4A3733; border-radius:16px; padding:8px 16px; font-size:12.5px; font-weight:700; font-family:'Manrope',sans-serif;">Перенести</button>
+              <button onClick="{{ cancelClick }}" style="background:transparent; color:#E58078; border:1.5px solid #E58078; border-radius:16px; padding:8px 16px; font-size:12.5px; font-weight:700; font-family:'Manrope',sans-serif;">Отменить</button>
+            </div>
+          </div>
+        </div>
+
+        <div onClick="{{ goToDetails }}" style="background:#2B201D; border:1px solid #4A3733; border-radius:24px; padding:22px; cursor:pointer;">
+          <div style="font-size:16px; font-weight:700; color:#F5EBE8; margin-bottom:14px; font-variant-numeric:tabular-nums;">Вторник, 10 ноября · 11:00–12:30</div>
+          <div style="display:flex; align-items:center; gap:10px; margin-bottom:12px;">
+            <div style="width:30px; height:30px; border-radius:999px; background:#3D2B28; color:#F2C2C0; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:11.5px; flex:none;">ИВ</div>
+            <span style="font-size:13.5px; font-weight:600; color:#F5EBE8;">Ирина Волкова</span>
+          </div>
+          <div style="font-size:13px; color:#C4ADA8; margin-bottom:14px;">Педикюр аппаратный</div>
+          <div style="display:flex; align-items:center; justify-content:space-between; padding-top:14px; border-top:1px solid #4A3733;">
+            <span style="font-size:14px; font-weight:700; color:#F5EBE8; font-variant-numeric:tabular-nums;">2 400 ₽ · 90 мин</span>
+            <div style="display:flex; align-items:center; gap:10px;">
+              <a href="#" onClick="{{ goToDetails }}" style="font-size:12.5px; font-weight:700;">Подробнее</a>
+              <button onClick="{{ transferClick }}" style="background:transparent; color:#F5EBE8; border:1.5px solid #4A3733; border-radius:16px; padding:8px 16px; font-size:12.5px; font-weight:700; font-family:'Manrope',sans-serif;">Перенести</button>
+              <button onClick="{{ cancelClick }}" style="background:transparent; color:#E58078; border:1.5px solid #E58078; border-radius:16px; padding:8px 16px; font-size:12.5px; font-weight:700; font-family:'Manrope',sans-serif;">Отменить</button>
+            </div>
+          </div>
+        </div>
+
+        <div onClick="{{ goToDetails }}" style="background:#2B201D; border:1px solid #4A3733; border-radius:24px; padding:22px; cursor:pointer;">
+          <div style="font-size:16px; font-weight:700; color:#F5EBE8; margin-bottom:14px; font-variant-numeric:tabular-nums;">Четверг, 15 октября · 9:00–10:00</div>
+          <div style="display:flex; align-items:center; gap:10px; margin-bottom:12px;">
+            <div style="width:30px; height:30px; border-radius:999px; background:#3D2B28; color:#F2C2C0; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:11.5px; flex:none;">МЗ</div>
+            <span style="font-size:13.5px; font-weight:600; color:#F5EBE8;">Мария Зайцева</span>
+          </div>
+          <div style="font-size:13px; color:#C4ADA8; margin-bottom:14px;">Ламинирование ресниц</div>
+          <div style="display:flex; align-items:center; justify-content:space-between; padding-top:14px; border-top:1px solid #4A3733;">
+            <span style="font-size:14px; font-weight:700; color:#F5EBE8; font-variant-numeric:tabular-nums;">1 600 ₽ · 60 мин</span>
+            <div style="display:flex; align-items:center; gap:10px;">
+              <a href="#" onClick="{{ goToDetails }}" style="font-size:12.5px; font-weight:700;">Подробнее</a>
+              <button onClick="{{ transferClick }}" style="background:transparent; color:#F5EBE8; border:1.5px solid #4A3733; border-radius:16px; padding:8px 16px; font-size:12.5px; font-weight:700; font-family:'Manrope',sans-serif;">Перенести</button>
+              <div style="position:relative;">
+                <button disabled="{{ true }}" style="background:transparent; color:#6B5852; border:1.5px solid #4A3733; border-radius:16px; padding:8px 16px; font-size:12.5px; font-weight:700; font-family:'Manrope',sans-serif; opacity:.6; cursor:not-allowed;">Отменить</button>
+                <div style="position:absolute; bottom:calc(100% + 8px); right:0; width:230px; background:#3D2B28; border:1px solid #4A3733; border-radius:12px; padding:10px 12px; font-size:11.5px; color:#C4ADA8; line-height:1.4; box-shadow:0 6px 16px rgba(36,26,24,.3);">Отмена возможна не позднее чем за 4 часа. Позвоните: +7 (999) 123-45-67</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </main>
+  </div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  componentDidMount(){ this.renderIcons(); }
+  renderIcons(){ if(window.lucide) window.lucide.createIcons(); }
+  renderVals(){
+    const goToLanding = () => { window.location.href = 'Лада - Лендинг.dc.html'; };
+    const goToBooking = () => { window.location.href = '1. Запись - Шаг 1. Услуги.dc.html'; };
+    const goToHistory = () => { window.location.href = '11. Кабинет - История записей.dc.html'; };
+    const goToNotifications = () => { window.location.href = '17. Кабинет - Уведомления.dc.html'; };
+    const goToProfile = () => { window.location.href = '16. Кабинет - Профиль.dc.html'; };
+    const goToDetails = () => { window.location.href = '9. Кабинет - Детали записи и отмена.dc.html'; };
+    const goToReschedule = () => { window.location.href = '10. Кабинет - Перенос записи.dc.html'; };
+    const stop = (fn) => (e) => { if(e && e.stopPropagation) e.stopPropagation(); fn(); };
+    const transferClick = stop(goToReschedule);
+    const cancelClick = stop(goToDetails);
+    const sidebarItems = [
+      {icon:'calendar', label:'Мои записи', bg:'rgba(242,194,192,.14)', fg:'#F2C2C0', onClick:null},
+      {icon:'history', label:'История', bg:'transparent', fg:'#C4ADA8', onClick:goToHistory},
+      {icon:'bell', label:'Уведомления', bg:'transparent', fg:'#C4ADA8', onClick:goToNotifications},
+      {icon:'user', label:'Профиль', bg:'transparent', fg:'#C4ADA8', onClick:goToProfile},
+      {icon:'log-out', label:'Выйти', bg:'transparent', fg:'#C4ADA8', onClick:goToLanding},
+    ];
+    const topNav = ['Услуги','Мастера','Как записаться','Контакты'];
+    const tabs = ['Предстоящие (2)','Прошедшие','Отменённые'].map((label,i)=>({ label, bg: i===0?'#F2C2C0':'transparent', fg: i===0?'#2A1C1A':'#9A807A', onClick: i===0?null:goToHistory }));
+    return { sidebarItems, topNav, tabs, goToLanding, goToBooking, goToNotifications, goToProfile, goToDetails, goToReschedule, transferClick, cancelClick };
+  }
+}
+
+</script>
+</body>
+</html>

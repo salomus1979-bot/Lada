@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta charset="utf-8">
+<title>Лада — Админ: Запросы мастеров</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+<style>
+  body{margin:0;-webkit-font-smoothing:antialiased;background:#FDF8F6;}
+  * { box-sizing: border-box; }
+  ::selection{ background:#F2C2C0; color:#2A1C1A; }
+  a{ color:#A65451; text-decoration:none; }
+  a:hover{ color:#8A423F; }
+  @media (prefers-reduced-motion: reduce){ * { animation:none !important; transition:none !important; } }
+</style>
+</helmet>
+
+<div style="font-family:'Manrope',sans-serif; background:#FDF8F6; color:#2A1C1A; min-height:100vh; display:flex;">
+
+  <aside style="width:240px; flex:none; background:#2A1C1A; display:flex; flex-direction:column; padding:24px 16px; position:sticky; top:0; height:100vh;">
+    <div style="padding:0 8px; margin-bottom:6px;"><span onClick="{{ goToDashboard }}" style="font-family:'Oswald',sans-serif; font-weight:800; font-size:20px; color:#F2C2C0; cursor:pointer;">ЛАДА</span></div>
+    <div style="padding:0 8px; margin-bottom:24px;"><span style="font-size:10.5px; font-weight:700; padding:3px 9px; border-radius:999px; background:rgba(242,194,192,.16); color:#F2C2C0;">Администратор</span></div>
+    <nav style="display:flex; flex-direction:column; gap:2px; flex:1;">
+      <sc-for list="{{ sidebarItems }}" as="si" hint-placeholder-count="8">
+        <div onClick="{{ si.onClick }}" style="display:flex; align-items:center; justify-content:space-between; gap:10px; padding:10px 12px; border-radius:10px; background:{{ si.bg }}; color:{{ si.fg }}; font-size:13.5px; font-weight:600; cursor:pointer;">
+          <div style="display:flex; align-items:center; gap:10px;"><i data-lucide="{{ si.icon }}" width="17" height="17" stroke-width="1.5"></i>{{ si.label }}</div>
+          <sc-if value="{{ si.badge }}"><span style="width:18px; height:18px; border-radius:999px; background:#F2C2C0; color:#2A1C1A; font-size:10px; font-weight:800; display:flex; align-items:center; justify-content:center;">{{ si.badge }}</span></sc-if>
+        </div>
+      </sc-for>
+    </nav>
+    <div style="display:flex; align-items:center; gap:10px; padding:10px 8px; border-top:1px solid #3D2B28; margin-top:8px; padding-top:16px;">
+      <div style="width:32px; height:32px; border-radius:999px; background:#F2C2C0; color:#2A1C1A; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:12px; flex:none;">ЕК</div>
+      <div style="flex:1; min-width:0;">
+        <div style="font-size:13px; font-weight:600; color:#F5EBE8; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Елена Крылова</div>
+        <a href="Лада - Лендинг.dc.html" style="font-size:11.5px; color:#9A807A;">Выйти</a>
+      </div>
+    </div>
+  </aside>
+
+  <div style="flex:1; min-width:0;">
+    <main style="padding:32px; max-width:760px;">
+
+      <h1 style="font-family:'Oswald',sans-serif; font-weight:700; text-transform:uppercase; font-size:28px; margin:0 0 8px;">Запросы от мастеров</h1>
+      <p style="font-size:13px; color:#8A726D; margin:0 0 20px; line-height:1.5;">Мастер не может отменить запись клиента самостоятельно — решение принимает администратор.</p>
+
+      <div style="display:flex; gap:4px; background:#FFFFFF; border:1px solid #E8DAD6; border-radius:999px; padding:4px; width:fit-content; margin-bottom:24px;">
+        <sc-for list="{{ tabs }}" as="tb" hint-placeholder-count="2"><div style="padding:8px 16px; border-radius:999px; background:{{ tb.bg }}; color:{{ tb.fg }}; font-size:12.5px; font-weight:700; white-space:nowrap;">{{ tb.label }}</div></sc-for>
+      </div>
+
+      <div style="display:flex; flex-direction:column; gap:16px;">
+
+        <div style="background:#FFFFFF; border:1px solid #E8DAD6; border-left:4px solid #A65451; border-radius:20px; padding:22px;">
+          <div style="display:flex; align-items:center; gap:12px; margin-bottom:16px; flex-wrap:wrap;">
+            <div style="width:36px; height:36px; border-radius:999px; background:#F3E9E6; color:#A65451; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:12px; flex:none;">ИВ</div>
+            <div style="flex:1; min-width:140px;">
+              <div style="font-size:14px; font-weight:700;">Ирина Волкова</div>
+              <div style="font-size:12px; color:#8A726D;">Запрос на отмену</div>
+            </div>
+            <span style="font-size:11.5px; color:#8A726D; font-variant-numeric:tabular-nums; white-space:nowrap;">14 окт, 14:20</span>
+          </div>
+          <div onClick="{{ goToBookingDetails }}" style="background:#FDF8F6; border:1px solid #E8DAD6; border-radius:14px; padding:14px 16px; margin-bottom:14px; cursor:pointer;">
+            <div style="font-size:13.5px; font-weight:700; color:#2A1C1A; margin-bottom:3px; font-variant-numeric:tabular-nums;">Четверг, 15 октября, 13:00–14:30</div>
+            <div style="font-size:12.5px; color:#5C4440;">Полина Рябова · Маникюр с покрытием · <span style="font-weight:700; color:#2A1C1A; font-variant-numeric:tabular-nums;">1 800 ₽</span></div>
+          </div>
+          <div style="border-left:3px solid #D9C3BC; padding-left:12px; margin-bottom:14px;">
+            <div style="font-size:13px; color:#5C4440; font-style:italic; line-height:1.4;">«Заболела, не смогу выйти»</div>
+          </div>
+          <div style="display:flex; gap:8px; align-items:flex-start; background:#FBF2E3; border:1px solid #E6C27D; border-radius:12px; padding:11px 14px; margin-bottom:16px;">
+            <i data-lucide="triangle-alert" width="14" height="14" stroke-width="1.5" style="color:#8A5A14; flex:none; margin-top:1px;"></i>
+            <span style="font-size:12px; color:#6B4A10; line-height:1.4;">Клиент получит уведомление об отмене студией.</span>
+          </div>
+          <div style="display:flex; gap:8px; flex-wrap:wrap;">
+            <button onClick="{{ goToDashboard }}" style="background:#B23A32; color:#FFFFFF; border:none; border-radius:14px; padding:10px 16px; font-size:12.5px; font-weight:700; font-family:'Manrope',sans-serif; white-space:nowrap; cursor:pointer;">Подтвердить отмену</button>
+            <button onClick="{{ goToDashboard }}" style="background:transparent; color:#5C4440; border:1.5px solid #E8DAD6; border-radius:14px; padding:10px 16px; font-size:12.5px; font-weight:700; font-family:'Manrope',sans-serif; white-space:nowrap; cursor:pointer;">Отклонить запрос</button>
+            <button onClick="{{ goToBookingDetails }}" style="background:transparent; color:#5C4440; border:1.5px solid #E8DAD6; border-radius:14px; padding:10px 16px; font-size:12.5px; font-weight:700; font-family:'Manrope',sans-serif; white-space:nowrap; cursor:pointer;">Перенести вместо отмены</button>
+          </div>
+        </div>
+
+        <div style="background:#FFFFFF; border:1px solid #E8DAD6; border-left:4px solid #A65451; border-radius:20px; padding:22px;">
+          <div style="display:flex; align-items:center; gap:12px; margin-bottom:16px; flex-wrap:wrap;">
+            <div style="width:36px; height:36px; border-radius:999px; background:#F3E9E6; color:#A65451; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:12px; flex:none;">ОБ</div>
+            <div style="flex:1; min-width:140px;">
+              <div style="font-size:14px; font-weight:700;">Ольга Белова</div>
+              <div style="font-size:12px; color:#8A726D;">Запрос на изменение карточки — описание</div>
+            </div>
+            <span style="font-size:11.5px; color:#8A726D; font-variant-numeric:tabular-nums; white-space:nowrap;">14 окт, 10:05</span>
+          </div>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:18px;">
+            <div style="background:#FDF8F6; border:1px solid #E8DAD6; border-radius:14px; padding:14px;">
+              <div style="font-size:10.5px; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:#8A726D; margin-bottom:6px;">Было</div>
+              <div style="font-size:12.5px; color:#5C4440; line-height:1.4;">Работаю с 2020 года, специализируюсь на долговременных покрытиях.</div>
+            </div>
+            <div style="background:#FDF3F2; border:1px solid #F0C5C2; border-radius:14px; padding:14px;">
+              <div style="font-size:10.5px; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:#A65451; margin-bottom:6px;">Стало</div>
+              <div style="font-size:12.5px; color:#2A1C1A; line-height:1.4;">Работаю с 2020 года, специализируюсь на долговременных покрытиях и аккуратном дизайне.</div>
+            </div>
+          </div>
+          <div style="display:flex; gap:8px;">
+            <button onClick="{{ goToMasterForm }}" style="background:#2A1C1A; color:#F2C2C0; border:none; border-radius:14px; padding:10px 16px; font-size:12.5px; font-weight:700; font-family:'Manrope',sans-serif; white-space:nowrap; cursor:pointer;">Принять</button>
+            <button onClick="{{ goToMasterForm }}" style="background:transparent; color:#5C4440; border:1.5px solid #E8DAD6; border-radius:14px; padding:10px 16px; font-size:12.5px; font-weight:700; font-family:'Manrope',sans-serif; white-space:nowrap; cursor:pointer;">Отклонить</button>
+          </div>
+        </div>
+
+        <div style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:#8A726D; margin-top:8px;">Обработанные</div>
+
+        <sc-for list="{{ resolvedRequests }}" as="r" hint-placeholder-count="2">
+          <div style="background:#FFFFFF; border:1px solid #E8DAD6; border-radius:20px; padding:20px; opacity:.6;">
+            <div style="display:flex; align-items:center; gap:12px; margin-bottom:10px; flex-wrap:wrap;">
+              <div style="width:32px; height:32px; border-radius:999px; background:#F3E9E6; color:#A65451; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:11px; flex:none;">{{ r.initials }}</div>
+              <div style="flex:1; min-width:140px;">
+                <div style="font-size:13.5px; font-weight:700;">{{ r.name }}</div>
+                <div style="font-size:12px; color:#8A726D;">{{ r.type }}</div>
+              </div>
+              <span style="font-size:11px; font-weight:700; padding:3px 9px; border-radius:999px; background:{{ r.badgeBg }}; color:{{ r.badgeColor }}; white-space:nowrap;">{{ r.badge }}</span>
+            </div>
+            <div style="font-size:11.5px; color:#8A726D;">{{ r.resolvedBy }}</div>
+          </div>
+        </sc-for>
+
+      </div>
+    </main>
+  </div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  componentDidMount(){ this.renderIcons(); }
+  renderIcons(){ if(window.lucide) window.lucide.createIcons(); }
+  renderVals(){
+    const goToDashboard = () => { window.location.href = '21. Админ - Дашборд дня.dc.html'; };
+    const goToBookingDetails = () => { window.location.href = '25. Админ - Детали записи.dc.html'; };
+    const goToMasterForm = () => { window.location.href = '29. Админ - Карточка мастера (форма).dc.html'; };
+    const goToSchedule = () => { window.location.href = '22. Админ - Сетка расписания.dc.html'; };
+    const goToBookings = () => { window.location.href = '23. Админ - Записи.dc.html'; };
+    const goToClients = () => { window.location.href = '26. Админ - Клиенты.dc.html'; };
+    const goToMasters = () => { window.location.href = '28. Админ - Мастера.dc.html'; };
+    const goToServices = () => { window.location.href = '31. Админ - Услуги.dc.html'; };
+    const goToSettings = () => { window.location.href = '33. Админ - Настройки студии.dc.html'; };
+    const goToRequests = () => { window.location.href = '34. Админ - Запросы мастеров.dc.html'; };
+    const sidebarItems = [
+      {icon:'layout-dashboard', label:'Дашборд', bg:'transparent', fg:'#C4ADA8', badge:null, onClick:goToDashboard},
+      {icon:'calendar', label:'Расписание', bg:'transparent', fg:'#C4ADA8', badge:null, onClick:goToSchedule},
+      {icon:'list', label:'Записи', bg:'transparent', fg:'#C4ADA8', badge:null, onClick:goToBookings},
+      {icon:'users', label:'Клиенты', bg:'transparent', fg:'#C4ADA8', badge:null, onClick:goToClients},
+      {icon:'user-cog', label:'Мастера', bg:'transparent', fg:'#C4ADA8', badge:null, onClick:goToMasters},
+      {icon:'droplet', label:'Услуги', bg:'transparent', fg:'#C4ADA8', badge:null, onClick:goToServices},
+      {icon:'settings', label:'Настройки студии', bg:'transparent', fg:'#C4ADA8', badge:null, onClick:goToSettings},
+      {icon:'inbox', label:'Запросы', bg:'rgba(242,194,192,.14)', fg:'#F2C2C0', badge:'2', onClick:null},
+    ];
+    const tabs = ['Новые (2)','Обработанные'].map((label,i)=>({ label, bg: i===0?'#2A1C1A':'transparent', fg: i===0?'#FFFFFF':'#5C4440' }));
+    const resolvedRequests = [
+      {initials:'МЗ', name:'Мария Зайцева', type:'Запрос на отмену', badge:'Подтверждён', badgeBg:'#EEF6EA', badgeColor:'#4F7A3D', resolvedBy:'Решено Еленой Крыловой · 10 окт, 16:40'},
+      {initials:'СТ', name:'Светлана Титова', type:'Запрос на изменение карточки', badge:'Отклонён', badgeBg:'#F3E9E6', badgeColor:'#8A726D', resolvedBy:'Решено Еленой Крыловой · 8 окт, 11:15'},
+    ];
+    return { sidebarItems, tabs, resolvedRequests };
+  }
+}
+
+</script>
+</body>
+</html>

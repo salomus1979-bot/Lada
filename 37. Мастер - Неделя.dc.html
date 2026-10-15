@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta charset="utf-8">
+<title>Лада — Мастер: Неделя</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+<style>
+  body{margin:0;-webkit-font-smoothing:antialiased;background:#1C1412;}
+  * { box-sizing: border-box; }
+  ::selection{ background:#F2C2C0; color:#2A1C1A; }
+  @media (prefers-reduced-motion: reduce){ * { animation:none !important; transition:none !important; } }
+</style>
+</helmet>
+
+<div style="font-family:'Manrope',sans-serif; background:#1C1412; min-height:100vh; display:flex; justify-content:center; padding:32px;">
+  <div style="width:390px; background:#241A18; color:#F5EBE8; border-radius:28px; overflow:hidden; display:flex; flex-direction:column; min-height:800px; position:relative;">
+
+    <div style="padding:20px 18px 14px; border-bottom:1px solid #4A3733;">
+      <h1 style="font-family:'Oswald',sans-serif; font-weight:700; text-transform:uppercase; font-size:19px; margin:0 0 12px;">Моё расписание</h1>
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;">
+        <i data-lucide="chevron-left" width="18" height="18" stroke-width="1.5" style="color:#9A807A;"></i>
+        <span style="font-size:13px; font-weight:700; color:#C4ADA8; font-variant-numeric:tabular-nums;">12–18 октября</span>
+        <i data-lucide="chevron-right" width="18" height="18" stroke-width="1.5" style="color:#C4ADA8;"></i>
+      </div>
+      <div style="font-size:12px; color:#9A807A; font-variant-numeric:tabular-nums;">18 записей · загрузка 72% · свободных окон 9</div>
+    </div>
+
+    <div style="flex:1; overflow-y:auto; padding:14px 18px 100px; display:flex; flex-direction:column; gap:12px;">
+
+      <sc-for list="{{ days }}" as="d" hint-placeholder-count="7">
+        <div style="background:{{ d.bg }}; border:{{ d.border }}; border-radius:16px; padding:14px; opacity:{{ d.opacity }};">
+          <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; gap:8px;">
+            <span style="font-size:13.5px; font-weight:700; color:{{ d.titleColor }}; white-space:nowrap;">{{ d.title }}</span>
+            <sc-if value="{{ d.special }}"><span style="font-size:10.5px; font-weight:700; padding:3px 8px; border-radius:999px; background:{{ d.specialBg }}; color:{{ d.specialColor }}; white-space:nowrap;">{{ d.special }}</span></sc-if>
+            <sc-if value="{{ d.summary }}"><span style="font-size:11.5px; color:#9A807A; white-space:nowrap; font-variant-numeric:tabular-nums;">{{ d.summary }}</span></sc-if>
+          </div>
+          <sc-if value="{{ d.loadPct }}">
+            <div style="height:5px; border-radius:999px; background:#332522; overflow:hidden; margin-bottom:10px;"><div style="height:100%; width:{{ d.loadPct }}%; background:#F2C2C0; border-radius:999px;"></div></div>
+          </sc-if>
+          <sc-for list="{{ d.visits }}" as="v" hint-placeholder-count="3">
+            <div onClick="{{ goToVisit }}" style="display:flex; align-items:center; gap:10px; padding:7px 0; border-top:1px solid #332522; cursor:pointer;">
+              <span style="font-size:12px; font-weight:700; color:#F5EBE8; font-variant-numeric:tabular-nums; flex:none; width:40px;">{{ v.time }}</span>
+              <span style="font-size:12.5px; color:#F5EBE8; flex:1; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ v.client }}</span>
+              <span style="font-size:11.5px; color:#9A807A; flex:none; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100px;">{{ v.service }}</span>
+              <span style="font-size:9.5px; font-weight:700; padding:2px 7px; border-radius:999px; background:{{ v.statusBg }}; color:{{ v.statusColor }}; flex:none; white-space:nowrap;">{{ v.status }}</span>
+            </div>
+          </sc-for>
+        </div>
+      </sc-for>
+
+    </div>
+
+    <div style="position:absolute; left:0; right:0; bottom:0; background:#2B201D; border-top:1px solid #4A3733; display:flex; padding:10px 8px 14px;">
+      <sc-for list="{{ navItems }}" as="n" hint-placeholder-count="4">
+        <div onClick="{{ n.onClick }}" style="flex:1; display:flex; flex-direction:column; align-items:center; gap:4px; color:{{ n.color }};">
+          <i data-lucide="{{ n.icon }}" width="19" height="19" stroke-width="1.5"></i>
+          <span style="font-size:10px; font-weight:600;">{{ n.label }}</span>
+        </div>
+      </sc-for>
+    </div>
+
+  </div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  componentDidMount(){ this.renderIcons(); }
+  renderIcons(){ if(window.lucide) window.lucide.createIcons(); }
+  renderVals(){
+    const statusColors = {
+      'Подтверждена':['rgba(143,191,120,.14)','#8FBF78'],
+      'Завершена':['#3D2B28','#C4ADA8'],
+      'Ожидает':['rgba(227,165,72,.14)','#E3A548'],
+    };
+    const mk=(time,client,service,status)=>{ const [bg,fg]=statusColors[status]; return {time,client,service,status,statusBg:bg,statusColor:fg}; };
+
+    const days = [
+      { title:'Понедельник, 12 октября', summary:'3 записи · 4 ч 00 мин', loadPct:45, bg:'#2B201D', border:'1px solid #4A3733', opacity:1, titleColor:'#F5EBE8', special:null, specialBg:null, specialColor:null,
+        visits:[ mk('10:00','Мария Седова','Маникюр','Завершена'), mk('13:00','Елена Фомина','Коррекция бровей','Завершена'), mk('16:00','Ольга Петрова','Маникюр','Завершена') ] },
+      { title:'Вторник, 13 октября', summary:null, loadPct:null, bg:'#2B201D', border:'1px solid #4A3733', opacity:.6, titleColor:'#9A807A', special:'Блокировка', specialBg:'#332522', specialColor:'#9A807A', visits:[] },
+      { title:'Среда, 14 октября', summary:'4 записи · 6 ч 30 мин', loadPct:78, bg:'#3D2B28', border:'1.5px solid #F2C2C0', opacity:1, titleColor:'#F2C2C0', special:'Сегодня', specialBg:'#F2C2C0', specialColor:'#2A1C1A',
+        visits:[ mk('11:00','Дарья Миронова','Маникюр с покрытием','Завершена'), mk('14:00','Анна Соколова','Маникюр + брови','Подтверждена'), mk('17:00','Ксения Орлова','Ламинирование бровей','Подтверждена') ] },
+      { title:'Четверг, 15 октября', summary:'5 записей · 7 ч 15 мин', loadPct:88, bg:'#2B201D', border:'1px solid #4A3733', opacity:1, titleColor:'#F5EBE8', special:null, specialBg:null, specialColor:null,
+        visits:[ mk('9:00','Виктория Белых','Маникюр','Подтверждена'), mk('11:30','Полина Рябова','Маникюр с покрытием','Ожидает'), mk('14:00','Светлана Орлова','Дизайн ногтей','Подтверждена') ] },
+      { title:'Пятница, 16 октября', summary:'4 записи · 6 ч 00 мин', loadPct:70, bg:'#2B201D', border:'1px solid #4A3733', opacity:1, titleColor:'#F5EBE8', special:null, specialBg:null, specialColor:null,
+        visits:[ mk('10:00','Анна Соколова','Коррекция бровей','Подтверждена'), mk('13:00','Мария Седова','Маникюр','Подтверждена'), mk('16:00','Ксения Орлова','Снятие покрытия','Подтверждена') ] },
+      { title:'Суббота, 17 октября', summary:null, loadPct:null, bg:'#2B201D', border:'1px solid #4A3733', opacity:.6, titleColor:'#9A807A', special:'Отпуск', specialBg:'#4A3733', specialColor:'#C4ADA8', visits:[] },
+      { title:'Воскресенье, 18 октября', summary:null, loadPct:null, bg:'#2B201D', border:'1px dashed #4A3733', opacity:.55, titleColor:'#9A807A', special:'Выходной', specialBg:'#332522', specialColor:'#9A807A', visits:[] },
+    ];
+
+    const goToMyDay = () => { window.location.href = '36. Мастер - Мой день.dc.html'; };
+    const goToClients = () => { window.location.href = '40. Мастер - Мои клиенты.dc.html'; };
+    const goToProfile = () => { window.location.href = '42. Мастер - Профиль.dc.html'; };
+    const goToVisit = () => { window.location.href = '38. Мастер - Детали визита.dc.html'; };
+    const navItems = [
+      {icon:'sun', label:'Мой день', color:'#9A807A', onClick:goToMyDay},
+      {icon:'calendar-days', label:'Неделя', color:'#F2C2C0', onClick:null},
+      {icon:'users', label:'Клиенты', color:'#9A807A', onClick:goToClients},
+      {icon:'user', label:'Профиль', color:'#9A807A', onClick:goToProfile},
+    ];
+    return { days, navItems, goToVisit };
+  }
+}
+
+</script>
+</body>
+</html>

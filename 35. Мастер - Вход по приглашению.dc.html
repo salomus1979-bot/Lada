@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta charset="utf-8">
+<title>Лада — Мастер: Вход</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+<style>
+  body{margin:0;-webkit-font-smoothing:antialiased;background:#1C1412;}
+  * { box-sizing: border-box; }
+  ::selection{ background:#F2C2C0; color:#2A1C1A; }
+  a{ color:#F2C2C0; text-decoration:none; }
+  a:hover{ color:#E8AEAC; }
+  @media (prefers-reduced-motion: reduce){ * { animation:none !important; transition:none !important; } }
+</style>
+</helmet>
+
+<div style="font-family:'Manrope',sans-serif; background:#1C1412; min-height:100vh; display:flex; gap:24px; justify-content:center; flex-wrap:wrap; padding:32px;">
+
+  <div style="width:390px; background:#241A18; color:#F5EBE8; border-radius:28px; overflow:hidden; display:flex; flex-direction:column; min-height:720px;">
+    <div style="padding:40px 24px 0;">
+      <div style="font-family:'Oswald',sans-serif; font-weight:800; font-size:20px; color:#F2C2C0; margin-bottom:2px;">ЛАДА</div>
+      <div style="font-size:12px; color:#9A807A; margin-bottom:28px;">Кабинет мастера</div>
+      <h1 style="font-family:'Oswald',sans-serif; font-weight:700; text-transform:uppercase; font-size:24px; margin:0 0 12px;">Здравствуйте, Ольга</h1>
+      <p style="font-size:13.5px; color:#C4ADA8; line-height:1.5; margin:0 0 26px;">Елена Крылова открыла вам доступ к рабочему кабинету. Придумайте пароль для входа.</p>
+
+      <label style="display:block; font-size:12px; font-weight:600; color:#C4ADA8; margin-bottom:6px;">E-mail</label>
+      <input value="o.belova@lada-studio.ru" disabled="{{ true }}" style="width:100%; background:#2B201D; border:1px solid #4A3733; border-radius:8px; padding:12px 14px; font-size:13.5px; color:#9A807A; font-family:'Manrope',sans-serif; margin-bottom:16px;" />
+
+      <label style="display:block; font-size:12px; font-weight:600; color:#C4ADA8; margin-bottom:6px;">Пароль</label>
+      <div style="position:relative; margin-bottom:6px;">
+        <input type="password" placeholder="••••••••" style="width:100%; background:#332522; border:1px solid #4A3733; border-radius:8px; padding:12px 40px 12px 14px; font-size:14px; color:#F5EBE8; font-family:'Manrope',sans-serif;" />
+        <i data-lucide="eye" width="17" height="17" stroke-width="1.5" style="position:absolute; right:12px; top:50%; transform:translateY(-50%); color:#9A807A;"></i>
+      </div>
+      <div style="display:flex; gap:4px; margin-bottom:6px;">
+        <sc-for list="{{ strengthBars }}" as="b" hint-placeholder-count="4"><div style="height:4px; flex:1; border-radius:2px; background:{{ b }};"></div></sc-for>
+      </div>
+      <div style="font-size:11px; color:#9A807A; margin-bottom:14px;">Минимум 8 символов, буквы и цифры</div>
+
+      <label style="display:block; font-size:12px; font-weight:600; color:#C4ADA8; margin-bottom:6px;">Повторите пароль</label>
+      <input type="password" placeholder="••••••••" style="width:100%; background:#332522; border:1px solid #4A3733; border-radius:8px; padding:12px 14px; font-size:14px; color:#F5EBE8; font-family:'Manrope',sans-serif; margin-bottom:22px;" />
+
+      <button onClick="{{ goToMyDay }}" style="width:100%; background:#F2C2C0; color:#2A1C1A; border:none; border-radius:16px; padding:14px; font-size:14.5px; font-weight:700; font-family:'Manrope',sans-serif;">Войти в кабинет</button>
+    </div>
+    <div style="flex:1;"></div>
+    <div style="text-align:center; font-size:11.5px; color:#6B5852; padding:20px;">Ссылка действует 7 дней</div>
+  </div>
+
+  <div style="width:390px; background:#241A18; color:#F5EBE8; border-radius:28px; overflow:hidden; display:flex; flex-direction:column; min-height:720px;">
+    <div style="padding:40px 24px 0;">
+      <div style="font-family:'Oswald',sans-serif; font-weight:800; font-size:20px; color:#F2C2C0; margin-bottom:2px;">ЛАДА</div>
+      <div style="font-size:12px; color:#9A807A; margin-bottom:40px;">Кабинет мастера</div>
+      <h1 style="font-family:'Oswald',sans-serif; font-weight:700; text-transform:uppercase; font-size:24px; margin:0 0 28px;">Вход</h1>
+
+      <label style="display:block; font-size:12px; font-weight:600; color:#C4ADA8; margin-bottom:6px;">E-mail</label>
+      <input placeholder="o.belova@lada-studio.ru" style="width:100%; background:#332522; border:1px solid #4A3733; border-radius:8px; padding:12px 14px; font-size:14px; color:#F5EBE8; font-family:'Manrope',sans-serif; margin-bottom:16px;" />
+
+      <label style="display:block; font-size:12px; font-weight:600; color:#C4ADA8; margin-bottom:6px;">Пароль</label>
+      <div style="position:relative; margin-bottom:22px;">
+        <input type="password" placeholder="••••••••" style="width:100%; background:#332522; border:1px solid #4A3733; border-radius:8px; padding:12px 40px 12px 14px; font-size:14px; color:#F5EBE8; font-family:'Manrope',sans-serif;" />
+        <i data-lucide="eye" width="17" height="17" stroke-width="1.5" style="position:absolute; right:12px; top:50%; transform:translateY(-50%); color:#9A807A;"></i>
+      </div>
+
+      <button onClick="{{ goToMyDay }}" style="width:100%; background:#F2C2C0; color:#2A1C1A; border:none; border-radius:16px; padding:14px; font-size:14.5px; font-weight:700; font-family:'Manrope',sans-serif; margin-bottom:18px;">Войти</button>
+      <div style="text-align:center;"><a href="#" onClick="{{ goToRecovery }}" style="font-size:13px; font-weight:600;">Забыли пароль?</a></div>
+    </div>
+    <div style="flex:1;"></div>
+    <div style="text-align:center; font-size:11.5px; color:#6B5852; padding:20px;">Регистрация мастерам недоступна — доступ выдаёт администратор</div>
+  </div>
+
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  componentDidMount(){ this.renderIcons(); }
+  renderIcons(){ if(window.lucide) window.lucide.createIcons(); }
+  renderVals(){
+    const goToMyDay = () => { window.location.href = '36. Мастер - Мой день.dc.html'; };
+    const goToRecovery = () => { window.location.href = '14. Восстановление пароля.dc.html'; };
+    return { strengthBars: ['#8FBF78','#8FBF78','#8FBF78','#4A3733'], goToMyDay, goToRecovery };
+  }
+}
+
+</script>
+</body>
+</html>

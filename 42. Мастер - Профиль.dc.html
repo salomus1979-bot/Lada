@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta charset="utf-8">
+<title>Лада — Мастер: Профиль</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+<style>
+  body{margin:0;-webkit-font-smoothing:antialiased;background:#1C1412;}
+  * { box-sizing: border-box; }
+  ::selection{ background:#F2C2C0; color:#2A1C1A; }
+  @media (prefers-reduced-motion: reduce){ * { animation:none !important; transition:none !important; } }
+</style>
+</helmet>
+
+<div style="font-family:'Manrope',sans-serif; background:#1C1412; min-height:100vh; display:flex; justify-content:center; padding:32px;">
+  <div style="width:390px; background:#241A18; color:#F5EBE8; border-radius:28px; overflow:hidden; display:flex; flex-direction:column; min-height:800px; position:relative;">
+
+    <div style="flex:1; overflow-y:auto; padding:20px 18px 100px; display:flex; flex-direction:column; gap:16px;">
+
+      <div style="text-align:center; padding-bottom:4px;">
+        <div style="position:relative; width:76px; margin:0 auto 12px;">
+          <div style="width:76px; height:76px; border-radius:999px; background:#3D2B28; color:#F2C2C0; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:22px;">ОБ</div>
+          <button style="position:absolute; right:-2px; bottom:-2px; width:28px; height:28px; border-radius:999px; background:#F2C2C0; border:2px solid #241A18; display:flex; align-items:center; justify-content:center;"><i data-lucide="pencil" width="13" height="13" stroke-width="1.5" style="color:#2A1C1A;"></i></button>
+        </div>
+        <div style="font-size:18px; font-weight:700; margin-bottom:8px;">Ольга Белова</div>
+        <div style="display:flex; align-items:center; justify-content:center; gap:8px;">
+          <span style="font-size:10.5px; font-weight:700; padding:4px 10px; border-radius:999px; background:rgba(242,194,192,.16); color:#F2C2C0;">Мастер</span>
+          <span style="font-size:12.5px; color:#9A807A; display:flex; align-items:center; gap:3px;"><i data-lucide="star" width="13" height="13" style="color:#F2C2C0; fill:#F2C2C0;"></i>4,7</span>
+        </div>
+      </div>
+
+      <div style="background:#2B201D; border:1px solid #4A3733; border-radius:18px; padding:18px;">
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; flex-wrap:wrap; gap:8px;">
+          <span style="font-size:14px; font-weight:700;">Моя карточка на сайте</span>
+          <span style="font-size:10px; font-weight:700; padding:3px 9px; border-radius:999px; background:rgba(227,165,72,.14); color:#E3A548; white-space:nowrap;">Изменение на проверке</span>
+        </div>
+        <div style="font-size:11px; color:#6B5852; margin-bottom:10px;">Отправлено 14 октября</div>
+        <label style="display:block; font-size:12px; font-weight:600; color:#C4ADA8; margin-bottom:6px;">Описание</label>
+        <textarea style="width:100%; min-height:80px; background:#332522; border:1px solid #4A3733; border-radius:8px; padding:11px 14px; font-size:13.5px; color:#F5EBE8; font-family:'Manrope',sans-serif; resize:vertical;">Работаю с 2020 года, специализируюсь на долговременных покрытиях и аккуратном дизайне.</textarea>
+        <div style="font-size:11px; color:#6B5852; text-align:right; margin:4px 0 12px; font-variant-numeric:tabular-nums;">98 / 300</div>
+        <div style="display:flex; gap:8px; align-items:flex-start; background:#332522; border-radius:10px; padding:11px 13px; margin-bottom:14px;">
+          <i data-lucide="info" width="14" height="14" stroke-width="1.5" style="color:#8CA9BE; flex:none; margin-top:1px;"></i>
+          <span style="font-size:11.5px; color:#9A807A; line-height:1.4;">Изменения увидит администратор и подтвердит их. До подтверждения на сайте останется прежний текст.</span>
+        </div>
+        <button style="width:100%; background:#F2C2C0; color:#2A1C1A; border:none; border-radius:14px; padding:12px; font-size:13.5px; font-weight:700; font-family:'Manrope',sans-serif;">Сохранить изменения</button>
+      </div>
+
+      <div style="background:#2B201D; border:1px solid #4A3733; border-radius:18px; padding:18px;">
+        <div style="display:flex; align-items:center; gap:7px; margin-bottom:12px;">
+          <span style="font-size:14px; font-weight:700;">Мои услуги</span>
+          <i data-lucide="lock" width="13" height="13" stroke-width="1.5" style="color:#6B5852;"></i>
+        </div>
+        <div style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:10px;">
+          <sc-for list="{{ myServices }}" as="s" hint-placeholder-count="5"><span style="font-size:11.5px; font-weight:700; padding:6px 12px; border-radius:999px; background:#3D2B28; color:#C4ADA8; white-space:nowrap;">{{ s }}</span></sc-for>
+        </div>
+        <div style="font-size:11px; color:#6B5852;">Список услуг и цены задаёт студия</div>
+      </div>
+
+      <div style="background:#2B201D; border:1px solid #4A3733; border-radius:18px; padding:18px;">
+        <div style="display:flex; align-items:center; gap:7px; margin-bottom:12px;">
+          <span style="font-size:14px; font-weight:700;">Мой график</span>
+          <i data-lucide="lock" width="13" height="13" stroke-width="1.5" style="color:#6B5852;"></i>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:7px; margin-bottom:10px;">
+          <sc-for list="{{ weekSchedule }}" as="d" hint-placeholder-count="7">
+            <div style="display:flex; justify-content:space-between; font-size:12.5px;">
+              <span style="color:#C4ADA8;">{{ d.label }}</span>
+              <span style="color:{{ d.color }}; font-variant-numeric:tabular-nums;">{{ d.hours }}</span>
+            </div>
+          </sc-for>
+        </div>
+        <span style="display:inline-flex; font-size:10.5px; font-weight:700; padding:3px 9px; border-radius:999px; background:#4A3733; color:#C4ADA8; margin-bottom:10px;">Отпуск 20–27 октября</span>
+        <div style="font-size:11px; color:#6B5852; line-height:1.4;">График составляет администратор. Разовые блокировки вы можете ставить сами.</div>
+      </div>
+
+      <div style="background:#2B201D; border:1px solid #4A3733; border-radius:18px; padding:18px;">
+        <div style="font-size:14px; font-weight:700; margin-bottom:12px;">Безопасность</div>
+        <button style="width:100%; background:transparent; color:#F5EBE8; border:1.5px solid #4A3733; border-radius:14px; padding:11px; font-size:13px; font-weight:700; font-family:'Manrope',sans-serif; margin-bottom:10px;">Сменить пароль</button>
+        <div style="font-size:11.5px; color:#9A807A; font-variant-numeric:tabular-nums;">Последний вход: сегодня, 09:12</div>
+      </div>
+
+      <button onClick="{{ goToInvite }}" style="width:100%; background:transparent; color:#E58078; border:1.5px solid #5A3832; border-radius:14px; padding:12px; font-size:13.5px; font-weight:700; font-family:'Manrope',sans-serif;">Выйти</button>
+    </div>
+
+    <div style="position:absolute; left:0; right:0; bottom:0; background:#2B201D; border-top:1px solid #4A3733; display:flex; padding:10px 8px 14px;">
+      <sc-for list="{{ navItems }}" as="n" hint-placeholder-count="4">
+        <div onClick="{{ n.onClick }}" style="flex:1; display:flex; flex-direction:column; align-items:center; gap:4px; color:{{ n.color }};">
+          <i data-lucide="{{ n.icon }}" width="19" height="19" stroke-width="1.5"></i>
+          <span style="font-size:10px; font-weight:600;">{{ n.label }}</span>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  componentDidMount(){ this.renderIcons(); }
+  renderIcons(){ if(window.lucide) window.lucide.createIcons(); }
+  renderVals(){
+    const myServices = ['Маникюр с покрытием','Дизайн ногтей','Снятие покрытия','Коррекция бровей','Окрашивание бровей'];
+    const weekSchedule = [
+      {label:'Пн', hours:'10:00–19:00', color:'#F5EBE8'}, {label:'Вт', hours:'10:00–19:00', color:'#F5EBE8'},
+      {label:'Ср', hours:'12:00–21:00', color:'#F5EBE8'}, {label:'Чт', hours:'12:00–21:00', color:'#F5EBE8'},
+      {label:'Пт', hours:'10:00–19:00', color:'#F5EBE8'}, {label:'Сб', hours:'11:00–18:00', color:'#F5EBE8'},
+      {label:'Вс', hours:'Выходной', color:'#6B5852'},
+    ];
+    const goToMyDay = () => { window.location.href = '36. Мастер - Мой день.dc.html'; };
+    const goToWeek = () => { window.location.href = '37. Мастер - Неделя.dc.html'; };
+    const goToClients = () => { window.location.href = '40. Мастер - Мои клиенты.dc.html'; };
+    const goToInvite = () => { window.location.href = '35. Мастер - Вход по приглашению.dc.html'; };
+    const navItems = [
+      {icon:'sun', label:'Мой день', color:'#9A807A', onClick:goToMyDay},
+      {icon:'calendar-days', label:'Неделя', color:'#9A807A', onClick:goToWeek},
+      {icon:'users', label:'Клиенты', color:'#9A807A', onClick:goToClients},
+      {icon:'user', label:'Профиль', color:'#F2C2C0', onClick:null},
+    ];
+    return { myServices, weekSchedule, navItems, goToInvite };
+  }
+}
+
+</script>
+</body>
+</html>

@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta charset="utf-8">
+<title>Лада — Лендинг</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+<style>
+  body{margin:0;-webkit-font-smoothing:antialiased;background:#241A18;}
+  * { box-sizing: border-box; }
+  ::selection{ background:#F2C2C0; color:#2A1C1A; }
+  a{ color:#F2C2C0; text-decoration:none; }
+  a:hover{ color:#E8AEAC; }
+  @media (prefers-reduced-motion: reduce){ * { animation:none !important; transition:none !important; } }
+</style>
+</helmet>
+
+<div style="font-family:'Manrope',sans-serif; background:#241A18; color:#F5EBE8; min-height:100vh;">
+
+  <header style="position:sticky; top:0; z-index:40; background:rgba(36,26,24,0.92); backdrop-filter:blur(8px); border-bottom:1px solid #4A3733;">
+    <div style="max-width:1200px; margin:0 auto; padding:16px 48px; display:flex; align-items:center; justify-content:space-between; gap:24px;">
+      <div style="display:flex; align-items:baseline; gap:10px;">
+        <a href="Лада - Лендинг.dc.html" style="font-family:'Oswald',sans-serif; font-weight:800; font-size:22px; letter-spacing:.01em; color:#F2C2C0;">ЛАДА</a>
+        <span style="font-size:12px; color:#9A807A;">студия маникюра и бровей</span>
+      </div>
+      <nav style="display:flex; gap:28px;">
+        <sc-for list="{{ navLinks }}" as="nl" hint-placeholder-count="5">
+          <a href="{{ nl.href }}" style="font-size:13px; font-weight:600; color:#C4ADA8;">{{ nl.label }}</a>
+        </sc-for>
+      </nav>
+      <div style="display:flex; align-items:center; gap:10px; flex:none;">
+        <button onClick="{{ goToLogin }}" style="background:transparent; color:#F5EBE8; border:1.5px solid #4A3733; border-radius:16px; padding:9px 18px; font-size:13px; font-weight:700; font-family:'Manrope',sans-serif;">Войти</button>
+        <button onClick="{{ goToBooking }}" style="background:#F2C2C0; color:#2A1C1A; border:none; border-radius:16px; padding:9px 20px; font-size:13px; font-weight:700; font-family:'Manrope',sans-serif;">Записаться</button>
+      </div>
+    </div>
+  </header>
+
+  <section style="max-width:1200px; margin:0 auto; padding:64px 48px 96px;">
+    <div style="display:grid; grid-template-columns:1.1fr 0.9fr; gap:64px; align-items:center;">
+      <div>
+        <div style="font-size:12px; font-weight:700; letter-spacing:.14em; text-transform:uppercase; color:#F2C2C0; margin-bottom:20px;">Запись онлайн за 2 минуты</div>
+        <h1 style="font-family:'Oswald',sans-serif; font-weight:800; text-transform:uppercase; letter-spacing:-0.01em; font-size:clamp(40px,4.2vw,64px); line-height:0.98; margin:0 0 24px; color:#F5EBE8;">Красота, которая начинается с удобного времени</h1>
+        <p style="font-size:18px; line-height:1.55; color:#C4ADA8; max-width:480px; margin:0 0 32px;">Выбирайте мастера и свободный слот сами — без звонков и ожидания ответа в переписке.</p>
+        <div style="display:flex; gap:12px; margin-bottom:28px; flex-wrap:wrap;">
+          <button onClick="{{ goToBooking }}" style="background:#F2C2C0; color:#2A1C1A; border:none; border-radius:16px; padding:15px 28px; font-size:15px; font-weight:700; font-family:'Manrope',sans-serif;">Записаться онлайн</button>
+          <button onClick="{{ goToPrice }}" style="background:transparent; color:#F5EBE8; border:1.5px solid #4A3733; border-radius:16px; padding:15px 28px; font-size:15px; font-weight:700; font-family:'Manrope',sans-serif;">Посмотреть прайс</button>
+        </div>
+        <div style="display:flex; align-items:center; gap:8px; color:#9A807A; font-size:13px;">
+          <i data-lucide="eye" width="16" height="16" stroke-width="1.5" style="color:#F2C2C0;"></i>Свободное время видно сразу
+        </div>
+      </div>
+      <div style="aspect-ratio:4/5; border-radius:24px; background:repeating-linear-gradient(135deg,#332522,#332522 10px,#3D2B28 10px,#3D2B28 20px); display:flex; align-items:center; justify-content:center; font-family:monospace; font-size:12px; color:#9A807A; text-align:center; padding:20px;">фото мастера за работой</div>
+    </div>
+  </section>
+
+  <section style="max-width:1080px; margin:-180px auto 0; padding:0 48px; position:relative; z-index:10;">
+    <div style="background:#3D2B28; border-radius:24px; padding:32px; box-shadow:0 16px 40px rgba(36,26,24,.38); border:1px solid #4A3733;">
+      <div style="font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:#9A807A; margin-bottom:14px;">1. Выберите мастера</div>
+      <div style="display:flex; gap:20px; margin-bottom:26px; flex-wrap:wrap;">
+        <sc-for list="{{ widgetMasters }}" as="wm" hint-placeholder-count="4">
+          <div onClick="{{ goToBooking }}" style="display:flex; flex-direction:column; align-items:center; gap:8px;">
+            <div style="width:52px; height:52px; border-radius:999px; background:#F2C2C0; color:#2A1C1A; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:16px; box-shadow:{{ wm.ring }};">{{ wm.initials }}</div>
+            <span style="font-size:12px; color:{{ wm.nameColor }}; font-weight:600;">{{ wm.name }}</span>
+          </div>
+        </sc-for>
+      </div>
+      <div style="font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:#9A807A; margin-bottom:14px;">2. Выберите услугу</div>
+      <div style="display:flex; gap:10px; margin-bottom:26px; flex-wrap:wrap;">
+        <sc-for list="{{ widgetServices }}" as="ws" hint-placeholder-count="4">
+          <span onClick="{{ goToBooking }}" style="font-size:13px; font-weight:700; padding:9px 18px; border-radius:999px; background:{{ ws.bg }}; color:{{ ws.fg }}; border:{{ ws.border }};">{{ ws.label }}</span>
+        </sc-for>
+      </div>
+      <div style="font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:#9A807A; margin-bottom:14px;">3. Ближайшее свободное время</div>
+      <div style="display:flex; gap:10px; margin-bottom:28px; flex-wrap:wrap;">
+        <sc-for list="{{ widgetSlots }}" as="sl" hint-placeholder-count="6">
+          <div onClick="{{ goToBooking }}" style="min-height:44px; min-width:92px; padding:0 14px; border-radius:10px; display:flex; align-items:center; justify-content:center; gap:6px; font-size:13px; font-weight:700; font-variant-numeric:tabular-nums; background:{{ sl.bg }}; color:{{ sl.fg }}; border:{{ sl.border }};">
+            <sc-if value="{{ sl.icon }}"><i data-lucide="{{ sl.icon }}" width="12" height="12" stroke-width="2"></i></sc-if>{{ sl.label }}
+          </div>
+        </sc-for>
+      </div>
+      <div style="display:flex; justify-content:flex-end;">
+        <button onClick="{{ goToBooking }}" style="background:#F2C2C0; color:#2A1C1A; border:none; border-radius:16px; padding:13px 28px; font-size:14px; font-weight:700; font-family:'Manrope',sans-serif;">Продолжить</button>
+      </div>
+    </div>
+  </section>
+
+  <section style="max-width:1200px; margin:0 auto; padding:120px 48px 72px;">
+    <div style="display:flex; justify-content:space-between; align-items:flex-end; gap:24px; margin-bottom:40px; flex-wrap:wrap;">
+      <h2 style="font-family:'Oswald',sans-serif; font-weight:700; text-transform:uppercase; font-size:40px; margin:0;">Наши услуги</h2>
+      <p style="font-size:14px; color:#9A807A; max-width:340px; margin:0;">Индивидуальный подход и безупречный результат</p>
+    </div>
+    <div style="display:flex; gap:20px; align-items:stretch; flex-wrap:wrap;">
+      <div style="flex:1 1 320px; min-height:420px; border-radius:24px; background:repeating-linear-gradient(135deg,#332522,#332522 10px,#3D2B28 10px,#3D2B28 20px); display:flex; flex-direction:column; justify-content:flex-end; padding:28px; position:relative;">
+        <div style="font-family:monospace; font-size:12px; color:#9A807A; position:absolute; top:28px; left:28px;">фото интерьера студии</div>
+        <a href="18. Каталог услуг и прайс.dc.html" style="font-size:14px; font-weight:700; color:#F2C2C0; display:inline-flex; align-items:center; gap:6px;">Посмотреть полный прайс <i data-lucide="arrow-right" width="15" height="15" stroke-width="2"></i></a>
+      </div>
+      <div style="flex:2 1 560px; display:grid; grid-template-columns:1fr 1fr; gap:20px;">
+        <sc-for list="{{ services }}" as="s" hint-placeholder-count="4">
+          <div style="background:#2B201D; border:1px solid #4A3733; border-radius:24px; padding:24px; display:flex; flex-direction:column;">
+            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:16px;">
+              <span style="font-family:'Oswald',sans-serif; font-size:13px; color:#9A807A;">{{ s.num }}/</span>
+              <div style="width:36px; height:36px; border-radius:10px; background:rgba(242,194,192,.14); display:flex; align-items:center; justify-content:center;">
+                <i data-lucide="{{ s.icon }}" width="18" height="18" stroke-width="1.5" style="color:#F2C2C0;"></i>
+              </div>
+            </div>
+            <div style="font-family:'Oswald',sans-serif; font-weight:700; text-transform:uppercase; font-size:17px; color:#F5EBE8; margin-bottom:6px;">{{ s.title }}</div>
+            <div style="font-size:13px; color:#9A807A; line-height:1.5; margin-bottom:16px; flex:1;">{{ s.desc }}</div>
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <div style="font-size:13px; color:#C4ADA8; font-variant-numeric:tabular-nums;">{{ s.price }} · {{ s.duration }}</div>
+            </div>
+            <button onClick="{{ goToBooking }}" style="margin-top:14px; background:transparent; color:#F2C2C0; border:1.5px solid #F2C2C0; border-radius:16px; padding:9px; font-size:13px; font-weight:700; font-family:'Manrope',sans-serif;">Записаться</button>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </section>
+
+  <section id="masters" style="max-width:1200px; margin:0 auto; padding:72px 48px;">
+    <h2 style="font-family:'Oswald',sans-serif; font-weight:700; text-transform:uppercase; font-size:40px; margin:0 0 40px;">Наши мастера</h2>
+    <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:20px;">
+      <sc-for list="{{ masters }}" as="m" hint-placeholder-count="4">
+        <div style="background:#2B201D; border:1px solid #4A3733; border-radius:24px; overflow:hidden; display:flex; flex-direction:column;">
+          <div style="aspect-ratio:4/5; background:repeating-linear-gradient(135deg,#332522,#332522 10px,#3D2B28 10px,#3D2B28 20px); display:flex; align-items:center; justify-content:center; font-family:monospace; font-size:11px; color:#9A807A; text-align:center; padding:16px;">фото мастера</div>
+          <div style="padding:20px;">
+            <div style="font-size:16px; font-weight:700; color:#F5EBE8; margin-bottom:2px;">{{ m.name }}</div>
+            <div style="font-size:12.5px; color:#9A807A; margin-bottom:12px;">{{ m.spec }} · опыт {{ m.years }}</div>
+            <div style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:14px;">
+              <sc-for list="{{ m.chips }}" as="ch" hint-placeholder-count="2"><span style="font-size:11px; font-weight:700; padding:4px 10px; border-radius:999px; background:#3D2B28; color:#C4ADA8;">{{ ch }}</span></sc-for>
+            </div>
+            <div style="display:flex; align-items:center; gap:4px; margin-bottom:16px;">
+              <sc-for list="{{ m.stars }}" as="star" hint-placeholder-count="5"><i data-lucide="star" width="13" height="13" stroke-width="1.5" style="color:{{ star.c }}; fill:{{ star.f }};"></i></sc-for>
+              <span style="font-size:12px; color:#9A807A; margin-left:4px; font-variant-numeric:tabular-nums;">{{ m.rating }}</span>
+            </div>
+            <button onClick="{{ goToBooking }}" style="width:100%; background:#F2C2C0; color:#2A1C1A; border:none; border-radius:16px; padding:10px; font-size:13px; font-weight:700; font-family:'Manrope',sans-serif;">Выбрать время</button>
+          </div>
+        </div>
+      </sc-for>
+    </div>
+  </section>
+
+  <section style="max-width:1200px; margin:0 auto; padding:72px 48px;">
+    <h2 style="font-family:'Oswald',sans-serif; font-weight:700; text-transform:uppercase; font-size:40px; margin:0 0 48px;">Запись в 4 шага</h2>
+    <div style="display:flex; align-items:flex-start;">
+      <sc-for list="{{ steps }}" as="st" hint-placeholder-count="4">
+        <div style="display:flex; align-items:flex-start; flex:{{ st.flexGrow }};">
+          <div style="flex:none; max-width:230px;">
+            <div style="display:flex; align-items:center; gap:12px; margin-bottom:14px;">
+              <span style="font-family:'Oswald',sans-serif; font-weight:700; font-size:28px; color:#4A3733;">{{ st.n }}</span>
+              <div style="width:40px; height:40px; border-radius:12px; background:rgba(242,194,192,.14); display:flex; align-items:center; justify-content:center;"><i data-lucide="{{ st.icon }}" width="20" height="20" stroke-width="1.5" style="color:#F2C2C0;"></i></div>
+            </div>
+            <div style="font-size:14px; font-weight:700; color:#F5EBE8; margin-bottom:6px;">{{ st.title }}</div>
+            <div style="font-size:12.5px; color:#9A807A; line-height:1.5;">{{ st.desc }}</div>
+          </div>
+          <sc-if value="{{ st.connector }}"><div style="height:1px; flex:1; background:#4A3733; margin:22px 16px 0;"></div></sc-if>
+        </div>
+      </sc-for>
+    </div>
+    <div style="margin-top:32px; display:flex; align-items:center; gap:8px; color:#9A807A; font-size:13px;">
+      <i data-lucide="shield" width="16" height="16" stroke-width="1.5" style="color:#F2C2C0;"></i>Запись можно отменить в личном кабинете, без звонка администратору
+    </div>
+  </section>
+
+  <section style="max-width:1200px; margin:0 auto; padding:72px 48px;">
+    <h2 style="font-family:'Oswald',sans-serif; font-weight:700; text-transform:uppercase; font-size:40px; margin:0 0 40px;">Преимущества</h2>
+    <div style="display:grid; grid-template-columns:1fr 1.2fr 1fr; gap:20px; align-items:stretch;">
+      <div style="display:flex; flex-direction:column; gap:20px;">
+        <sc-for list="{{ advantagesLeft }}" as="a" hint-placeholder-count="2">
+          <div style="background:#2B201D; border:1px solid #4A3733; border-radius:24px; padding:24px; flex:1;">
+            <span style="font-family:'Oswald',sans-serif; font-size:13px; color:#9A807A;">{{ a.num }}/</span>
+            <div style="width:40px; height:40px; border-radius:12px; border:1.5px solid #4A3733; display:flex; align-items:center; justify-content:center; margin:12px 0 14px;"><i data-lucide="{{ a.icon }}" width="20" height="20" stroke-width="1.5" style="color:#F2C2C0;"></i></div>
+            <div style="font-family:'Oswald',sans-serif; font-weight:700; text-transform:uppercase; font-size:15px; color:#F5EBE8; margin-bottom:6px;">{{ a.title }}</div>
+            <div style="font-size:12.5px; color:#9A807A; line-height:1.5;">{{ a.desc }}</div>
+          </div>
+        </sc-for>
+      </div>
+      <div style="border-radius:24px; background:repeating-linear-gradient(135deg,#332522,#332522 10px,#3D2B28 10px,#3D2B28 20px); display:flex; align-items:center; justify-content:center; font-family:monospace; font-size:12px; color:#9A807A; text-align:center; padding:20px;">фото процедуры</div>
+      <div style="display:flex; flex-direction:column; gap:20px;">
+        <sc-for list="{{ advantagesRight }}" as="a2" hint-placeholder-count="2">
+          <div style="background:#2B201D; border:1px solid #4A3733; border-radius:24px; padding:24px; flex:1;">
+            <span style="font-family:'Oswald',sans-serif; font-size:13px; color:#9A807A;">{{ a2.num }}/</span>
+            <div style="width:40px; height:40px; border-radius:12px; border:1.5px solid #4A3733; display:flex; align-items:center; justify-content:center; margin:12px 0 14px;"><i data-lucide="{{ a2.icon }}" width="20" height="20" stroke-width="1.5" style="color:#F2C2C0;"></i></div>
+            <div style="font-family:'Oswald',sans-serif; font-weight:700; text-transform:uppercase; font-size:15px; color:#F5EBE8; margin-bottom:6px;">{{ a2.title }}</div>
+            <div style="font-size:12.5px; color:#9A807A; line-height:1.5;">{{ a2.desc }}</div>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </section>
+
+  <section style="max-width:1200px; margin:0 auto; padding:72px 48px;">
+    <h2 style="font-family:'Oswald',sans-serif; font-weight:700; text-transform:uppercase; font-size:40px; margin:0 0 40px;">Отзывы</h2>
+    <div style="display:grid; grid-template-columns:220px 1fr; gap:32px;">
+      <div>
+        <div style="font-family:'Oswald',sans-serif; font-weight:800; font-size:64px; color:#F2C2C0; line-height:1;">4,9</div>
+        <div style="display:flex; gap:3px; margin:10px 0 8px;"><sc-for list="{{ summaryStars }}" as="ss" hint-placeholder-count="5"><i data-lucide="star" width="16" height="16" style="color:#F2C2C0; fill:#F2C2C0;"></i></sc-for></div>
+        <div style="font-size:13px; color:#9A807A;">средняя оценка</div>
+      </div>
+      <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:16px;">
+        <sc-for list="{{ reviews }}" as="r" hint-placeholder-count="3">
+          <div style="background:#2B201D; border:1px solid #4A3733; border-radius:24px; padding:22px;">
+            <div style="display:flex; align-items:center; gap:10px; margin-bottom:14px;">
+              <div style="width:38px; height:38px; border-radius:999px; background:#3D2B28; color:#F2C2C0; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:13px;">{{ r.initials }}</div>
+              <div>
+                <div style="font-size:13px; font-weight:700; color:#F5EBE8;">{{ r.name }}</div>
+                <div style="font-size:11.5px; color:#9A807A;">{{ r.service }}</div>
+              </div>
+            </div>
+            <div style="display:flex; gap:2px; margin-bottom:10px;"><sc-for list="{{ r.stars }}" as="rs" hint-placeholder-count="5"><i data-lucide="star" width="12" height="12" style="color:#F2C2C0; fill:#F2C2C0;"></i></sc-for></div>
+            <div style="font-size:13px; color:#C4ADA8; line-height:1.5; margin-bottom:12px;">{{ r.text }}</div>
+            <div style="font-size:11px; color:#6B5852;">{{ r.date }}</div>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </section>
+
+  <section style="max-width:800px; margin:0 auto; padding:72px 48px;">
+    <h2 style="font-family:'Oswald',sans-serif; font-weight:700; text-transform:uppercase; font-size:40px; margin:0 0 32px;">Частые вопросы</h2>
+    <div style="border-top:1px solid #4A3733;">
+      <sc-for list="{{ faqItems }}" as="f" hint-placeholder-count="5">
+        <div style="border-bottom:1px solid #4A3733;">
+          <div onClick="{{ f.toggle }}" style="display:flex; align-items:center; justify-content:space-between; padding:20px 4px; cursor:pointer;">
+            <span style="font-size:15px; font-weight:700; color:#F5EBE8;">{{ f.q }}</span>
+            <i data-lucide="chevron-down" width="18" height="18" stroke-width="1.5" style="color:#9A807A; transform:{{ f.iconRotate }}; transition:transform 200ms ease-out;"></i>
+          </div>
+          <sc-if value="{{ f.open }}"><div style="padding:0 4px 20px; font-size:13.5px; color:#9A807A; line-height:1.6; max-width:640px;">{{ f.a }}</div></sc-if>
+        </div>
+      </sc-for>
+    </div>
+  </section>
+
+  <section style="padding:88px 48px; background:#2B201D; border-top:1px solid #4A3733; border-bottom:1px solid #4A3733; text-align:center;">
+    <h2 style="font-family:'Oswald',sans-serif; font-weight:800; text-transform:uppercase; letter-spacing:-0.01em; font-size:clamp(34px,4vw,52px); margin:0 0 16px; color:#F5EBE8;">Выберите своё время</h2>
+    <p style="font-size:16px; color:#C4ADA8; margin:0 0 32px;">Свободные слоты видны прямо сейчас — запись займёт пару минут</p>
+    <button onClick="{{ goToBooking }}" style="background:#F2C2C0; color:#2A1C1A; border:none; border-radius:16px; padding:16px 36px; font-size:15px; font-weight:700; font-family:'Manrope',sans-serif;">Записаться онлайн</button>
+  </section>
+
+  <footer style="max-width:1200px; margin:0 auto; padding:64px 48px 32px;">
+    <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:32px; margin-bottom:40px;">
+      <sc-for list="{{ footerCols }}" as="fc" hint-placeholder-count="4">
+        <div>
+          <div style="width:36px; height:36px; border-radius:10px; background:rgba(242,194,192,.14); display:flex; align-items:center; justify-content:center; margin-bottom:14px;"><i data-lucide="{{ fc.icon }}" width="18" height="18" stroke-width="1.5" style="color:#F2C2C0;"></i></div>
+          <div style="font-size:13px; font-weight:700; color:#F5EBE8; margin-bottom:6px;">{{ fc.title }}</div>
+          <div style="font-size:12.5px; color:#9A807A; line-height:1.5;">{{ fc.text }}</div>
+          <sc-if value="{{ fc.button }}"><button onClick="{{ goToBooking }}" style="margin-top:12px; background:#F2C2C0; color:#2A1C1A; border:none; border-radius:16px; padding:9px 18px; font-size:12.5px; font-weight:700; font-family:'Manrope',sans-serif;">{{ fc.button }}</button></sc-if>
+        </div>
+      </sc-for>
+    </div>
+    <div style="display:flex; align-items:center; justify-content:space-between; padding-top:24px; border-top:1px solid #4A3733; flex-wrap:wrap; gap:12px;">
+      <div style="font-size:12px; color:#6B5852;">© 2026 Лада. Все права защищены. <a href="#" style="color:#6B5852; text-decoration:underline;">Политика конфиденциальности</a></div>
+      <div style="display:flex; gap:12px;">
+        <i data-lucide="camera" width="18" height="18" stroke-width="1.5" style="color:#9A807A;"></i>
+        <i data-lucide="send" width="18" height="18" stroke-width="1.5" style="color:#9A807A;"></i>
+      </div>
+    </div>
+  </footer>
+
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { openFaq: 0 };
+  componentDidMount(){ this.renderIcons(); }
+  componentDidUpdate(){ this.renderIcons(); }
+  renderIcons(){ if(window.lucide) window.lucide.createIcons(); }
+
+  renderVals(){
+    const navLinks = [
+      {label:'Услуги', href:'18. Каталог услуг и прайс.dc.html'}, {label:'Мастера', href:'#masters'},
+      {label:'Как записаться', href:'#steps'}, {label:'Отзывы', href:'#reviews'}, {label:'Контакты', href:'#contacts'},
+    ];
+    const goToLogin = () => { window.location.href = '12. Вход.dc.html'; };
+    const goToBooking = () => { window.location.href = '1. Запись - Шаг 1. Услуги.dc.html'; };
+    const goToPrice = () => { window.location.href = '18. Каталог услуг и прайс.dc.html'; };
+
+    const widgetMasters = [
+      {initials:'АМ', name:'Анна', ring:'0 0 0 3px rgba(242,194,192,.45)', nameColor:'#F5EBE8'},
+      {initials:'СТ', name:'Светлана', ring:'none', nameColor:'#9A807A'},
+      {initials:'ДН', name:'Дарья', ring:'none', nameColor:'#9A807A'},
+      {initials:'ЕК', name:'Елена', ring:'none', nameColor:'#9A807A'},
+    ];
+    const widgetServices = ['Маникюр','Педикюр','Брови','Ресницы'].map((label,i)=>({
+      label, bg: i===0?'#F2C2C0':'transparent', fg: i===0?'#2A1C1A':'#C4ADA8', border: i===0?'1.5px solid transparent':'1.5px solid #4A3733'
+    }));
+    const widgetSlotsRaw = [
+      {label:'Сегодня 14:00', state:'free'}, {label:'15:30', state:'selected'}, {label:'18:00', state:'booked'},
+      {label:'Завтра 10:00', state:'free'}, {label:'11:30', state:'free'}, {label:'13:00', state:'booked'},
+    ];
+    const widgetSlots = widgetSlotsRaw.map(s=>{
+      if(s.state==='selected') return {label:s.label, bg:'#F2C2C0', fg:'#2A1C1A', border:'1px solid #F2C2C0', icon:'check'};
+      if(s.state==='booked') return {label:s.label, bg:'repeating-linear-gradient(135deg,#3D2B28,#3D2B28 6px,#4A3733 6px,#4A3733 12px)', fg:'#9A807A', border:'1px solid #4A3733', icon:'lock'};
+      return {label:s.label, bg:'#241A18', fg:'#C4ADA8', border:'1px dashed #4A3733', icon:null};
+    });
+
+    const services = [
+      {num:1, icon:'droplet', title:'Маникюр', desc:'Покрытие, укрепление, дизайн', price:'от 1 800 ₽', duration:'90 мин'},
+      {num:2, icon:'scissors', title:'Педикюр', desc:'Аппаратный и комбинированный', price:'от 2 400 ₽', duration:'90 мин'},
+      {num:3, icon:'eye', title:'Брови', desc:'Коррекция, окрашивание, ламинирование', price:'от 1 200 ₽', duration:'60 мин'},
+      {num:4, icon:'sparkles', title:'Ресницы', desc:'Наращивание и ламинирование', price:'от 2 200 ₽', duration:'120 мин'},
+    ];
+
+    const starsRow = (filled)=> Array.from({length:5}, (_,i)=>({ c: i<filled?'#F2C2C0':'#4A3733', f: i<filled?'#F2C2C0':'none' }));
+    const masters = [
+      {name:'Анна Морозова', spec:'Маникюр, педикюр', years:'6 лет', chips:['Маникюр','Педикюр'], stars:starsRow(5), rating:'5.0'},
+      {name:'Светлана Титова', spec:'Брови, ресницы', years:'4 года', chips:['Брови','Ресницы'], stars:starsRow(5), rating:'4.9'},
+      {name:'Дарья Новикова', spec:'Маникюр, дизайн', years:'3 года', chips:['Маникюр'], stars:starsRow(4), rating:'4.8'},
+      {name:'Елена Климова', spec:'Педикюр, брови', years:'5 лет', chips:['Педикюр','Брови'], stars:starsRow(5), rating:'4.9'},
+    ];
+
+    const stepsRaw = [
+      {icon:'user', title:'Выберите мастера', desc:'Посмотрите специализацию и опыт'},
+      {icon:'droplet', title:'Выберите услугу', desc:'Все процедуры с ценой и длительностью'},
+      {icon:'calendar', title:'Откройте календарь', desc:'Выберите свободное время сами'},
+      {icon:'check', title:'Подтвердите запись', desc:'Она появится в личном кабинете'},
+    ];
+    const steps = stepsRaw.map((s,i)=>({ ...s, n: '0'+(i+1), connector: i<stepsRaw.length-1, flexGrow: i<stepsRaw.length-1 ? '1 1 0' : '0 0 auto' }));
+
+    const advantagesLeft = [
+      {num:1, icon:'award', title:'Опытные мастера', desc:'Профильное образование и опыт от 3 лет'},
+      {num:2, icon:'calendar', title:'Запись без звонков', desc:'Свободное время видно онлайн круглосуточно'},
+    ];
+    const advantagesRight = [
+      {num:3, icon:'shield', title:'Премиальные материалы', desc:'Сертифицированные препараты и составы'},
+      {num:4, icon:'heart', title:'Комфорт и забота', desc:'Уютная атмосфера и внимание к каждой детали'},
+    ];
+
+    const reviews = [
+      {initials:'МК', name:'Мария К.', service:'Маникюр', stars:starsRow(5), text:'Записалась за минуту вечером, выбрала удобное время сама — ни одного звонка.', date:'2 недели назад'},
+      {initials:'ОП', name:'Ольга П.', service:'Брови', stars:starsRow(5), text:'Понравилось, что сразу видно все свободные слоты — не пришлось ничего уточнять в переписке.', date:'месяц назад'},
+      {initials:'ИС', name:'Ирина С.', service:'Ресницы', stars:starsRow(4), text:'Удобно, что можно выбрать конкретного мастера и свою запись потом отменить в кабинете.', date:'месяц назад'},
+    ];
+
+    const faqRaw = [
+      {q:'Как отменить или перенести запись?', a:'В личном кабинете — в разделе «Мои записи» есть кнопка отмены. Перенос делается отменой текущей записи и созданием новой на удобное время.'},
+      {q:'Нужно ли вносить предоплату?', a:'Нет, предоплата не требуется — оплата принимается на месте, после процедуры.'},
+      {q:'Что если нужного времени нет в календаре?', a:'Это значит, что слот уже занят. Выберите ближайшее свободное время — календарь обновляется в реальном времени.'},
+      {q:'Можно ли записаться к конкретному мастеру?', a:'Да, вы сами выбираете мастера на первом шаге записи и видите только его свободные слоты.'},
+      {q:'Как восстановить пароль от личного кабинета?', a:'На странице входа есть ссылка «Забыли пароль» — следуйте инструкциям для восстановления доступа.'},
+    ];
+    const faqItems = faqRaw.map((f,i)=>({
+      ...f, open: this.state.openFaq===i, iconRotate: this.state.openFaq===i ? 'rotate(180deg)' : 'rotate(0deg)',
+      toggle: ()=> this.setState(s=>({ openFaq: s.openFaq===i ? -1 : i }))
+    }));
+
+    const footerCols = [
+      {icon:'map-pin', title:'Адрес', text:'м. Фрунзенская, ул. Студийная, 12', button:null},
+      {icon:'clock', title:'Режим работы', text:'Ежедневно 10:00–21:00', button:null},
+      {icon:'phone', title:'Телефон', text:'+7 (999) 123-45-67', button:null},
+      {icon:'calendar', title:'Запись', text:'Выберите время онлайн', button:'Записаться'},
+    ];
+
+    return { navLinks, widgetMasters, widgetServices, widgetSlots, services, masters, steps, advantagesLeft, advantagesRight,
+      summaryStars:[1,2,3,4,5], reviews, faqItems, footerCols, goToLogin, goToBooking, goToPrice };
+  }
+}
+
+</script>
+</body>
+</html>

@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta charset="utf-8">
+<title>Лада — Мастер: Мой день</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+<style>
+  body{margin:0;-webkit-font-smoothing:antialiased;background:#1C1412;}
+  * { box-sizing: border-box; }
+  ::selection{ background:#F2C2C0; color:#2A1C1A; }
+  a{ color:#F2C2C0; text-decoration:none; }
+  @media (prefers-reduced-motion: reduce){ * { animation:none !important; transition:none !important; } }
+</style>
+</helmet>
+
+<div style="font-family:'Manrope',sans-serif; background:#1C1412; min-height:100vh; display:flex; justify-content:center; padding:32px;">
+  <div style="width:390px; background:#241A18; color:#F5EBE8; border-radius:28px; overflow:hidden; display:flex; flex-direction:column; min-height:800px; position:relative;">
+
+    <div style="padding:20px 18px 0;">
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:18px;">
+        <div style="display:flex; align-items:center; gap:10px;">
+          <div style="width:38px; height:38px; border-radius:999px; background:#3D2B28; color:#F2C2C0; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:13px; flex:none;">ОБ</div>
+          <div>
+            <div style="font-size:14px; font-weight:700;">Ольга Белова</div>
+            <span style="font-size:10px; font-weight:700; padding:2px 8px; border-radius:999px; background:rgba(242,194,192,.14); color:#F2C2C0;">Мастер</span>
+          </div>
+        </div>
+        <div style="position:relative;">
+          <i data-lucide="bell" width="20" height="20" stroke-width="1.5" style="color:#C4ADA8;"></i>
+          <div style="position:absolute; top:-1px; right:-1px; width:7px; height:7px; border-radius:999px; background:#F2C2C0;"></div>
+        </div>
+      </div>
+
+      <div style="display:flex; align-items:center; gap:6px; margin-bottom:14px;">
+        <i data-lucide="chevron-left" width="18" height="18" stroke-width="1.5" style="color:#9A807A; flex:none;"></i>
+        <div style="display:flex; gap:6px; flex:1; overflow-x:auto;">
+          <sc-for list="{{ weekDays }}" as="d" hint-placeholder-count="7">
+            <div style="flex:none; width:42px; text-align:center; padding:8px 0; border-radius:12px; background:{{ d.bg }};">
+              <div style="font-size:9.5px; color:{{ d.dowColor }}; text-transform:uppercase;">{{ d.dow }}</div>
+              <div style="font-size:14px; font-weight:700; color:{{ d.fg }}; font-variant-numeric:tabular-nums;">{{ d.num }}</div>
+            </div>
+          </sc-for>
+        </div>
+        <i data-lucide="chevron-right" width="18" height="18" stroke-width="1.5" style="color:#C4ADA8; flex:none;"></i>
+      </div>
+
+      <div style="font-size:12.5px; color:#C4ADA8; margin-bottom:16px;">4 записи · 6 ч 30 мин · <span style="color:#F2C2C0; font-weight:700;">следующий клиент через 20 минут</span></div>
+    </div>
+
+    <div style="flex:1; overflow-y:auto; padding:0 18px 100px; display:flex; flex-direction:column; gap:12px;">
+
+      <div onClick="{{ goToVisit }}" style="background:#2B201D; border:1px solid #4A3733; border-radius:18px; padding:16px; opacity:.55; display:flex; gap:12px; cursor:pointer;">
+        <div style="font-size:13px; font-weight:700; color:#F5EBE8; font-variant-numeric:tabular-nums; flex:none; width:58px;">11:00<br/>12:30</div>
+        <div style="flex:1; min-width:0;">
+          <div style="font-size:14px; font-weight:700; margin-bottom:2px;">Дарья Миронова</div>
+          <div style="font-size:12px; color:#9A807A;">Маникюр с покрытием</div>
+        </div>
+        <span style="font-size:10.5px; font-weight:700; padding:3px 8px; border-radius:999px; background:#3D2B28; color:#C4ADA8; height:fit-content; white-space:nowrap;">Завершён</span>
+      </div>
+
+      <div onClick="{{ goToVisit }}" style="background:#2B201D; border:1.5px solid #F2C2C0; border-radius:18px; padding:16px; box-shadow:0 0 0 3px rgba(242,194,192,.12); cursor:pointer;">
+        <div style="display:flex; gap:12px; margin-bottom:10px;">
+          <div style="font-size:13px; font-weight:700; color:#F5EBE8; font-variant-numeric:tabular-nums; flex:none; width:58px;">14:00<br/>16:00</div>
+          <div style="flex:1; min-width:0;">
+            <div style="font-size:14px; font-weight:700; margin-bottom:2px;">Анна Соколова</div>
+            <div style="font-size:12px; color:#9A807A;">Маникюр с покрытием + Коррекция бровей</div>
+            <div style="font-size:11.5px; color:#C4ADA8; font-variant-numeric:tabular-nums; margin-top:2px;">2 ч 00 мин</div>
+          </div>
+          <span style="font-size:10.5px; font-weight:700; padding:3px 8px; border-radius:999px; background:#F2C2C0; color:#2A1C1A; height:fit-content; white-space:nowrap;">Идёт сейчас</span>
+        </div>
+        <div style="display:flex; align-items:flex-start; gap:7px; background:#3D2B28; border-radius:10px; padding:9px 11px;">
+          <i data-lucide="sticky-note" width="13" height="13" stroke-width="1.5" style="color:#F2C2C0; flex:none; margin-top:1px;"></i>
+          <span style="font-size:11.5px; color:#C4ADA8; line-height:1.4;">Предпочитает нейтральные оттенки</span>
+        </div>
+      </div>
+
+      <div style="background:repeating-linear-gradient(135deg,#2B201D,#2B201D 6px,#332522 6px,#332522 12px); border:1px solid #4A3733; border-radius:18px; padding:14px 16px; display:flex; align-items:center; gap:12px;">
+        <div style="font-size:13px; font-weight:700; color:#9A807A; font-variant-numeric:tabular-nums; flex:none; width:58px;">16:00<br/>16:30</div>
+        <div style="flex:1; font-size:13px; font-weight:700; color:#9A807A;">Перерыв</div>
+        <button style="width:30px; height:30px; border-radius:999px; background:transparent; border:1.5px solid #4A3733; display:flex; align-items:center; justify-content:center; flex:none;"><i data-lucide="x" width="14" height="14" stroke-width="1.5" style="color:#9A807A;"></i></button>
+      </div>
+
+      <div onClick="{{ goToVisit }}" style="background:#2B201D; border:1px solid #4A3733; border-radius:18px; padding:16px; display:flex; align-items:center; gap:12px; cursor:pointer;">
+        <div style="font-size:13px; font-weight:700; color:#F5EBE8; font-variant-numeric:tabular-nums; flex:none; width:58px;">17:00<br/>18:00</div>
+        <div style="flex:1; min-width:0;">
+          <div style="font-size:14px; font-weight:700; margin-bottom:2px;">Ксения Орлова</div>
+          <div style="font-size:12px; color:#9A807A;">Ламинирование бровей</div>
+          <span style="font-size:10.5px; font-weight:700; padding:3px 8px; border-radius:999px; background:rgba(143,191,120,.14); color:#8FBF78; display:inline-block; margin-top:5px;">Подтверждена</span>
+        </div>
+        <button onClick="{{ noop }}" style="width:44px; height:44px; border-radius:999px; background:#F2C2C0; display:flex; align-items:center; justify-content:center; flex:none;"><i data-lucide="phone" width="19" height="19" stroke-width="1.5" style="color:#2A1C1A;"></i></button>
+      </div>
+
+      <div style="border:1px dashed #4A3733; border-radius:18px; padding:16px; display:flex; align-items:center; gap:12px; opacity:.6;">
+        <div style="font-size:13px; font-weight:700; color:#9A807A; font-variant-numeric:tabular-nums; flex:none; width:58px;">19:00<br/>21:00</div>
+        <div style="font-size:13px; color:#9A807A;">Свободно</div>
+      </div>
+
+    </div>
+
+    <button onClick="{{ goToBlock }}" style="position:absolute; left:18px; right:18px; bottom:76px; background:#F2C2C0; color:#2A1C1A; border:none; border-radius:16px; padding:14px; font-size:14px; font-weight:700; font-family:'Manrope',sans-serif; display:flex; align-items:center; justify-content:center; gap:8px; box-shadow:0 10px 24px rgba(36,26,24,.35);"><i data-lucide="lock" width="16" height="16" stroke-width="1.5"></i>Заблокировать время</button>
+
+    <div style="position:absolute; left:0; right:0; bottom:0; background:#2B201D; border-top:1px solid #4A3733; display:flex; padding:10px 8px 14px;">
+      <sc-for list="{{ navItems }}" as="n" hint-placeholder-count="4">
+        <div onClick="{{ n.onClick }}" style="flex:1; display:flex; flex-direction:column; align-items:center; gap:4px; color:{{ n.color }};">
+          <i data-lucide="{{ n.icon }}" width="19" height="19" stroke-width="1.5"></i>
+          <span style="font-size:10px; font-weight:600;">{{ n.label }}</span>
+        </div>
+      </sc-for>
+    </div>
+
+  </div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  componentDidMount(){ this.renderIcons(); }
+  renderIcons(){ if(window.lucide) window.lucide.createIcons(); }
+  renderVals(){
+    const weekDays = [
+      {dow:'пн', num:12, bg:'transparent', fg:'#C4ADA8', dowColor:'#6B5852'},
+      {dow:'вт', num:13, bg:'transparent', fg:'#C4ADA8', dowColor:'#6B5852'},
+      {dow:'ср', num:14, bg:'#F2C2C0', fg:'#2A1C1A', dowColor:'#2A1C1A'},
+      {dow:'чт', num:15, bg:'transparent', fg:'#C4ADA8', dowColor:'#6B5852'},
+      {dow:'пт', num:16, bg:'transparent', fg:'#C4ADA8', dowColor:'#6B5852'},
+      {dow:'сб', num:17, bg:'transparent', fg:'#C4ADA8', dowColor:'#6B5852'},
+      {dow:'вс', num:18, bg:'transparent', fg:'#6B5852', dowColor:'#4A3733'},
+    ];
+    const goToWeek = () => { window.location.href = '37. Мастер - Неделя.dc.html'; };
+    const goToClients = () => { window.location.href = '40. Мастер - Мои клиенты.dc.html'; };
+    const goToProfile = () => { window.location.href = '42. Мастер - Профиль.dc.html'; };
+    const goToVisit = () => { window.location.href = '38. Мастер - Детали визита.dc.html'; };
+    const goToBlock = () => { window.location.href = '39. Мастер - Заблокировать время.dc.html'; };
+    const noop = (e) => { if(e && e.stopPropagation) e.stopPropagation(); };
+    const navItems = [
+      {icon:'sun', label:'Мой день', color:'#F2C2C0', onClick:null},
+      {icon:'calendar-days', label:'Неделя', color:'#9A807A', onClick:goToWeek},
+      {icon:'users', label:'Клиенты', color:'#9A807A', onClick:goToClients},
+      {icon:'user', label:'Профиль', color:'#9A807A', onClick:goToProfile},
+    ];
+    return { weekDays, navItems, goToVisit, goToBlock, noop };
+  }
+}
+
+</script>
+</body>
+</html>

@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta charset="utf-8">
+<title>Лада — Вход</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+<style>
+  body{margin:0;-webkit-font-smoothing:antialiased;background:#241A18;}
+  * { box-sizing: border-box; }
+  ::selection{ background:#F2C2C0; color:#2A1C1A; }
+  a{ color:#F2C2C0; text-decoration:none; }
+  a:hover{ color:#E8AEAC; }
+  @keyframes ladSpin{ to{ transform: rotate(360deg) } }
+  @media (prefers-reduced-motion: reduce){ * { animation:none !important; transition:none !important; } }
+</style>
+</helmet>
+
+<div style="font-family:'Manrope',sans-serif; background:#241A18; color:#F5EBE8; min-height:100vh; display:grid; grid-template-columns:minmax(0,480px) minmax(0,1fr); position:relative;">
+
+  <div style="display:flex; align-items:center; justify-content:center; padding:48px 32px;">
+    <div style="width:100%; max-width:380px;">
+      <a href="Лада - Лендинг.dc.html" style="display:block; font-family:'Oswald',sans-serif; font-weight:800; font-size:22px; color:#F2C2C0; margin-bottom:36px;">ЛАДА</a>
+      <h1 style="font-family:'Oswald',sans-serif; font-weight:700; text-transform:uppercase; font-size:26px; margin:0 0 28px;">Вход в личный кабинет</h1>
+
+      <label style="display:block; font-size:12px; font-weight:600; color:#C4ADA8; margin-bottom:6px;">E-mail</label>
+      <input type="text" placeholder="anna@mail.ru" style="width:100%; background:#332522; border:1px solid #4A3733; border-radius:8px; padding:12px 14px; font-size:14px; color:#F5EBE8; font-family:'Manrope',sans-serif; margin-bottom:16px;" />
+
+      <label style="display:block; font-size:12px; font-weight:600; color:#C4ADA8; margin-bottom:6px;">Пароль</label>
+      <div style="position:relative; margin-bottom:16px;">
+        <input type="password" placeholder="••••••••" style="width:100%; background:#332522; border:1px solid #4A3733; border-radius:8px; padding:12px 40px 12px 14px; font-size:14px; color:#F5EBE8; font-family:'Manrope',sans-serif;" />
+        <i data-lucide="eye" width="17" height="17" stroke-width="1.5" style="position:absolute; right:12px; top:50%; transform:translateY(-50%); color:#9A807A;"></i>
+      </div>
+
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:24px;">
+        <div style="display:flex; align-items:center; gap:8px;">
+          <div style="width:18px; height:18px; border-radius:5px; border:1.5px solid #4A3733;"></div>
+          <span style="font-size:13px; color:#C4ADA8;">Запомнить меня</span>
+        </div>
+        <a href="14. Восстановление пароля.dc.html" style="font-size:13px; font-weight:700;">Забыли пароль?</a>
+      </div>
+
+      <a href="7. Кабинет - Предстоящие записи.dc.html" style="width:100%; background:#F2C2C0; color:#2A1C1A; border:none; border-radius:16px; padding:13px; font-size:14.5px; font-weight:700; font-family:'Manrope',sans-serif; margin-bottom:24px; display:block; text-align:center; text-decoration:none; box-sizing:border-box;">Войти</a>
+
+      <div style="display:flex; align-items:center; gap:12px; margin-bottom:24px;">
+        <div style="flex:1; height:1px; background:#4A3733;"></div>
+      </div>
+
+      <div style="text-align:center; font-size:13.5px; color:#9A807A; margin-bottom:20px;">Нет аккаунта? <a href="13. Регистрация.dc.html" style="font-weight:700;">Зарегистрироваться</a></div>
+      <div style="text-align:center;"><a href="Лада - Лендинг.dc.html" style="font-size:13px; font-weight:600; color:#9A807A;">← Вернуться на сайт</a></div>
+    </div>
+  </div>
+
+  <div style="position:relative; background:repeating-linear-gradient(135deg,#332522,#332522 12px,#3D2B28 12px,#3D2B28 24px); display:flex; align-items:flex-start; padding:48px;">
+    <div style="position:absolute; top:24px; left:24px; font-family:monospace; font-size:11px; color:#9A807A;">фото интерьера студии</div>
+    <div style="font-family:'Oswald',sans-serif; font-weight:600; font-size:28px; line-height:1.3; color:#F5EBE8; max-width:380px; text-shadow:0 2px 20px rgba(0,0,0,.4); margin-top:80px;">«Красота — это забота о себе, на которую всегда найдётся время»</div>
+  </div>
+
+  <div style="position:absolute; right:40px; bottom:40px; width:300px; display:flex; flex-direction:column; gap:16px;">
+    <div>
+      <div style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:#F5EBE8; margin-bottom:10px; text-shadow:0 2px 8px rgba(0,0,0,.5);">Состояние: ошибка входа</div>
+      <div style="background:#2B201D; border:1px solid #4A3733; border-radius:20px; padding:18px;">
+        <div style="display:flex; gap:9px; align-items:flex-start; background:rgba(229,128,120,.12); border:1px solid rgba(229,128,120,.3); border-radius:12px; padding:10px 12px; margin-bottom:14px;">
+          <i data-lucide="x-circle" width="15" height="15" stroke-width="1.5" style="color:#E58078; flex:none; margin-top:1px;"></i>
+          <span style="font-size:12.5px; color:#F5EBE8;">Неверный e-mail или пароль</span>
+        </div>
+        <input readonly="{{ true }}" value="anna@mail" style="width:100%; background:#332522; border:1px solid #E58078; border-radius:8px; padding:9px 12px; font-size:13px; color:#F5EBE8; margin-bottom:8px;" />
+        <input readonly="{{ true }}" type="password" value="12345" style="width:100%; background:#332522; border:1px solid #E58078; border-radius:8px; padding:9px 12px; font-size:13px; color:#F5EBE8;" />
+      </div>
+    </div>
+
+    <div>
+      <div style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:#F5EBE8; margin-bottom:10px; text-shadow:0 2px 8px rgba(0,0,0,.5);">Состояние: загрузка</div>
+      <button style="width:100%; background:#F2C2C0; color:#2A1C1A; border:none; border-radius:16px; padding:12px; font-size:13.5px; font-weight:700; font-family:'Manrope',sans-serif; display:flex; align-items:center; justify-content:center; gap:8px; opacity:.85;">
+        <i data-lucide="loader-2" width="15" height="15" style="animation:ladSpin 0.8s linear infinite;"></i>Входим…
+      </button>
+    </div>
+
+    <div>
+      <div style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:#F5EBE8; margin-bottom:10px; text-shadow:0 2px 8px rgba(0,0,0,.5);">Состояние: вход из воронки записи</div>
+      <div style="display:flex; gap:9px; align-items:flex-start; background:rgba(140,169,190,.14); border:1px solid rgba(140,169,190,.35); border-radius:12px; padding:12px 14px;">
+        <i data-lucide="info" width="15" height="15" stroke-width="1.5" style="color:#8CA9BE; flex:none; margin-top:1px;"></i>
+        <span style="font-size:12px; color:#F5EBE8; line-height:1.4;">Войдите, чтобы завершить запись на 23 октября, 14:00. Ваш выбор сохранён.</span>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  componentDidMount(){ this.renderIcons(); }
+  renderIcons(){ if(window.lucide) window.lucide.createIcons(); }
+  renderVals(){ return {}; }
+}
+
+</script>
+</body>
+</html>

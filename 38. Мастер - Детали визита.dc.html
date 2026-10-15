@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta charset="utf-8">
+<title>Лада — Мастер: Детали визита</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+<style>
+  body{margin:0;-webkit-font-smoothing:antialiased;background:#1C1412;}
+  * { box-sizing: border-box; }
+  ::selection{ background:#F2C2C0; color:#2A1C1A; }
+  @media (prefers-reduced-motion: reduce){ * { animation:none !important; transition:none !important; } }
+</style>
+</helmet>
+
+<div style="font-family:'Manrope',sans-serif; background:#1C1412; min-height:100vh; display:flex; gap:24px; justify-content:center; flex-wrap:wrap; padding:32px;">
+
+  <div style="width:390px; background:#241A18; color:#F5EBE8; border-radius:28px; overflow:hidden; display:flex; flex-direction:column; min-height:800px;">
+    <div onClick="{{ goToMyDay }}" style="padding:18px 18px 0; display:flex; align-items:center; gap:10px; margin-bottom:6px;">
+      <i data-lucide="arrow-left" width="20" height="20" stroke-width="1.5" style="color:#C4ADA8;"></i>
+      <span style="font-size:13px; font-weight:600; color:#C4ADA8;">Назад</span>
+    </div>
+    <div style="padding:14px 18px 0; flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:14px;">
+
+      <div>
+        <span style="display:inline-flex; font-size:11px; font-weight:700; padding:4px 10px; border-radius:999px; background:rgba(143,191,120,.14); color:#8FBF78; margin-bottom:10px;">Подтверждена</span>
+        <div style="font-size:19px; font-weight:700; font-variant-numeric:tabular-nums; margin-bottom:4px;">Пятница, 23 октября · 14:00–16:00</div>
+        <div style="font-size:12.5px; color:#9A807A;">через 9 дней</div>
+      </div>
+
+      <div style="background:#2B201D; border:1px solid #4A3733; border-radius:18px; padding:16px;">
+        <div style="display:flex; align-items:center; gap:12px; margin-bottom:4px;">
+          <div style="width:42px; height:42px; border-radius:999px; background:#3D2B28; color:#F2C2C0; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:14px; flex:none;">АС</div>
+          <div style="flex:1; min-width:0;">
+            <div style="font-size:15px; font-weight:700;">Анна Соколова</div>
+            <div style="font-size:12px; color:#9A807A;">12 визитов ко мне · 1 неявка</div>
+          </div>
+        </div>
+        <div style="font-size:13px; color:#C4ADA8; font-variant-numeric:tabular-nums; margin:8px 0 12px;">+7 913 445-21-08</div>
+        <div style="display:flex; gap:8px; margin-bottom:8px;">
+          <button style="flex:1; background:#F2C2C0; color:#2A1C1A; border:none; border-radius:14px; padding:12px; font-size:13px; font-weight:700; font-family:'Manrope',sans-serif; display:flex; align-items:center; justify-content:center; gap:6px;"><i data-lucide="phone" width="15" height="15" stroke-width="1.5"></i>Позвонить</button>
+          <button style="flex:1; background:transparent; color:#F5EBE8; border:1.5px solid #4A3733; border-radius:14px; padding:12px; font-size:13px; font-weight:700; font-family:'Manrope',sans-serif; display:flex; align-items:center; justify-content:center; gap:6px;"><i data-lucide="message-circle" width="15" height="15" stroke-width="1.5"></i>Написать</button>
+        </div>
+        <div style="font-size:11px; color:#6B5852;">Вы видите контакты только своих клиентов</div>
+      </div>
+
+      <div style="background:#2B201D; border:1px solid #4A3733; border-radius:18px; padding:16px;">
+        <div style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:#9A807A; margin-bottom:10px;">Услуги</div>
+        <div style="display:flex; justify-content:space-between; font-size:13.5px; color:#F5EBE8; padding:6px 0;"><span>Маникюр с покрытием</span><span style="color:#9A807A; font-variant-numeric:tabular-nums;">90 мин</span></div>
+        <div style="display:flex; justify-content:space-between; font-size:13.5px; color:#F5EBE8; padding:6px 0; border-bottom:1px solid #332522;"><span>Коррекция бровей</span><span style="color:#9A807A; font-variant-numeric:tabular-nums;">30 мин</span></div>
+        <div style="display:flex; justify-content:space-between; font-size:13.5px; font-weight:700; padding-top:10px;"><span>Итого</span><span style="font-variant-numeric:tabular-nums;">2 ч 00 мин</span></div>
+      </div>
+
+      <div style="background:#2B201D; border:1px solid #4A3733; border-radius:18px; padding:16px;">
+        <div style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:#9A807A; margin-bottom:8px;">Комментарий клиента</div>
+        <div style="font-size:13px; color:#C4ADA8;">—</div>
+      </div>
+
+      <div style="background:#2B201D; border:1px solid #4A3733; border-radius:18px; padding:16px;">
+        <div style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:#9A807A; margin-bottom:8px;">Моя заметка <span style="text-transform:none; color:#6B5852; font-weight:600;">· клиент не видит</span></div>
+        <div style="font-size:13px; color:#F5EBE8; margin-bottom:10px;">Предпочитает нейтральные оттенки</div>
+        <button style="background:transparent; color:#F2C2C0; border:1.5px solid #4A3733; border-radius:12px; padding:8px 14px; font-size:12.5px; font-weight:700; font-family:'Manrope',sans-serif;">Добавить заметку</button>
+      </div>
+
+      <div style="display:flex; gap:8px;">
+        <button style="flex:1; background:rgba(143,191,120,.14); color:#8FBF78; border:none; border-radius:14px; padding:12px 6px; font-size:12px; font-weight:700; font-family:'Manrope',sans-serif;">Клиент пришёл</button>
+        <button style="flex:1; background:rgba(229,128,120,.14); color:#E58078; border:none; border-radius:14px; padding:12px 6px; font-size:12px; font-weight:700; font-family:'Manrope',sans-serif;">Не пришёл</button>
+        <button style="flex:1; background:#3D2B28; color:#C4ADA8; border:none; border-radius:14px; padding:12px 6px; font-size:12px; font-weight:700; font-family:'Manrope',sans-serif;">Завершён</button>
+      </div>
+
+      <button style="width:100%; background:transparent; color:#E58078; border:1.5px solid #5A3832; border-radius:14px; padding:13px; font-size:13.5px; font-weight:700; font-family:'Manrope',sans-serif;">Запросить отмену</button>
+      <div style="display:flex; gap:8px; align-items:flex-start; background:#2B201D; border-radius:12px; padding:11px 13px; margin-bottom:20px;">
+        <i data-lucide="info" width="14" height="14" stroke-width="1.5" style="color:#8CA9BE; flex:none; margin-top:1px;"></i>
+        <span style="font-size:11.5px; color:#9A807A; line-height:1.4;">Отменить запись может только администратор. Мы отправим ему ваш запрос.</span>
+      </div>
+
+    </div>
+  </div>
+
+  <div style="width:390px; background:#241A18; color:#F5EBE8; border-radius:28px; overflow:hidden; display:flex; flex-direction:column; min-height:800px; position:relative;">
+    <div onClick="{{ goToMyDay }}" style="padding:18px 18px 0; display:flex; align-items:center; gap:10px;">
+      <i data-lucide="arrow-left" width="20" height="20" stroke-width="1.5" style="color:#C4ADA8;"></i>
+      <span style="font-size:13px; font-weight:600; color:#C4ADA8;">Назад</span>
+    </div>
+    <div style="padding:14px 18px; opacity:.4;">
+      <div style="font-size:19px; font-weight:700; font-variant-numeric:tabular-nums;">Пятница, 23 октября · 14:00–16:00</div>
+      <div style="background:#2B201D; border:1px solid #4A3733; border-radius:18px; height:120px; margin-top:14px;"></div>
+    </div>
+
+    <div style="position:absolute; left:0; right:0; bottom:0; background:#2B201D; border-top:1px solid #4A3733; border-radius:24px 24px 0 0; padding:22px 20px 26px; box-shadow:0 -10px 30px rgba(0,0,0,.3);">
+      <div style="width:36px; height:4px; border-radius:999px; background:#4A3733; margin:0 auto 18px;"></div>
+      <div style="font-size:16px; font-weight:700; margin-bottom:14px;">Запросить отмену</div>
+      <label style="display:block; font-size:12px; font-weight:600; color:#C4ADA8; margin-bottom:6px;">Причина *</label>
+      <textarea placeholder="Опишите причину отмены" style="width:100%; min-height:76px; background:#332522; border:1px solid #4A3733; border-radius:8px; padding:11px 14px; font-size:13.5px; color:#F5EBE8; font-family:'Manrope',sans-serif; resize:vertical; margin-bottom:10px;"></textarea>
+      <div style="font-size:11.5px; color:#9A807A; line-height:1.4; margin-bottom:18px;">Администратор получит запрос и решит, отменить или перенести визит.</div>
+      <div style="display:flex; gap:10px;">
+        <button style="flex:1; background:transparent; color:#C4ADA8; border:1.5px solid #4A3733; border-radius:14px; padding:12px; font-size:13px; font-weight:700; font-family:'Manrope',sans-serif;">Отмена</button>
+        <button style="flex:1; background:#F2C2C0; color:#2A1C1A; border:none; border-radius:14px; padding:12px; font-size:13px; font-weight:700; font-family:'Manrope',sans-serif;">Отправить запрос</button>
+      </div>
+    </div>
+  </div>
+
+  <div style="width:390px;">
+    <div style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:#F5EBE8; margin-bottom:10px;">Состояние: запрос отправлен</div>
+    <div style="background:#241A18; border:1px solid #4A3733; border-radius:18px; padding:16px;">
+      <span style="display:inline-flex; font-size:11px; font-weight:700; padding:4px 10px; border-radius:999px; background:rgba(227,165,72,.14); color:#E3A548; margin-bottom:10px;">Запрос отправлен, ожидает решения</span>
+      <div style="font-size:15px; font-weight:700; color:#F5EBE8; font-variant-numeric:tabular-nums; margin-bottom:4px;">Пятница, 23 октября · 14:00–16:00</div>
+      <div style="font-size:12.5px; color:#9A807A;">Анна Соколова · Маникюр с покрытием, Коррекция бровей</div>
+    </div>
+  </div>
+
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  componentDidMount(){ this.renderIcons(); }
+  renderIcons(){ if(window.lucide) window.lucide.createIcons(); }
+  renderVals(){
+    const goToMyDay = () => { window.location.href = '36. Мастер - Мой день.dc.html'; };
+    return { goToMyDay };
+  }
+}
+
+</script>
+</body>
+</html>

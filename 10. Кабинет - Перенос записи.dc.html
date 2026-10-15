@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta charset="utf-8">
+<title>Лада — Перенос записи</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+<style>
+  body{margin:0;-webkit-font-smoothing:antialiased;background:#241A18;}
+  * { box-sizing: border-box; }
+  ::selection{ background:#F2C2C0; color:#2A1C1A; }
+  a{ color:#F2C2C0; text-decoration:none; }
+  a:hover{ color:#E8AEAC; }
+  @media (prefers-reduced-motion: reduce){ * { animation:none !important; transition:none !important; } }
+</style>
+</helmet>
+
+<div style="font-family:'Manrope',sans-serif; background:#241A18; color:#F5EBE8; min-height:100vh; display:flex;">
+
+  <aside style="width:232px; flex:none; background:#2B201D; border-right:1px solid #4A3733; display:flex; flex-direction:column; padding:24px 16px; position:sticky; top:0; height:100vh;">
+    <div style="font-family:'Oswald',sans-serif; font-weight:800; font-size:20px; color:#F2C2C0; padding:0 8px; margin-bottom:28px;">ЛАДА</div>
+    <nav style="display:flex; flex-direction:column; gap:2px; flex:1;">
+      <sc-for list="{{ sidebarItems }}" as="si" hint-placeholder-count="5">
+        <div style="display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:10px; background:{{ si.bg }}; color:{{ si.fg }}; font-size:13.5px; font-weight:600;">
+          <i data-lucide="{{ si.icon }}" width="17" height="17" stroke-width="1.5"></i>{{ si.label }}
+        </div>
+      </sc-for>
+    </nav>
+    <button style="background:#F2C2C0; color:#2A1C1A; border:none; border-radius:16px; padding:12px; font-size:13.5px; font-weight:700; font-family:'Manrope',sans-serif; display:flex; align-items:center; justify-content:center; gap:7px;"><i data-lucide="plus" width="16" height="16" stroke-width="2"></i>Новая запись</button>
+  </aside>
+
+  <div style="flex:1; min-width:0; display:flex; flex-direction:column;">
+
+    <header style="position:sticky; top:0; z-index:30; background:rgba(36,26,24,0.95); backdrop-filter:blur(8px); border-bottom:1px solid #4A3733;">
+      <div style="padding:14px 40px; display:flex; align-items:center; justify-content:space-between; gap:24px;">
+        <div style="font-family:'Oswald',sans-serif; font-weight:700; text-transform:uppercase; font-size:17px;">Перенос записи</div>
+        <button style="background:transparent; border:none; color:#9A807A; display:flex; align-items:center; gap:6px; font-size:13px; font-weight:600; font-family:'Manrope',sans-serif;"><i data-lucide="x" width="16" height="16" stroke-width="1.5"></i>Закрыть</button>
+      </div>
+      <div style="padding:14px 40px; border-top:1px solid #4A3733; display:flex; align-items:center; gap:16px; flex-wrap:wrap; background:#2B201D;">
+        <i data-lucide="lock" width="14" height="14" stroke-width="1.5" style="color:#6B5852; flex:none;"></i>
+        <span style="font-size:13px; color:#9A807A;">Ольга Белова · Маникюр с покрытием, Коррекция бровей <span style="white-space:nowrap;">· 2 ч 00 мин · 2 600 ₽</span></span>
+        <span style="font-size:11.5px; color:#6B5852; margin-left:auto;">Состав услуг и мастер сохраняются. Чтобы изменить их, отмените запись и создайте новую</span>
+      </div>
+      <div style="padding:10px 40px; border-top:1px solid #332522; font-size:13px; color:#6B5852; text-decoration:line-through;">Текущее время: пятница, 23 октября, 14:00</div>
+    </header>
+
+    <main style="padding:32px 40px 0; flex:1;">
+      <div style="display:grid; grid-template-columns:minmax(0,0.85fr) minmax(0,1.15fr); gap:28px; align-items:start;">
+
+        <div style="min-width:0;">
+          <div style="background:#2B201D; border:1px solid #4A3733; border-radius:24px; padding:22px;">
+            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:18px;">
+              <i data-lucide="chevron-left" width="18" height="18" stroke-width="1.5" style="color:#4A3733;"></i>
+              <div style="font-family:'Oswald',sans-serif; font-weight:600; font-size:16px; text-transform:uppercase;">Октябрь 2026</div>
+              <i data-lucide="chevron-right" width="18" height="18" stroke-width="1.5" style="color:#9A807A;"></i>
+            </div>
+            <div style="display:grid; grid-template-columns:repeat(7,1fr); gap:6px; margin-bottom:6px;">
+              <sc-for list="{{ weekdayLabels }}" as="wd" hint-placeholder-count="7"><div style="text-align:center; font-size:10.5px; color:#6B5852; text-transform:uppercase; padding:4px 0;">{{ wd }}</div></sc-for>
+            </div>
+            <div style="display:grid; grid-template-columns:repeat(7,1fr); gap:6px;">
+              <sc-for list="{{ calendarCells }}" as="cell" hint-placeholder-count="35">
+                <div style="aspect-ratio:1; border-radius:10px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; background:{{ cell.bg }}; border:{{ cell.border }}; opacity:{{ cell.opacity }}; position:relative;">
+                  <sc-if value="{{ cell.num }}">
+                    <span style="font-size:13px; font-weight:700; color:{{ cell.fg }}; font-variant-numeric:tabular-nums;">{{ cell.num }}</span>
+                    <div style="display:flex; gap:2px; height:4px;"><sc-for list="{{ cell.dots }}" as="dot" hint-placeholder-count="3"><div style="width:4px; height:4px; border-radius:999px; background:{{ dot }};"></div></sc-for></div>
+                  </sc-if>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </div>
+
+        <div style="min-width:0;">
+          <div style="font-size:16px; font-weight:700; color:#F5EBE8; margin-bottom:10px;">Вторник, 27 октября</div>
+          <div style="display:flex; align-items:center; gap:10px; background:rgba(140,169,190,.12); border:1px solid rgba(140,169,190,.3); border-radius:14px; padding:12px 16px; margin-bottom:18px;">
+            <i data-lucide="info" width="16" height="16" stroke-width="1.5" style="color:#8CA9BE; flex:none;"></i>
+            <span style="font-size:13px; color:#C4ADA8;">Нужно 2 ч 00 мин подряд — показываем только подходящее начало</span>
+          </div>
+
+          <sc-for list="{{ dayParts }}" as="dp" hint-placeholder-count="3">
+            <div style="margin-bottom:18px;">
+              <div style="font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:#9A807A; margin-bottom:10px;">{{ dp.title }}</div>
+              <div style="display:grid; grid-template-columns:repeat(auto-fill,minmax(84px,1fr)); gap:8px;">
+                <sc-for list="{{ dp.slots }}" as="sl" hint-placeholder-count="5">
+                  <div style="position:relative;">
+                    <div role="button" aria-label="{{ sl.aria }}" style="min-height:44px; border-radius:10px; display:flex; align-items:center; justify-content:center; gap:5px; font-size:13px; font-weight:700; font-variant-numeric:tabular-nums; background:{{ sl.bg }}; color:{{ sl.fg }}; border:{{ sl.border }};">
+                      <sc-if value="{{ sl.icon }}"><i data-lucide="{{ sl.icon }}" width="12" height="12" stroke-width="2"></i></sc-if>{{ sl.time }}
+                    </div>
+                    <sc-if value="{{ sl.currentTag }}"><div style="position:absolute; top:-9px; left:50%; transform:translateX(-50%); font-size:8.5px; font-weight:700; padding:2px 6px; border-radius:999px; background:#4A3733; color:#C4ADA8; white-space:nowrap;">Текущая запись</div></sc-if>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+
+      </div>
+    </main>
+
+    <div style="position:sticky; bottom:0; background:rgba(36,26,24,0.97); backdrop-filter:blur(8px); border-top:1px solid #4A3733; margin-top:24px;">
+      <div style="padding:18px 40px;">
+        <div style="display:flex; align-items:center; gap:10px; margin-bottom:12px; flex-wrap:wrap; font-size:14px;">
+          <span style="color:#9A807A; text-decoration:line-through; font-variant-numeric:tabular-nums;">Было: 23 октября, 14:00</span>
+          <i data-lucide="arrow-right" width="15" height="15" stroke-width="1.5" style="color:#9A807A;"></i>
+          <span style="color:#F5EBE8; font-weight:700; font-variant-numeric:tabular-nums;">Станет: 27 октября, 11:00</span>
+        </div>
+        <div style="display:flex; gap:10px; align-items:flex-start; background:rgba(227,165,72,.12); border:1px solid rgba(227,165,72,.3); border-radius:14px; padding:12px 16px; margin-bottom:16px;">
+          <i data-lucide="triangle-alert" width="16" height="16" stroke-width="1.5" style="color:#E3A548; flex:none; margin-top:1px;"></i>
+          <span style="font-size:12.5px; color:#C4ADA8; line-height:1.5;">Старое время освободится только после успешного переноса.</span>
+        </div>
+        <div style="display:flex; justify-content:flex-end; gap:10px;">
+          <button onClick="{{ goToDetails }}" style="background:transparent; color:#C4ADA8; border:1.5px solid #4A3733; border-radius:16px; padding:11px 20px; font-size:13.5px; font-weight:700; font-family:'Manrope',sans-serif;">Отмена</button>
+          <button onClick="{{ goToRecords }}" style="background:#F2C2C0; color:#2A1C1A; border:none; border-radius:16px; padding:11px 24px; font-size:13.5px; font-weight:700; font-family:'Manrope',sans-serif;">Перенести запись</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  componentDidMount(){ this.renderIcons(); }
+  componentDidUpdate(){ this.renderIcons(); }
+  renderIcons(){ if(window.lucide) window.lucide.createIcons(); }
+
+  renderVals(){
+    const goToRecords = () => { window.location.href = '7. Кабинет - Предстоящие записи.dc.html'; };
+    const goToDetails = () => { window.location.href = '9. Кабинет - Детали записи и отмена.dc.html'; };
+    const sidebarItems = [
+      {icon:'calendar', label:'Мои записи', bg:'rgba(242,194,192,.14)', fg:'#F2C2C0'},
+      {icon:'history', label:'История', bg:'transparent', fg:'#C4ADA8'},
+      {icon:'bell', label:'Уведомления', bg:'transparent', fg:'#C4ADA8'},
+      {icon:'user', label:'Профиль', bg:'transparent', fg:'#C4ADA8'},
+      {icon:'log-out', label:'Выйти', bg:'transparent', fg:'#C4ADA8'},
+    ];
+
+    const weekdayLabels = ['пн','вт','ср','чт','пт','сб','вс'];
+    const leadingBlanks = 3, today = 12;
+    const cells = [];
+    for(let i=0;i<leadingBlanks;i++) cells.push({num:null});
+    for(let d=1; d<=31; d++){
+      let bg='#241A18', border='1px solid #332522', fg='#C4ADA8', opacity=1, dots=[];
+      if(d < today){ fg='#5A4642'; opacity=.5; }
+      else if(d === today){ border='1.5px solid #9A807A'; }
+      if(d===27){ bg='#F2C2C0'; fg='#2A1C1A'; border='1px solid #F2C2C0'; }
+      else if([14,21,28].includes(d)){ bg='repeating-linear-gradient(135deg,#2B201D,#2B201D 5px,#332522 5px,#332522 10px)'; fg='#6B5852'; opacity=.6; }
+      else if([13,15,16,19,20,22,23,26,29,30].includes(d)){ dots=['#F2C2C0']; }
+      else if(d>=today){ dots=['#F2C2C0','#F2C2C0','#F2C2C0']; }
+      cells.push({num:d, bg, border, fg, opacity, dots});
+    }
+    while(cells.length % 7 !== 0) cells.push({num:null});
+
+    const slot = (time, state, currentTag)=>{
+      if(state==='free') return {time, bg:'#241A18', fg:'#C4ADA8', border:'1px dashed #4A3733', icon:null, aria:time+', свободно', currentTag};
+      if(state==='selected') return {time, bg:'#F2C2C0', fg:'#2A1C1A', border:'1px solid #F2C2C0', icon:'check', aria:time+', выбрано', currentTag};
+      if(state==='booked') return {time, bg:'repeating-linear-gradient(135deg,#3D2B28,#3D2B28 6px,#4A3733 6px,#4A3733 12px)', fg:'#9A807A', border:'1px solid #4A3733', icon:'lock', aria:time+', занято', currentTag};
+    };
+
+    const dayParts = [
+      { title:'Утро', slots:[slot('9:00','free'), slot('10:00','booked'), slot('11:00','selected')] },
+      { title:'День', slots:[slot('12:00','free'), slot('13:00','free'), slot('14:00','booked',true), slot('15:00','free'), slot('16:00','free')] },
+      { title:'Вечер', slots:[slot('18:00','free'), slot('19:00','booked')] },
+    ];
+
+    return { sidebarItems, weekdayLabels, calendarCells: cells, dayParts, goToRecords, goToDetails };
+  }
+}
+
+</script>
+</body>
+</html>

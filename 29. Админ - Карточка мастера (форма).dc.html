@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta charset="utf-8">
+<title>Лада — Админ: Карточка мастера</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+<style>
+  body{margin:0;-webkit-font-smoothing:antialiased;background:#FDF8F6;}
+  * { box-sizing: border-box; }
+  ::selection{ background:#F2C2C0; color:#2A1C1A; }
+  a{ color:#A65451; text-decoration:none; }
+  a:hover{ color:#8A423F; }
+  @media (prefers-reduced-motion: reduce){ * { animation:none !important; transition:none !important; } }
+</style>
+</helmet>
+
+<div style="font-family:'Manrope',sans-serif; background:#FDF8F6; color:#2A1C1A; min-height:100vh; display:flex;">
+
+  <aside style="width:240px; flex:none; background:#2A1C1A; display:flex; flex-direction:column; padding:24px 16px; position:sticky; top:0; height:100vh;">
+    <div style="padding:0 8px; margin-bottom:6px;"><span onClick="{{ goToDashboard }}" style="font-family:'Oswald',sans-serif; font-weight:800; font-size:20px; color:#F2C2C0; cursor:pointer;">ЛАДА</span></div>
+    <div style="padding:0 8px; margin-bottom:24px;"><span style="font-size:10.5px; font-weight:700; padding:3px 9px; border-radius:999px; background:rgba(242,194,192,.16); color:#F2C2C0;">Администратор</span></div>
+    <nav style="display:flex; flex-direction:column; gap:2px; flex:1;">
+      <sc-for list="{{ sidebarItems }}" as="si" hint-placeholder-count="8">
+        <div onClick="{{ si.onClick }}" style="display:flex; align-items:center; justify-content:space-between; gap:10px; padding:10px 12px; border-radius:10px; background:{{ si.bg }}; color:{{ si.fg }}; font-size:13.5px; font-weight:600; cursor:pointer;">
+          <div style="display:flex; align-items:center; gap:10px;"><i data-lucide="{{ si.icon }}" width="17" height="17" stroke-width="1.5"></i>{{ si.label }}</div>
+          <sc-if value="{{ si.badge }}"><span style="width:18px; height:18px; border-radius:999px; background:#F2C2C0; color:#2A1C1A; font-size:10px; font-weight:800; display:flex; align-items:center; justify-content:center;">{{ si.badge }}</span></sc-if>
+        </div>
+      </sc-for>
+    </nav>
+    <div style="display:flex; align-items:center; gap:10px; padding:10px 8px; border-top:1px solid #3D2B28; margin-top:8px; padding-top:16px;">
+      <div style="width:32px; height:32px; border-radius:999px; background:#F2C2C0; color:#2A1C1A; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:12px; flex:none;">ЕК</div>
+      <div style="flex:1; min-width:0;">
+        <div style="font-size:13px; font-weight:600; color:#F5EBE8; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Елена Крылова</div>
+        <a href="Лада - Лендинг.dc.html" style="font-size:11.5px; color:#9A807A;">Выйти</a>
+      </div>
+    </div>
+  </aside>
+
+  <div style="flex:1; min-width:0;">
+    <main style="padding:32px; max-width:1180px;">
+
+      <div style="display:flex; align-items:center; gap:8px; font-size:13px; color:#8A726D; margin-bottom:18px; flex-wrap:wrap;">
+        <a href="28. Админ - Мастера.dc.html">Мастера</a><i data-lucide="chevron-right" width="13" height="13" stroke-width="1.5"></i><a href="#">Ольга Белова</a><i data-lucide="chevron-right" width="13" height="13" stroke-width="1.5"></i><span style="color:#5C4440;">Редактирование</span>
+      </div>
+
+      <div style="display:grid; grid-template-columns:minmax(0,1.6fr) minmax(260px,1fr); gap:28px; align-items:start;">
+
+        <div style="min-width:0; display:flex; flex-direction:column; gap:20px;">
+
+          <div style="background:#FFFFFF; border:1px solid #E8DAD6; border-radius:20px; padding:24px;">
+            <div style="font-size:14px; font-weight:700; margin-bottom:18px;">Основное</div>
+            <div style="display:flex; gap:16px; margin-bottom:20px; align-items:center;">
+              <div style="width:72px; height:72px; border-radius:16px; flex:none; background:repeating-linear-gradient(135deg,#F3E9E6,#F3E9E6 8px,#FDF8F6 8px,#FDF8F6 16px); display:flex; align-items:center; justify-content:center; font-family:monospace; font-size:9px; color:#B9A69F; text-align:center;">фото</div>
+              <button style="background:transparent; color:#A65451; border:1.5px solid #E8DAD6; border-radius:12px; padding:9px 16px; font-size:12.5px; font-weight:700; font-family:'Manrope',sans-serif; display:flex; align-items:center; gap:6px; white-space:nowrap;"><i data-lucide="upload" width="14" height="14" stroke-width="1.5"></i>Загрузить фото</button>
+            </div>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:14px;">
+              <div><label style="display:block; font-size:12px; font-weight:600; color:#5C4440; margin-bottom:6px;">Имя</label><input value="Ольга" readonly="{{ true }}" style="width:100%; background:#FDF8F6; border:1px solid #E8DAD6; border-radius:8px; padding:10px 14px; font-size:13.5px; color:#2A1C1A; font-family:'Manrope',sans-serif;" /></div>
+              <div><label style="display:block; font-size:12px; font-weight:600; color:#5C4440; margin-bottom:6px;">Фамилия</label><input value="Белова" readonly="{{ true }}" style="width:100%; background:#FDF8F6; border:1px solid #E8DAD6; border-radius:8px; padding:10px 14px; font-size:13.5px; color:#2A1C1A; font-family:'Manrope',sans-serif;" /></div>
+              <div><label style="display:block; font-size:12px; font-weight:600; color:#5C4440; margin-bottom:6px;">Специализация</label><input value="Маникюр, брови" readonly="{{ true }}" style="width:100%; background:#FDF8F6; border:1px solid #E8DAD6; border-radius:8px; padding:10px 14px; font-size:13.5px; color:#2A1C1A; font-family:'Manrope',sans-serif;" /></div>
+              <div><label style="display:block; font-size:12px; font-weight:600; color:#5C4440; margin-bottom:6px;">Стаж, лет</label><input value="6" readonly="{{ true }}" style="width:100%; background:#FDF8F6; border:1px solid #E8DAD6; border-radius:8px; padding:10px 14px; font-size:13.5px; color:#2A1C1A; font-family:'Manrope',sans-serif;" /></div>
+            </div>
+            <label style="display:block; font-size:12px; font-weight:600; color:#5C4440; margin-bottom:6px;">Описание для сайта</label>
+            <textarea style="width:100%; min-height:90px; background:#FDF8F6; border:1px solid #E8DAD6; border-radius:8px; padding:11px 14px; font-size:13.5px; color:#2A1C1A; font-family:'Manrope',sans-serif; resize:vertical;">Работаю с 2020 года, специализируюсь на долговременных покрытиях и аккуратном дизайне.</textarea>
+            <div style="font-size:11px; color:#B9A69F; text-align:right; margin-top:4px; font-variant-numeric:tabular-nums;">98 / 300</div>
+          </div>
+
+          <div style="background:#FFFFFF; border:1px solid #E8DAD6; border-radius:20px; padding:24px;">
+            <div style="font-size:14px; font-weight:700; margin-bottom:6px;">Услуги</div>
+            <div style="font-size:12px; color:#8A726D; margin-bottom:16px; line-height:1.4;">Клиент увидит мастера только если тот выполняет все выбранные услуги визита.</div>
+            <sc-for list="{{ serviceGroups }}" as="g" hint-placeholder-count="4">
+              <div style="margin-bottom:16px;">
+                <div style="font-size:11.5px; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:#8A726D; margin-bottom:8px;">{{ g.title }}</div>
+                <div style="display:flex; flex-direction:column; gap:9px;">
+                  <sc-for list="{{ g.items }}" as="it" hint-placeholder-count="3">
+                    <div style="display:flex; align-items:center; gap:10px;">
+                      <div style="{{ it.checkShape }}"></div>
+                      <span style="font-size:13px; color:#2A1C1A;">{{ it.name }}</span>
+                    </div>
+                  </sc-for>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+
+          <div style="background:#FFFFFF; border:1px solid #E8DAD6; border-radius:20px; padding:24px;">
+            <div style="font-size:14px; font-weight:700; margin-bottom:16px;">Отображение на сайте</div>
+            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:16px;">
+              <span style="font-size:13px; color:#2A1C1A;">Показывать в каталоге мастеров</span>
+              <div style="width:34px; height:20px; border-radius:999px; background:#A65451; flex:none;"></div>
+            </div>
+            <div style="max-width:200px;"><label style="display:block; font-size:12px; font-weight:600; color:#5C4440; margin-bottom:6px;">Порядок сортировки</label><input value="1" readonly="{{ true }}" style="width:100%; background:#FDF8F6; border:1px solid #E8DAD6; border-radius:8px; padding:10px 14px; font-size:13.5px; color:#2A1C1A; font-variant-numeric:tabular-nums; font-family:'Manrope',sans-serif;" /></div>
+          </div>
+
+          <div style="display:flex; gap:10px;">
+            <button onClick="{{ goToMasters }}" style="background:transparent; color:#5C4440; border:1.5px solid #E8DAD6; border-radius:16px; padding:11px 22px; font-size:13.5px; font-weight:700; font-family:'Manrope',sans-serif; cursor:pointer;">Отмена</button>
+            <button onClick="{{ goToMasters }}" style="background:#2A1C1A; color:#F2C2C0; border:none; border-radius:16px; padding:11px 24px; font-size:13.5px; font-weight:700; font-family:'Manrope',sans-serif; cursor:pointer;">Сохранить</button>
+          </div>
+        </div>
+
+        <div style="display:flex; flex-direction:column; gap:16px; min-width:0;">
+
+          <div style="background:#FFFFFF; border:1px solid #E8DAD6; border-radius:20px; padding:20px;">
+            <div style="font-size:13px; font-weight:700; margin-bottom:12px;">Доступ в систему</div>
+            <span style="display:inline-flex; font-size:11px; font-weight:700; padding:4px 10px; border-radius:999px; background:#EEF6EA; color:#4F7A3D; margin-bottom:12px;">Доступ выдан</span>
+            <div style="font-size:12.5px; color:#5C4440; margin-bottom:4px;">olga.belova@mail.ru</div>
+            <div style="font-size:12px; color:#8A726D; margin-bottom:16px; font-variant-numeric:tabular-nums;">Последний вход: 14 окт, 09:12</div>
+            <div style="display:flex; flex-direction:column; gap:8px;">
+              <button style="background:transparent; color:#5C4440; border:1.5px solid #E8DAD6; border-radius:14px; padding:9px; font-size:12.5px; font-weight:700; font-family:'Manrope',sans-serif;">Отправить сброс пароля</button>
+              <button style="background:transparent; color:#B23A32; border:1.5px solid #F3CFCB; border-radius:14px; padding:9px; font-size:12.5px; font-weight:700; font-family:'Manrope',sans-serif;">Отозвать доступ</button>
+            </div>
+          </div>
+
+          <div style="background:#FFFFFF; border:1px solid #E8DAD6; border-radius:20px; padding:20px;">
+            <div style="font-size:13px; font-weight:700; margin-bottom:12px;">Модерация</div>
+            <div style="background:#FBF2E3; border:1px solid #E6C27D; border-radius:14px; padding:14px; margin-bottom:12px;">
+              <span style="font-size:11px; font-weight:700; padding:3px 9px; border-radius:999px; background:#FFFFFF; color:#8A5A14; display:inline-block; margin-bottom:8px;">1 изменение ждёт проверки</span>
+              <div style="font-size:12.5px; color:#5C4440; line-height:1.4;">Мастер изменил описание</div>
+            </div>
+            <div style="display:flex; gap:6px; flex-wrap:wrap;">
+              <button onClick="{{ goToRequests }}" style="flex:1; background:transparent; color:#5C4440; border:1.5px solid #E8DAD6; border-radius:12px; padding:8px; font-size:12px; font-weight:700; font-family:'Manrope',sans-serif; white-space:nowrap; cursor:pointer;">Посмотреть</button>
+              <button style="flex:1; background:#EEF6EA; color:#4F7A3D; border:none; border-radius:12px; padding:8px; font-size:12px; font-weight:700; font-family:'Manrope',sans-serif; white-space:nowrap;">Принять</button>
+              <button style="flex:1; background:#FBEAE8; color:#B23A32; border:none; border-radius:12px; padding:8px; font-size:12px; font-weight:700; font-family:'Manrope',sans-serif; white-space:nowrap;">Отклонить</button>
+            </div>
+          </div>
+
+          <div style="background:#FFFFFF; border:1px solid #E8DAD6; border-radius:20px; padding:20px;">
+            <div style="font-size:13px; font-weight:700; margin-bottom:14px;">Статистика</div>
+            <div style="display:flex; flex-direction:column; gap:12px;">
+              <sc-for list="{{ stats }}" as="st" hint-placeholder-count="3">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                  <span style="font-size:12.5px; color:#5C4440;">{{ st.label }}</span>
+                  <span style="font-size:14px; font-weight:700; color:{{ st.color }}; font-variant-numeric:tabular-nums;">{{ st.value }}</span>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  componentDidMount(){ this.renderIcons(); }
+  renderIcons(){ if(window.lucide) window.lucide.createIcons(); }
+  renderVals(){
+    const goToDashboard = () => { window.location.href = '21. Админ - Дашборд дня.dc.html'; };
+    const goToSchedule = () => { window.location.href = '22. Админ - Сетка расписания.dc.html'; };
+    const goToBookings = () => { window.location.href = '23. Админ - Записи.dc.html'; };
+    const goToClients = () => { window.location.href = '26. Админ - Клиенты.dc.html'; };
+    const goToMasters = () => { window.location.href = '28. Админ - Мастера.dc.html'; };
+    const goToServices = () => { window.location.href = '31. Админ - Услуги.dc.html'; };
+    const goToSettings = () => { window.location.href = '33. Админ - Настройки студии.dc.html'; };
+    const goToRequests = () => { window.location.href = '34. Админ - Запросы мастеров.dc.html'; };
+    const goToMasters = () => { window.location.href = '28. Админ - Мастера.dc.html'; };
+    const sidebarItems = [
+      {icon:'layout-dashboard', label:'Дашборд', bg:'transparent', fg:'#C4ADA8', badge:null, onClick:goToDashboard},
+      {icon:'calendar', label:'Расписание', bg:'transparent', fg:'#C4ADA8', badge:null, onClick:goToSchedule},
+      {icon:'list', label:'Записи', bg:'transparent', fg:'#C4ADA8', badge:null, onClick:goToBookings},
+      {icon:'users', label:'Клиенты', bg:'transparent', fg:'#C4ADA8', badge:null, onClick:goToClients},
+      {icon:'user-cog', label:'Мастера', bg:'rgba(242,194,192,.14)', fg:'#F2C2C0', badge:null, onClick:null},
+      {icon:'droplet', label:'Услуги', bg:'transparent', fg:'#C4ADA8', badge:null, onClick:goToServices},
+      {icon:'settings', label:'Настройки студии', bg:'transparent', fg:'#C4ADA8', badge:null, onClick:goToSettings},
+      {icon:'inbox', label:'Запросы', bg:'transparent', fg:'#C4ADA8', badge:'2', onClick:goToRequests},
+    ];
+
+    const checkOn = 'width:18px;height:18px;border-radius:5px;background:#A65451;flex:none;';
+    const checkOff = 'width:18px;height:18px;border-radius:5px;border:1.5px solid #E8DAD6;flex:none;';
+    const serviceGroups = [
+      { title:'Маникюр', items:[
+        {name:'Маникюр с покрытием', checked:true}, {name:'Укрепление гелем', checked:true}, {name:'Дизайн ногтей', checked:true},
+      ]},
+      { title:'Педикюр', items:[ {name:'Аппаратный педикюр', checked:false}, {name:'Комбинированный педикюр', checked:false} ]},
+      { title:'Брови', items:[ {name:'Коррекция бровей', checked:true}, {name:'Окрашивание бровей', checked:true}, {name:'Ламинирование бровей', checked:false} ]},
+      { title:'Ресницы', items:[ {name:'Наращивание ресниц', checked:false}, {name:'Ламинирование ресниц', checked:false} ]},
+    ].map(g=>({ ...g, items: g.items.map(it=>({ ...it, checkShape: it.checked ? checkOn : checkOff })) }));
+
+    const stats = [
+      {label:'Записей за месяц', value:'47', color:'#2A1C1A'},
+      {label:'Рейтинг', value:'4,9', color:'#A65451'},
+      {label:'Доля отмен', value:'4%', color:'#4F7A3D'},
+    ];
+
+    return { sidebarItems, serviceGroups, stats };
+  }
+}
+
+</script>
+</body>
+</html>

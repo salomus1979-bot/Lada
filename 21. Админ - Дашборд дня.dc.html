@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta charset="utf-8">
+<title>Лада — Админ: Дашборд дня</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+<style>
+  body{margin:0;-webkit-font-smoothing:antialiased;background:#FDF8F6;}
+  * { box-sizing: border-box; }
+  ::selection{ background:#F2C2C0; color:#2A1C1A; }
+  a{ color:#A65451; text-decoration:none; }
+  a:hover{ color:#8A423F; }
+  @media (prefers-reduced-motion: reduce){ * { animation:none !important; transition:none !important; } }
+</style>
+</helmet>
+
+<div style="font-family:'Manrope',sans-serif; background:#FDF8F6; color:#2A1C1A; min-height:100vh; display:flex;">
+
+  <aside style="width:240px; flex:none; background:#2A1C1A; display:flex; flex-direction:column; padding:24px 16px; position:sticky; top:0; height:100vh;">
+    <div style="display:flex; align-items:center; justify-content:space-between; padding:0 8px; margin-bottom:6px;">
+      <span onClick="{{ goToDashboard }}" style="font-family:'Oswald',sans-serif; font-weight:800; font-size:20px; color:#F2C2C0; cursor:pointer;">ЛАДА</span>
+    </div>
+    <div style="padding:0 8px; margin-bottom:24px;"><span style="font-size:10.5px; font-weight:700; padding:3px 9px; border-radius:999px; background:rgba(242,194,192,.16); color:#F2C2C0;">Администратор</span></div>
+    <nav style="display:flex; flex-direction:column; gap:2px; flex:1;">
+      <sc-for list="{{ sidebarItems }}" as="si" hint-placeholder-count="8">
+        <div onClick="{{ si.onClick }}" style="display:flex; align-items:center; justify-content:space-between; gap:10px; padding:10px 12px; border-radius:10px; background:{{ si.bg }}; color:{{ si.fg }}; font-size:13.5px; font-weight:600; cursor:pointer;">
+          <div style="display:flex; align-items:center; gap:10px;"><i data-lucide="{{ si.icon }}" width="17" height="17" stroke-width="1.5"></i>{{ si.label }}</div>
+          <sc-if value="{{ si.badge }}"><span style="width:18px; height:18px; border-radius:999px; background:#F2C2C0; color:#2A1C1A; font-size:10px; font-weight:800; display:flex; align-items:center; justify-content:center;">{{ si.badge }}</span></sc-if>
+        </div>
+      </sc-for>
+    </nav>
+    <div style="display:flex; align-items:center; gap:10px; padding:10px 8px; border-top:1px solid #3D2B28; margin-top:8px; padding-top:16px;">
+      <div style="width:32px; height:32px; border-radius:999px; background:#F2C2C0; color:#2A1C1A; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:12px; flex:none;">ЕК</div>
+      <div style="flex:1; min-width:0;">
+        <div style="font-size:13px; font-weight:600; color:#F5EBE8; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Елена Крылова</div>
+        <a href="Лада - Лендинг.dc.html" style="font-size:11.5px; color:#9A807A;">Выйти</a>
+      </div>
+    </div>
+  </aside>
+
+  <div style="flex:1; min-width:0; display:flex; flex-direction:column;">
+
+    <header style="position:sticky; top:0; z-index:30; background:#FFFFFF; border-bottom:1px solid #E8DAD6;">
+      <div style="padding:16px 40px; display:flex; align-items:center; justify-content:space-between; gap:20px; flex-wrap:wrap;">
+        <div style="display:flex; align-items:center; gap:14px;">
+          <i data-lucide="chevron-left" width="17" height="17" stroke-width="1.5" style="color:#8A726D;"></i>
+          <span style="font-size:15px; font-weight:700; color:#2A1C1A;">Среда, 14 октября</span>
+          <i data-lucide="chevron-right" width="17" height="17" stroke-width="1.5" style="color:#5C4440;"></i>
+        </div>
+        <div style="flex:1; max-width:340px; min-width:200px; background:#FDF8F6; border:1px solid #E8DAD6; border-radius:10px; padding:9px 14px; display:flex; align-items:center; gap:8px;">
+          <i data-lucide="search" width="15" height="15" stroke-width="1.5" style="color:#8A726D;"></i>
+          <span style="font-size:13px; color:#8A726D;">Поиск по клиенту или телефону</span>
+        </div>
+        <div style="display:flex; align-items:center; gap:16px;">
+          <i data-lucide="bell" width="18" height="18" stroke-width="1.5" style="color:#5C4440; cursor:pointer;" onClick="{{ goToRequests }}"></i>
+          <button onClick="{{ goToNewBooking }}" style="background:#2A1C1A; color:#F2C2C0; border:none; border-radius:16px; padding:10px 18px; font-size:13px; font-weight:700; font-family:'Manrope',sans-serif; display:flex; align-items:center; gap:7px; cursor:pointer;"><i data-lucide="plus" width="15" height="15" stroke-width="2"></i>Новая запись</button>
+        </div>
+      </div>
+    </header>
+
+    <main style="padding:32px 40px; flex:1;">
+
+      <div style="display:grid; grid-template-columns:repeat(5,1fr); gap:14px; margin-bottom:28px;">
+        <sc-for list="{{ metrics }}" as="m" hint-placeholder-count="5">
+          <div onClick="{{ m.onClick }}" style="background:#FFFFFF; border:1px solid #E8DAD6; border-radius:18px; padding:18px; cursor:{{ m.cursor }};">
+            <div style="font-size:11.5px; color:#8A726D; margin-bottom:8px;">{{ m.label }}</div>
+            <div style="font-size:26px; font-weight:700; color:{{ m.color }}; font-variant-numeric:tabular-nums;">{{ m.value }}</div>
+          </div>
+        </sc-for>
+      </div>
+
+      <div style="display:grid; grid-template-columns:minmax(0,1.7fr) minmax(260px,1fr); gap:24px; align-items:start;">
+
+        <div style="min-width:0;">
+          <div style="background:#FFFFFF; border:1px solid #E8DAD6; border-radius:20px; overflow:hidden; margin-bottom:24px;">
+            <div style="padding:16px 20px; border-bottom:1px solid #E8DAD6; font-size:14px; font-weight:700;">Ближайшие визиты · на 2 часа вперёд</div>
+            <div style="display:grid; grid-template-columns:52px minmax(0,1fr) minmax(0,0.9fr) minmax(0,1fr) minmax(0,1fr) auto; gap:8px; padding:10px 20px; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.03em; color:#8A726D; border-bottom:1px solid #E8DAD6;">
+              <div>Время</div><div>Клиент</div><div>Телефон</div><div>Мастер</div><div>Услуги</div><div>Статус</div>
+            </div>
+            <sc-for list="{{ upcoming }}" as="u" hint-placeholder-count="4">
+              <div onClick="{{ goToBookingDetails }}" style="display:grid; grid-template-columns:52px minmax(0,1fr) minmax(0,0.9fr) minmax(0,1fr) minmax(0,1fr) auto; gap:8px; padding:13px 20px; border-bottom:1px solid #F3E9E6; align-items:center; cursor:pointer;">
+                <div style="font-size:13px; font-weight:700; color:#2A1C1A; font-variant-numeric:tabular-nums;">{{ u.time }}</div>
+                <div style="font-size:13px; color:#2A1C1A; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ u.client }}</div>
+                <div style="font-size:12px; color:#5C4440; font-variant-numeric:tabular-nums; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ u.phone }}</div>
+                <div style="font-size:13px; color:#5C4440; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ u.master }}</div>
+                <div style="font-size:12px; color:#5C4440; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ u.service }}</div>
+                <div><span style="font-size:11px; font-weight:700; padding:3px 9px; border-radius:999px; background:{{ u.badgeBg }}; color:{{ u.badgeColor }}; white-space:nowrap;">{{ u.status }}</span></div>
+              </div>
+            </sc-for>
+          </div>
+
+          <div style="background:#FFFFFF; border:1px solid #E8DAD6; border-radius:20px; padding:22px;">
+            <div style="font-size:14px; font-weight:700; margin-bottom:18px;">Загрузка мастеров сегодня</div>
+            <div style="display:flex; flex-direction:column; gap:14px;">
+              <sc-for list="{{ masterLoad }}" as="ml" hint-placeholder-count="3">
+                <div onClick="{{ goToMasterSchedule }}" style="cursor:pointer;">
+                  <div style="display:flex; justify-content:space-between; font-size:13px; margin-bottom:6px;"><span style="font-weight:600; color:#2A1C1A;">{{ ml.name }}</span><span style="font-weight:700; color:#5C4440; font-variant-numeric:tabular-nums;">{{ ml.pct }}%</span></div>
+                  <div style="height:8px; border-radius:999px; background:#F3E9E6; overflow:hidden;"><div style="height:100%; width:{{ ml.pct }}%; background:#A65451; border-radius:999px;"></div></div>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </div>
+
+        <div style="display:flex; flex-direction:column; gap:14px; min-width:0;">
+          <div style="font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:#8A726D;">Требует внимания</div>
+
+          <div style="background:#FFFFFF; border:1px solid #E8DAD6; border-radius:18px; padding:18px;">
+            <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+              <i data-lucide="calendar-x" width="15" height="15" stroke-width="1.5" style="color:#B23A32;"></i>
+              <span style="font-size:12px; font-weight:700; color:#B23A32;">Запрос на отмену</span>
+            </div>
+            <div style="font-size:13px; color:#2A1C1A; margin-bottom:14px; line-height:1.4;">Ирина Волкова просит отменить запись на 15:00 (педикюр)</div>
+            <div style="display:flex; gap:8px;">
+              <button onClick="{{ goToRequests }}" style="flex:1; background:#2A1C1A; color:#F2C2C0; border:none; border-radius:12px; padding:8px; font-size:12px; font-weight:700; font-family:'Manrope',sans-serif; cursor:pointer;">Подтвердить</button>
+              <button onClick="{{ goToRequests }}" style="flex:1; background:transparent; color:#5C4440; border:1.5px solid #E8DAD6; border-radius:12px; padding:8px; font-size:12px; font-weight:700; font-family:'Manrope',sans-serif; cursor:pointer;">Отклонить</button>
+            </div>
+          </div>
+
+          <div onClick="{{ goToClientCard }}" style="background:#FFFFFF; border:1px solid #E8DAD6; border-radius:18px; padding:18px; cursor:pointer;">
+            <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+              <i data-lucide="user-x" width="15" height="15" stroke-width="1.5" style="color:#8A5A14;"></i>
+              <span style="font-size:12px; font-weight:700; color:#8A5A14;">Клиент не пришёл</span>
+            </div>
+            <div style="font-size:13px; color:#2A1C1A; line-height:1.4;">Вчера: Полина Рябова не явилась на запись</div>
+          </div>
+
+          <div onClick="{{ goToSchedule }}" style="background:#FFFFFF; border:1px solid #E8DAD6; border-radius:18px; padding:18px; cursor:pointer;">
+            <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+              <i data-lucide="calendar-clock" width="15" height="15" stroke-width="1.5" style="color:#3F647C;"></i>
+              <span style="font-size:12px; font-weight:700; color:#3F647C;">Пустое расписание</span>
+            </div>
+            <div style="font-size:13px; color:#2A1C1A; line-height:1.4;">Завтра у Марии Зайцевой нет ни одной записи</div>
+          </div>
+        </div>
+
+      </div>
+    </main>
+  </div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  componentDidMount(){ this.renderIcons(); }
+  renderIcons(){ if(window.lucide) window.lucide.createIcons(); }
+  renderVals(){
+    const goToDashboard = () => { window.location.href = '21. Админ - Дашборд дня.dc.html'; };
+    const goToSchedule = () => { window.location.href = '22. Админ - Сетка расписания.dc.html'; };
+    const goToBookings = () => { window.location.href = '23. Админ - Записи.dc.html'; };
+    const goToClients = () => { window.location.href = '26. Админ - Клиенты.dc.html'; };
+    const goToMasters = () => { window.location.href = '28. Админ - Мастера.dc.html'; };
+    const goToServices = () => { window.location.href = '31. Админ - Услуги.dc.html'; };
+    const goToSettings = () => { window.location.href = '33. Админ - Настройки студии.dc.html'; };
+    const goToRequests = () => { window.location.href = '34. Админ - Запросы мастеров.dc.html'; };
+    const goToNewBooking = () => { window.location.href = '24. Админ - Новая запись за клиента.dc.html'; };
+    const goToBookingDetails = () => { window.location.href = '25. Админ - Детали записи.dc.html'; };
+    const goToClientCard = () => { window.location.href = '27. Админ - Карточка клиента.dc.html'; };
+    const goToMasterSchedule = () => { window.location.href = '30. Админ - График работы мастера.dc.html'; };
+    const sidebarItems = [
+      {icon:'layout-dashboard', label:'Дашборд', bg:'rgba(242,194,192,.14)', fg:'#F2C2C0', badge:null, onClick:null},
+      {icon:'calendar', label:'Расписание', bg:'transparent', fg:'#C4ADA8', badge:null, onClick:goToSchedule},
+      {icon:'list', label:'Записи', bg:'transparent', fg:'#C4ADA8', badge:null, onClick:goToBookings},
+      {icon:'users', label:'Клиенты', bg:'transparent', fg:'#C4ADA8', badge:null, onClick:goToClients},
+      {icon:'user-cog', label:'Мастера', bg:'transparent', fg:'#C4ADA8', badge:null, onClick:goToMasters},
+      {icon:'droplet', label:'Услуги', bg:'transparent', fg:'#C4ADA8', badge:null, onClick:goToServices},
+      {icon:'settings', label:'Настройки студии', bg:'transparent', fg:'#C4ADA8', badge:null, onClick:goToSettings},
+      {icon:'inbox', label:'Запросы', bg:'transparent', fg:'#C4ADA8', badge:'2', onClick:goToRequests},
+    ];
+    const metrics = [
+      {label:'Записей сегодня', value:'11', color:'#2A1C1A', onClick:goToBookings, cursor:'pointer'},
+      {label:'Свободных окон', value:'7', color:'#2A1C1A', onClick:goToSchedule, cursor:'pointer'},
+      {label:'Загрузка', value:'68%', color:'#A65451', onClick:null, cursor:'default'},
+      {label:'Отмен сегодня', value:'1', color:'#B23A32', onClick:null, cursor:'default'},
+      {label:'Новых клиентов', value:'2', color:'#4F7A3D', onClick:null, cursor:'default'},
+    ];
+    const upcoming = [
+      {time:'14:00', client:'Ольга Петрова', phone:'+7 999 111-22-33', master:'Ольга Белова', service:'Маникюр, брови', status:'Подтверждена', badgeBg:'#EEF6EA', badgeColor:'#4F7A3D'},
+      {time:'14:30', client:'Светлана Орлова', phone:'+7 999 222-33-44', master:'Ирина Волкова', service:'Педикюр', status:'Подтверждена', badgeBg:'#EEF6EA', badgeColor:'#4F7A3D'},
+      {time:'15:00', client:'Ирина Волкова', phone:'+7 999 333-44-55', master:'Ирина Волкова', service:'Педикюр', status:'Ожидает', badgeBg:'#FBF2E3', badgeColor:'#8A5A14'},
+      {time:'15:30', client:'Мария Седова', phone:'+7 999 444-55-66', master:'Мария Зайцева', service:'Ресницы', status:'Подтверждена', badgeBg:'#EEF6EA', badgeColor:'#4F7A3D'},
+    ];
+    const masterLoad = [ {name:'Ольга', pct:80}, {name:'Ирина', pct:70}, {name:'Мария', pct:45} ];
+    return { sidebarItems, metrics, upcoming, masterLoad };
+  }
+}
+
+</script>
+</body>
+</html>

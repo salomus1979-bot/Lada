@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta charset="utf-8">
+<title>Лада — Запись: Подтверждение</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+<style>
+  body{margin:0;-webkit-font-smoothing:antialiased;background:#241A18;}
+  * { box-sizing: border-box; }
+  ::selection{ background:#F2C2C0; color:#2A1C1A; }
+  a{ color:#F2C2C0; text-decoration:none; }
+  a:hover{ color:#E8AEAC; }
+  @keyframes ladSpin{ to{ transform: rotate(360deg) } }
+  @media (prefers-reduced-motion: reduce){ * { animation:none !important; transition:none !important; } }
+</style>
+</helmet>
+
+<div style="font-family:'Manrope',sans-serif; background:#241A18; color:#F5EBE8; min-height:100vh; display:flex; flex-direction:column;">
+
+  <header style="position:sticky; top:0; z-index:40; background:rgba(36,26,24,0.95); backdrop-filter:blur(8px); border-bottom:1px solid #4A3733;">
+    <div style="max-width:1280px; margin:0 auto; padding:18px 48px; display:flex; align-items:center; justify-content:space-between; gap:24px;">
+      <span style="font-family:'Oswald',sans-serif; font-weight:800; font-size:20px; letter-spacing:.01em; color:#F2C2C0; flex:none;">ЛАДА</span>
+      <div style="display:flex; align-items:center; gap:0; flex:1; justify-content:center; max-width:560px;">
+        <sc-for list="{{ stepperSteps }}" as="st" hint-placeholder-count="4">
+          <div style="display:flex; align-items:center; flex:{{ st.flexGrow }};">
+            <div onClick="{{ st.onClick }}" style="display:flex; align-items:center; gap:9px; flex:none; cursor:{{ st.cursor }};">
+              <div style="width:28px; height:28px; border-radius:999px; background:{{ st.bg }}; color:{{ st.fg }}; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; flex:none;">
+                <sc-if value="{{ st.done }}"><i data-lucide="check" width="13" height="13"></i></sc-if>
+                <sc-if value="{{ !st.done }}">{{ st.n }}</sc-if>
+              </div>
+              <span style="font-size:12.5px; font-weight:700; color:{{ st.labelColor }}; white-space:nowrap;">{{ st.label }}</span>
+            </div>
+            <sc-if value="{{ st.connector }}"><div style="height:2px; flex:1; background:{{ st.connectorColor }}; margin:0 12px;"></div></sc-if>
+          </div>
+        </sc-for>
+      </div>
+      <button style="background:transparent; border:none; color:#9A807A; display:flex; align-items:center; gap:6px; font-size:13px; font-weight:600; font-family:'Manrope',sans-serif; flex:none;"><i data-lucide="x" width="16" height="16" stroke-width="1.5"></i>Выйти</button>
+    </div>
+  </header>
+
+  <div style="max-width:1280px; margin:0 auto; padding:48px; flex:1; width:100%; display:grid; grid-template-columns:minmax(0,760px) minmax(260px,1fr); gap:40px;">
+
+    <div style="max-width:760px; min-width:0;">
+      <h1 style="font-family:'Oswald',sans-serif; font-weight:700; text-transform:uppercase; font-size:32px; margin:0 0 24px;">Проверьте запись</h1>
+
+      <div style="background:#2B201D; border:1px solid #4A3733; border-radius:24px; padding:6px; margin-bottom:24px;">
+        <sc-for list="{{ summaryRows }}" as="row" hint-placeholder-count="3">
+          <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:16px; padding:18px 18px; border-bottom:{{ row.borderBottom }};">
+            <div style="flex:1;">
+              <div style="font-size:11.5px; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:#9A807A; margin-bottom:8px;">{{ row.label }}</div>
+              <sc-if value="{{ row.master }}">
+                <div style="display:flex; align-items:center; gap:10px;">
+                  <div style="width:34px; height:34px; border-radius:999px; background:#F2C2C0; color:#2A1C1A; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:12.5px; flex:none;">{{ row.master.initials }}</div>
+                  <span style="font-size:14.5px; font-weight:700; color:#F5EBE8;">{{ row.master.name }}</span>
+                </div>
+              </sc-if>
+              <sc-if value="{{ row.services }}">
+                <div style="display:flex; flex-direction:column; gap:4px;">
+                  <sc-for list="{{ row.services }}" as="srv" hint-placeholder-count="2">
+                    <div style="font-size:14.5px; color:#F5EBE8;">{{ srv.name }} <span style="color:#9A807A; font-variant-numeric:tabular-nums;">({{ srv.price }}, {{ srv.duration }})</span></div>
+                  </sc-for>
+                </div>
+              </sc-if>
+              <sc-if value="{{ row.plain }}"><div style="font-size:14.5px; font-weight:700; color:#F5EBE8; font-variant-numeric:tabular-nums;">{{ row.plain }}</div></sc-if>
+            </div>
+            <a href="{{ row.link }}" style="font-size:13px; font-weight:700; flex:none; margin-top:2px;">Изменить</a>
+          </div>
+        </sc-for>
+        <div style="display:flex; justify-content:space-between; align-items:center; padding:18px;">
+          <span style="font-size:12px; color:#9A807A;">Итого к оплате</span>
+          <span style="font-size:19px; font-weight:700; color:#F5EBE8; font-variant-numeric:tabular-nums;">2 600 ₽ · 2 ч 00 мин</span>
+        </div>
+      </div>
+
+      <label style="display:block; font-size:12px; font-weight:600; color:#C4ADA8; margin-bottom:6px;">Комментарий мастеру (необязательно)</label>
+      <textarea placeholder="Например: аллергия на определённые составы" style="width:100%; min-height:80px; background:#332522; border:1px solid #4A3733; border-radius:8px; padding:12px 14px; font-size:14px; color:#F5EBE8; font-family:'Manrope',sans-serif; resize:vertical; margin-bottom:18px;"></textarea>
+
+      <div style="display:flex; align-items:flex-start; gap:10px; margin-bottom:22px;">
+        <div style="width:18px; height:18px; border-radius:5px; background:#F2C2C0; flex:none; margin-top:1px;"></div>
+        <span style="font-size:13px; color:#C4ADA8; line-height:1.4;">Я согласен(на) на <a href="#">обработку персональных данных</a></span>
+      </div>
+
+      <div style="display:flex; gap:10px; align-items:flex-start; background:rgba(140,169,190,.12); border:1px solid rgba(140,169,190,.3); border-radius:14px; padding:14px 16px; margin-bottom:28px;">
+        <i data-lucide="info" width="16" height="16" stroke-width="1.5" style="color:#8CA9BE; flex:none; margin-top:1px;"></i>
+        <span style="font-size:13px; color:#C4ADA8; line-height:1.5;">Оплата на месте. Отменить или перенести запись можно в личном кабинете не позднее чем за 4 часа до визита.</span>
+      </div>
+
+      <div style="display:flex; gap:12px; margin-bottom:16px;">
+        <button onClick="{{ goToDateTime }}" style="background:transparent; color:#C4ADA8; border:1.5px solid #4A3733; border-radius:16px; padding:13px 22px; font-size:14px; font-weight:700; font-family:'Manrope',sans-serif; flex:none; cursor:pointer;">Назад</button>
+        <button onClick="{{ goToCreated }}" style="flex:1; background:#F2C2C0; color:#2A1C1A; border:none; border-radius:16px; padding:13px; font-size:14.5px; font-weight:700; font-family:'Manrope',sans-serif; cursor:pointer;">Подтвердить запись</button>
+      </div>
+    </div>
+
+    <div style="display:flex; flex-direction:column; gap:20px; min-width:0;">
+      <div>
+        <div style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:#6B5852; margin-bottom:10px;">Состояние: гость (не авторизован)</div>
+        <div style="background:#2B201D; border:1px solid #4A3733; border-radius:20px; padding:16px; margin-bottom:12px; opacity:.8;">
+          <div style="font-size:11px; color:#9A807A; margin-bottom:6px;">Ольга Белова · 23 окт, 14:00</div>
+          <div style="font-size:13px; font-weight:700; color:#F5EBE8; font-variant-numeric:tabular-nums;">2 600 ₽ · 2 ч 00 мин</div>
+        </div>
+        <div style="background:#3D2B28; border:1px solid #F2C2C0; border-radius:20px; padding:20px;">
+          <div style="font-size:14px; font-weight:700; color:#F5EBE8; margin-bottom:6px;">Войдите, чтобы завершить запись</div>
+          <div style="font-size:12px; color:#9A807A; margin-bottom:16px;">Ваш выбор сохранится</div>
+          <div style="display:flex; flex-direction:column; gap:8px;">
+            <button onClick="{{ goToLogin }}" style="background:#F2C2C0; color:#2A1C1A; border:none; border-radius:16px; padding:11px; font-size:13.5px; font-weight:700; font-family:'Manrope',sans-serif; cursor:pointer;">Войти</button>
+            <button onClick="{{ goToRegister }}" style="background:transparent; color:#F5EBE8; border:1.5px solid #4A3733; border-radius:16px; padding:11px; font-size:13.5px; font-weight:700; font-family:'Manrope',sans-serif; cursor:pointer;">Зарегистрироваться</button>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:#6B5852; margin-bottom:10px;">Состояние: отправка (loading)</div>
+        <button style="width:100%; background:#F2C2C0; color:#2A1C1A; border:none; border-radius:16px; padding:13px; font-size:14px; font-weight:700; font-family:'Manrope',sans-serif; display:flex; align-items:center; justify-content:center; gap:8px; opacity:.85;">
+          <i data-lucide="loader-2" width="16" height="16" style="animation:ladSpin 0.8s linear infinite;"></i>Подтверждаем запись…
+        </button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  componentDidMount(){ this.renderIcons(); }
+  componentDidUpdate(){ this.renderIcons(); }
+  renderIcons(){ if(window.lucide) window.lucide.createIcons(); }
+
+  renderVals(){
+    const stepNames = ['Услуги','Мастер','Дата и время','Подтверждение'];
+    const stepPages = ['1. Запись - Шаг 1. Услуги.dc.html','2. Запись - Шаг 2. Мастер.dc.html','3. Запись - Шаг 3. Дата и время.dc.html','4. Запись - Шаг 4. Подтверждение.dc.html'];
+    const current = 3;
+    const stepperSteps = stepNames.map((label,i)=>{
+      const done = i < current, active = i === current;
+      return {
+        n: '0'+(i+1), label, done,
+        bg: done ? '#F2C2C0' : active ? '#F2C2C0' : '#3D2B28',
+        fg: done || active ? '#2A1C1A' : '#9A807A',
+        labelColor: active ? '#F5EBE8' : (done ? '#C4ADA8' : '#6B5852'),
+        connector: i < stepNames.length-1,
+        connectorColor: i < current ? '#F2C2C0' : '#4A3733',
+        flexGrow: i < stepNames.length-1 ? '1 1 0' : '0 0 auto',
+        cursor: done ? 'pointer' : 'default',
+        onClick: done ? (() => { window.location.href = stepPages[i]; }) : null,
+      };
+    });
+
+    const summaryRows = [
+      { label:'Услуги', services:[ {name:'Маникюр с покрытием', price:'1 800 ₽', duration:'90 мин'}, {name:'Коррекция бровей', price:'800 ₽', duration:'30 мин'} ], borderBottom:'1px solid #4A3733', link:'1. Запись - Шаг 1. Услуги.dc.html' },
+      { label:'Мастер', master:{ initials:'ОБ', name:'Ольга Белова' }, borderBottom:'1px solid #4A3733', link:'2. Запись - Шаг 2. Мастер.dc.html' },
+      { label:'Дата и время', plain:'пятница, 23 октября 2026, 14:00–16:00', borderBottom:'none', link:'3. Запись - Шаг 3. Дата и время.dc.html' },
+    ];
+
+    const goToDateTime = () => { window.location.href = '3. Запись - Шаг 3. Дата и время.dc.html'; };
+    const goToCreated = () => { window.location.href = '5. Запись создана.dc.html'; };
+    const goToLogin = () => { window.location.href = '12. Вход.dc.html'; };
+    const goToRegister = () => { window.location.href = '13. Регистрация.dc.html'; };
+
+    return { stepperSteps, summaryRows, goToDateTime, goToCreated, goToLogin, goToRegister };
+  }
+}
+
+</script>
+</body>
+</html>

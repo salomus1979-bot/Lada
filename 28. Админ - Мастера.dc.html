@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta charset="utf-8">
+<title>Лада — Админ: Мастера</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+<style>
+  body{margin:0;-webkit-font-smoothing:antialiased;background:#FDF8F6;}
+  * { box-sizing: border-box; }
+  ::selection{ background:#F2C2C0; color:#2A1C1A; }
+  a{ color:#A65451; text-decoration:none; }
+  a:hover{ color:#8A423F; }
+  @media (prefers-reduced-motion: reduce){ * { animation:none !important; transition:none !important; } }
+</style>
+</helmet>
+
+<div style="font-family:'Manrope',sans-serif; background:#FDF8F6; color:#2A1C1A; min-height:100vh; display:flex;">
+
+  <aside style="width:240px; flex:none; background:#2A1C1A; display:flex; flex-direction:column; padding:24px 16px; position:sticky; top:0; height:100vh;">
+    <div style="padding:0 8px; margin-bottom:6px;"><span onClick="{{ goToDashboard }}" style="font-family:'Oswald',sans-serif; font-weight:800; font-size:20px; color:#F2C2C0; cursor:pointer;">ЛАДА</span></div>
+    <div style="padding:0 8px; margin-bottom:24px;"><span style="font-size:10.5px; font-weight:700; padding:3px 9px; border-radius:999px; background:rgba(242,194,192,.16); color:#F2C2C0;">Администратор</span></div>
+    <nav style="display:flex; flex-direction:column; gap:2px; flex:1;">
+      <sc-for list="{{ sidebarItems }}" as="si" hint-placeholder-count="8">
+        <div onClick="{{ si.onClick }}" style="display:flex; align-items:center; justify-content:space-between; gap:10px; padding:10px 12px; border-radius:10px; background:{{ si.bg }}; color:{{ si.fg }}; font-size:13.5px; font-weight:600; cursor:pointer;">
+          <div style="display:flex; align-items:center; gap:10px;"><i data-lucide="{{ si.icon }}" width="17" height="17" stroke-width="1.5"></i>{{ si.label }}</div>
+          <sc-if value="{{ si.badge }}"><span style="width:18px; height:18px; border-radius:999px; background:#F2C2C0; color:#2A1C1A; font-size:10px; font-weight:800; display:flex; align-items:center; justify-content:center;">{{ si.badge }}</span></sc-if>
+        </div>
+      </sc-for>
+    </nav>
+    <div style="display:flex; align-items:center; gap:10px; padding:10px 8px; border-top:1px solid #3D2B28; margin-top:8px; padding-top:16px;">
+      <div style="width:32px; height:32px; border-radius:999px; background:#F2C2C0; color:#2A1C1A; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:12px; flex:none;">ЕК</div>
+      <div style="flex:1; min-width:0;">
+        <div style="font-size:13px; font-weight:600; color:#F5EBE8; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Елена Крылова</div>
+        <a href="Лада - Лендинг.dc.html" style="font-size:11.5px; color:#9A807A;">Выйти</a>
+      </div>
+    </div>
+  </aside>
+
+  <div style="flex:1; min-width:0;">
+    <main style="padding:32px; max-width:1200px;">
+
+      <div style="display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap; margin-bottom:18px;">
+        <h1 style="font-family:'Oswald',sans-serif; font-weight:700; text-transform:uppercase; font-size:28px; margin:0;">Мастера</h1>
+        <button onClick="{{ goToMasterForm }}" style="background:#2A1C1A; color:#F2C2C0; border:none; border-radius:14px; padding:9px 18px; font-size:12.5px; font-weight:700; font-family:'Manrope',sans-serif; display:flex; align-items:center; gap:6px; white-space:nowrap; cursor:pointer;"><i data-lucide="plus" width="14" height="14" stroke-width="2"></i>Добавить мастера</button>
+      </div>
+
+      <div style="display:flex; gap:4px; background:#FFFFFF; border:1px solid #E8DAD6; border-radius:999px; padding:4px; width:fit-content; margin-bottom:24px;">
+        <sc-for list="{{ tabs }}" as="tb" hint-placeholder-count="3"><div style="padding:8px 16px; border-radius:999px; background:{{ tb.bg }}; color:{{ tb.fg }}; font-size:12.5px; font-weight:700; white-space:nowrap;">{{ tb.label }}</div></sc-for>
+      </div>
+
+      <div style="display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:18px; margin-bottom:28px;">
+        <sc-for list="{{ masters }}" as="m" hint-placeholder-count="4">
+          <div onClick="{{ goToMasterForm }}" style="background:#FFFFFF; border:1px solid #E8DAD6; border-radius:22px; overflow:hidden; opacity:{{ m.opacity }}; display:flex; flex-direction:column; cursor:pointer;">
+            <div style="aspect-ratio:4/3; background:repeating-linear-gradient(135deg,#F3E9E6,#F3E9E6 10px,#FDF8F6 10px,#FDF8F6 20px); display:flex; align-items:center; justify-content:center; font-family:monospace; font-size:11px; color:#B9A69F;">фото мастера</div>
+            <div style="padding:18px; display:flex; flex-direction:column; flex:1;">
+              <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:8px; margin-bottom:4px;">
+                <span style="font-size:15px; font-weight:700;">{{ m.name }}</span>
+                <i data-lucide="more-horizontal" width="16" height="16" stroke-width="1.5" style="color:#8A726D; cursor:pointer; flex:none;"></i>
+              </div>
+              <div style="font-size:12.5px; color:#8A726D; margin-bottom:8px;">{{ m.spec }} · опыт {{ m.years }}</div>
+              <div style="display:flex; align-items:center; gap:4px; margin-bottom:10px;">
+                <sc-for list="{{ m.stars }}" as="star" hint-placeholder-count="5"><i data-lucide="star" width="12" height="12" stroke-width="1.5" style="color:{{ star.c }}; fill:{{ star.f }};"></i></sc-for>
+                <span style="font-size:11.5px; color:#8A726D; margin-left:4px;">{{ m.rating }}</span>
+              </div>
+              <div style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:12px;">
+                <sc-for list="{{ m.chips }}" as="ch" hint-placeholder-count="2"><span style="font-size:10.5px; font-weight:700; padding:4px 9px; border-radius:999px; background:#F3E9E6; color:#5C4440; white-space:nowrap;">{{ ch }}</span></sc-for>
+              </div>
+              <div style="font-size:12px; color:#5C4440; margin-bottom:14px; font-variant-numeric:tabular-nums;">Записей на неделю: {{ m.weekBookings }}</div>
+              <div style="flex:1;"></div>
+              <sc-if value="{{ m.archiveNote }}"><div style="font-size:11px; color:#B9A69F; margin-bottom:10px;">{{ m.archiveNote }}</div></sc-if>
+              <div style="display:flex; align-items:center; justify-content:space-between; gap:8px; flex-wrap:wrap;">
+                <span style="font-size:11px; font-weight:700; padding:4px 10px; border-radius:999px; background:{{ m.badgeBg }}; color:{{ m.badgeColor }}; white-space:nowrap;">{{ m.badge }}</span>
+                <sc-if value="{{ m.actionLabel }}"><button onClick="{{ m.actionOnClick }}" style="background:transparent; color:#A65451; border:1.5px solid #E8DAD6; border-radius:12px; padding:7px 12px; font-size:11.5px; font-weight:700; font-family:'Manrope',sans-serif; white-space:nowrap; width:100%; cursor:pointer;">{{ m.actionLabel }}</button></sc-if>
+              </div>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+
+      <div>
+        <div style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:#8A726D; margin-bottom:10px;">Предупреждение при попытке архивировать мастера с будущими записями</div>
+        <div style="background:#FFFFFF; border:1px solid #E8DAD6; border-radius:22px; padding:22px; width:380px; box-shadow:0 8px 20px rgba(42,28,26,.08);">
+          <div style="width:40px; height:40px; border-radius:12px; background:#FBF2E3; display:flex; align-items:center; justify-content:center; margin-bottom:14px;">
+            <i data-lucide="triangle-alert" width="20" height="20" stroke-width="1.5" style="color:#8A5A14;"></i>
+          </div>
+          <div style="font-size:14.5px; font-weight:700; margin-bottom:8px;">Нельзя архивировать мастера</div>
+          <div style="font-size:12.5px; color:#5C4440; line-height:1.5; margin-bottom:14px;">У Ольги Беловой 6 будущих записей. Перенесите или отмените их перед архивацией:</div>
+          <div style="display:flex; flex-direction:column; gap:6px; margin-bottom:18px;">
+            <sc-for list="{{ warningBookings }}" as="wb" hint-placeholder-count="3"><a href="#" style="font-size:12.5px; font-weight:600;">{{ wb }}</a></sc-for>
+          </div>
+          <div style="display:flex; gap:10px;">
+            <button style="flex:1; background:transparent; color:#5C4440; border:1.5px solid #E8DAD6; border-radius:14px; padding:10px; font-size:12.5px; font-weight:700; font-family:'Manrope',sans-serif;">Отмена</button>
+            <button onClick="{{ goToBookings }}" style="flex:1; background:#2A1C1A; color:#F2C2C0; border:none; border-radius:14px; padding:10px; font-size:12.5px; font-weight:700; font-family:'Manrope',sans-serif; cursor:pointer;">Открыть записи</button>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  componentDidMount(){ this.renderIcons(); }
+  renderIcons(){ if(window.lucide) window.lucide.createIcons(); }
+  renderVals(){
+    const goToDashboard = () => { window.location.href = '21. Админ - Дашборд дня.dc.html'; };
+    const goToSchedule = () => { window.location.href = '22. Админ - Сетка расписания.dc.html'; };
+    const goToBookings = () => { window.location.href = '23. Админ - Записи.dc.html'; };
+    const goToClients = () => { window.location.href = '26. Админ - Клиенты.dc.html'; };
+    const goToMasters = () => { window.location.href = '28. Админ - Мастера.dc.html'; };
+    const goToServices = () => { window.location.href = '31. Админ - Услуги.dc.html'; };
+    const goToSettings = () => { window.location.href = '33. Админ - Настройки студии.dc.html'; };
+    const goToRequests = () => { window.location.href = '34. Админ - Запросы мастеров.dc.html'; };
+    const goToMasterForm = () => { window.location.href = '29. Админ - Карточка мастера (форма).dc.html'; };
+    const sidebarItems = [
+      {icon:'layout-dashboard', label:'Дашборд', bg:'transparent', fg:'#C4ADA8', badge:null, onClick:goToDashboard},
+      {icon:'calendar', label:'Расписание', bg:'transparent', fg:'#C4ADA8', badge:null, onClick:goToSchedule},
+      {icon:'list', label:'Записи', bg:'transparent', fg:'#C4ADA8', badge:null, onClick:goToBookings},
+      {icon:'users', label:'Клиенты', bg:'transparent', fg:'#C4ADA8', badge:null, onClick:goToClients},
+      {icon:'user-cog', label:'Мастера', bg:'rgba(242,194,192,.14)', fg:'#F2C2C0', badge:null, onClick:null},
+      {icon:'droplet', label:'Услуги', bg:'transparent', fg:'#C4ADA8', badge:null, onClick:goToServices},
+      {icon:'settings', label:'Настройки студии', bg:'transparent', fg:'#C4ADA8', badge:null, onClick:goToSettings},
+      {icon:'inbox', label:'Запросы', bg:'transparent', fg:'#C4ADA8', badge:'2', onClick:goToRequests},
+    ];
+    const tabs = ['Все','Работают','В архиве'].map((label,i)=>({ label, bg: i===0?'#2A1C1A':'transparent', fg: i===0?'#FFFFFF':'#5C4440' }));
+
+    const starsRow = (filled)=> Array.from({length:5}, (_,i)=>({ c: i<filled?'#A65451':'#E8DAD6', f: i<filled?'#A65451':'none' }));
+
+    const masters = [
+      { name:'Ольга Белова', spec:'Маникюр, брови', years:'6 лет', stars:starsRow(5), rating:'4,9', chips:['Маникюр','Брови'], weekBookings:18, badge:'Доступ выдан', badgeBg:'#EEF6EA', badgeColor:'#4F7A3D', actionLabel:null, opacity:1, archiveNote:null },
+      { name:'Ирина Волкова', spec:'Педикюр, ресницы', years:'5 лет', stars:starsRow(5), rating:'4,8', chips:['Педикюр','Ресницы'], weekBookings:14, badge:'Доступ выдан', badgeBg:'#EEF6EA', badgeColor:'#4F7A3D', actionLabel:null, opacity:1, archiveNote:null },
+      { name:'Мария Зайцева', spec:'Ресницы, брови', years:'3 года', stars:starsRow(4), rating:'4,7', chips:['Ресницы','Брови'], weekBookings:9, badge:'Доступ не выдан', badgeBg:'#F3E9E6', badgeColor:'#5C4440', actionLabel:'Выдать доступ', actionOnClick:null, opacity:1, archiveNote:null },
+      { name:'Татьяна Нечаева', spec:'Маникюр', years:'2 года', stars:starsRow(4), rating:'4,6', chips:['Маникюр'], weekBookings:0, badge:'В архиве', badgeBg:'#F3E9E6', badgeColor:'#8A726D', actionLabel:null, opacity:.55, archiveNote:'Не отображается на сайте' },
+    ];
+    const warningBookings = ['23 окт, 14:00 — Анна Соколова', '24 окт, 11:00 — Дарья Миронова', '25 окт, 16:30 — Ксения Орлова'];
+    return { sidebarItems, tabs, masters, warningBookings };
+  }
+}
+
+</script>
+</body>
+</html>

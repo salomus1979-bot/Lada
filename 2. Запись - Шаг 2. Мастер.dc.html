@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta charset="utf-8">
+<title>Лада — Запись: Мастер</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+<style>
+  body{margin:0;-webkit-font-smoothing:antialiased;background:#241A18;}
+  * { box-sizing: border-box; }
+  ::selection{ background:#F2C2C0; color:#2A1C1A; }
+  a{ color:#F2C2C0; text-decoration:none; }
+  a:hover{ color:#E8AEAC; }
+  @media (prefers-reduced-motion: reduce){ * { animation:none !important; transition:none !important; } }
+</style>
+</helmet>
+
+<div style="font-family:'Manrope',sans-serif; background:#241A18; color:#F5EBE8; min-height:100vh; display:flex; flex-direction:column;">
+
+  <header style="position:sticky; top:0; z-index:40; background:rgba(36,26,24,0.95); backdrop-filter:blur(8px); border-bottom:1px solid #4A3733;">
+    <div style="max-width:1200px; margin:0 auto; padding:18px 48px; display:flex; align-items:center; justify-content:space-between; gap:24px;">
+      <span style="font-family:'Oswald',sans-serif; font-weight:800; font-size:20px; letter-spacing:.01em; color:#F2C2C0; flex:none;">ЛАДА</span>
+      <div style="display:flex; align-items:center; gap:0; flex:1; justify-content:center; max-width:560px;">
+        <sc-for list="{{ stepperSteps }}" as="st" hint-placeholder-count="4">
+          <div style="display:flex; align-items:center; flex:{{ st.flexGrow }};">
+            <div onClick="{{ st.onClick }}" style="display:flex; align-items:center; gap:9px; flex:none; cursor:{{ st.cursor }};">
+              <div style="width:28px; height:28px; border-radius:999px; background:{{ st.bg }}; color:{{ st.fg }}; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; flex:none;">
+                <sc-if value="{{ st.done }}"><i data-lucide="check" width="13" height="13"></i></sc-if>
+                <sc-if value="{{ !st.done }}">{{ st.n }}</sc-if>
+              </div>
+              <span style="font-size:12.5px; font-weight:700; color:{{ st.labelColor }}; white-space:nowrap;">{{ st.label }}</span>
+            </div>
+            <sc-if value="{{ st.connector }}"><div style="height:2px; flex:1; background:{{ st.connectorColor }}; margin:0 12px;"></div></sc-if>
+          </div>
+        </sc-for>
+      </div>
+      <button onClick="{{ goToLanding }}" style="background:transparent; border:none; color:#9A807A; display:flex; align-items:center; gap:6px; font-size:13px; font-weight:600; font-family:'Manrope',sans-serif; flex:none; cursor:pointer;"><i data-lucide="x" width="16" height="16" stroke-width="1.5"></i>Выйти</button>
+    </div>
+  </header>
+
+  <div style="max-width:1200px; margin:0 auto; padding:48px; flex:1; width:100%;">
+
+    <h1 style="font-family:'Oswald',sans-serif; font-weight:700; text-transform:uppercase; font-size:32px; margin:0 0 12px;">Выберите мастера</h1>
+    <div style="display:flex; align-items:center; gap:10px; margin-bottom:32px; flex-wrap:wrap;">
+      <span style="font-size:13.5px; color:#C4ADA8;">Маникюр с покрытием, Коррекция бровей <span style="white-space:nowrap;">· <span style="font-variant-numeric:tabular-nums;">2 ч 00 мин</span> · <span style="font-variant-numeric:tabular-nums; color:#F5EBE8; font-weight:700;">2 600 ₽</span></span></span>
+      <a href="1. Запись - Шаг 1. Услуги.dc.html" style="font-size:13px; font-weight:700;">Изменить</a>
+    </div>
+
+    <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:20px; margin-bottom:28px;">
+      <div style="grid-column:span 3; background:#2B201D; border:1.5px solid #F2C2C0; border-radius:24px; padding:22px; display:flex; align-items:center; gap:18px; box-shadow:0 0 0 3px rgba(242,194,192,.14);">
+        <div style="width:52px; height:52px; border-radius:16px; background:rgba(242,194,192,.14); display:flex; align-items:center; justify-content:center; flex:none;"><i data-lucide="users" width="24" height="24" stroke-width="1.5" style="color:#F2C2C0;"></i></div>
+        <div style="flex:1;">
+          <div style="font-size:16px; font-weight:700; color:#F5EBE8; margin-bottom:3px;">Любой свободный мастер</div>
+          <div style="font-size:12.5px; color:#9A807A;">Покажем все свободные окна студии — так выбор времени шире</div>
+        </div>
+        <div style="width:24px; height:24px; border-radius:999px; border:1.5px solid #4A3733; flex:none;"></div>
+      </div>
+
+      <sc-for list="{{ masters }}" as="m" hint-placeholder-count="2">
+        <div style="background:#2B201D; border:{{ m.border }}; border-radius:24px; overflow:hidden; opacity:{{ m.opacity }}; display:flex; flex-direction:column; position:relative;">
+          <sc-if value="{{ m.selected }}"><div style="position:absolute; top:14px; right:14px; width:24px; height:24px; border-radius:999px; background:#F2C2C0; display:flex; align-items:center; justify-content:center; z-index:1;"><i data-lucide="check" width="14" height="14" style="color:#2A1C1A;"></i></div></sc-if>
+          <div style="aspect-ratio:4/3; background:repeating-linear-gradient(135deg,#332522,#332522 10px,#3D2B28 10px,#3D2B28 20px); display:flex; align-items:center; justify-content:center; font-family:monospace; font-size:11px; color:#9A807A;">фото мастера</div>
+          <div style="padding:18px; flex:1; display:flex; flex-direction:column;">
+            <div style="font-size:15px; font-weight:700; color:#F5EBE8; margin-bottom:2px;">{{ m.name }}</div>
+            <div style="font-size:12px; color:#9A807A; margin-bottom:10px;">{{ m.spec }} · опыт {{ m.years }}</div>
+            <div style="display:flex; align-items:center; gap:4px; margin-bottom:12px;">
+              <sc-for list="{{ m.stars }}" as="star" hint-placeholder-count="5"><i data-lucide="star" width="12" height="12" stroke-width="1.5" style="color:{{ star.c }}; fill:{{ star.f }};"></i></sc-for>
+              <span style="font-size:11.5px; color:#9A807A; margin-left:4px; font-variant-numeric:tabular-nums;">{{ m.rating }}</span>
+            </div>
+            <div style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:12px;">
+              <sc-for list="{{ m.chips }}" as="ch" hint-placeholder-count="2"><span style="font-size:11px; font-weight:700; padding:4px 10px; border-radius:999px; background:#3D2B28; color:#C4ADA8;">{{ ch }}</span></sc-for>
+            </div>
+            <div style="flex:1;"></div>
+            <sc-if value="{{ m.selected }}"><div style="font-size:12px; color:#8FBF78; display:flex; align-items:center; gap:5px;"><i data-lucide="check-circle-2" width="13" height="13" stroke-width="1.5"></i>Выполняет все выбранные услуги</div></sc-if>
+            <sc-if value="{{ !m.selected }}">
+              <div style="font-size:11px; font-weight:700; padding:4px 10px; border-radius:999px; background:rgba(229,128,120,.14); color:#E58078; width:fit-content; margin-bottom:8px; display:flex; align-items:center; gap:5px;"><i data-lucide="x-circle" width="12" height="12" stroke-width="1.5"></i>Не выполняет все выбранные услуги</div>
+              <a href="1. Запись - Шаг 1. Услуги.dc.html" style="font-size:12px; font-weight:700;">Изменить состав услуг</a>
+            </sc-if>
+          </div>
+        </div>
+      </sc-for>
+
+      <div style="background:#2B201D; border:1px dashed #4A3733; border-radius:24px; padding:28px 20px; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center;">
+        <div style="width:44px; height:44px; border-radius:12px; background:rgba(229,128,120,.1); display:flex; align-items:center; justify-content:center; margin-bottom:14px;"><i data-lucide="search-x" width="22" height="22" stroke-width="1.5" style="color:#9A807A;"></i></div>
+        <div style="font-size:13px; font-weight:700; color:#F5EBE8; margin-bottom:6px;">Нет мастера, который выполняет все выбранные услуги</div>
+        <div style="font-size:11.5px; color:#9A807A; margin-bottom:14px; line-height:1.4;">Уберите часть услуг или выберите мастера, который выполнит доступные</div>
+        <button style="background:transparent; color:#F2C2C0; border:1.5px solid #F2C2C0; border-radius:16px; padding:9px 16px; font-size:12.5px; font-weight:700; font-family:'Manrope',sans-serif;">Изменить состав услуг</button>
+      </div>
+    </div>
+
+  </div>
+
+  <div style="position:sticky; bottom:0; background:rgba(36,26,24,0.95); backdrop-filter:blur(8px); border-top:1px solid #4A3733;">
+    <div style="max-width:1200px; margin:0 auto; padding:18px 48px; display:flex; justify-content:space-between;">
+      <button onClick="{{ goToServices }}" style="background:transparent; color:#C4ADA8; border:none; border-radius:16px; padding:11px 18px; font-size:13.5px; font-weight:700; font-family:'Manrope',sans-serif; display:flex; align-items:center; gap:6px; cursor:pointer;"><i data-lucide="arrow-left" width="16" height="16" stroke-width="1.5"></i>Назад</button>
+      <button onClick="{{ goToDateTime }}" style="background:#F2C2C0; color:#2A1C1A; border:none; border-radius:16px; padding:11px 24px; font-size:13.5px; font-weight:700; font-family:'Manrope',sans-serif; cursor:pointer;">Выбрать время</button>
+    </div>
+  </div>
+
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  componentDidMount(){ this.renderIcons(); }
+  componentDidUpdate(){ this.renderIcons(); }
+  renderIcons(){ if(window.lucide) window.lucide.createIcons(); }
+
+  renderVals(){
+    const stepNames = ['Услуги','Мастер','Дата и время','Подтверждение'];
+    const stepPages = ['1. Запись - Шаг 1. Услуги.dc.html','2. Запись - Шаг 2. Мастер.dc.html','3. Запись - Шаг 3. Дата и время.dc.html','4. Запись - Шаг 4. Подтверждение.dc.html'];
+    const current = 1;
+    const stepperSteps = stepNames.map((label,i)=>{
+      const done = i < current, active = i === current;
+      return {
+        n: '0'+(i+1), label, done,
+        bg: done ? '#F2C2C0' : active ? '#F2C2C0' : '#3D2B28',
+        fg: done || active ? '#2A1C1A' : '#9A807A',
+        labelColor: active ? '#F5EBE8' : (done ? '#C4ADA8' : '#6B5852'),
+        connector: i < stepNames.length-1,
+        connectorColor: i < current ? '#F2C2C0' : '#4A3733',
+        flexGrow: i < stepNames.length-1 ? '1 1 0' : '0 0 auto',
+        cursor: done ? 'pointer' : 'default',
+        onClick: done ? (() => { window.location.href = stepPages[i]; }) : null,
+      };
+    });
+
+    const starsRow = (filled)=> Array.from({length:5}, (_,i)=>({ c: i<filled?'#F2C2C0':'#4A3733', f: i<filled?'#F2C2C0':'none' }));
+
+    const masters = [
+      {name:'Ольга Белова', spec:'Маникюр, брови', years:'4 года', chips:['Маникюр','Брови'], stars:starsRow(5), rating:'4,7', selected:true, border:'1.5px solid #F2C2C0', opacity:1},
+      {name:'Ирина Волкова', spec:'Педикюр, ресницы', years:'5 лет', chips:['Педикюр','Ресницы'], stars:starsRow(4), rating:'4,6', selected:false, border:'1px solid #4A3733', opacity:.55},
+      {name:'Мария Зайцева', spec:'Ресницы, брови', years:'3 года', chips:['Ресницы'], stars:starsRow(5), rating:'4,8', selected:false, border:'1px solid #4A3733', opacity:.55},
+    ];
+
+    const goToLanding = () => { window.location.href = 'Лада - Лендинг.dc.html'; };
+    const goToServices = () => { window.location.href = '1. Запись - Шаг 1. Услуги.dc.html'; };
+    const goToDateTime = () => { window.location.href = '3. Запись - Шаг 3. Дата и время.dc.html'; };
+
+    return { stepperSteps, masters, goToLanding, goToServices, goToDateTime };
+  }
+}
+
+</script>
+</body>
+</html>

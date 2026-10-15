@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta charset="utf-8">
+<title>Лада — Запись создана</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+<style>
+  body{margin:0;-webkit-font-smoothing:antialiased;background:#241A18;}
+  * { box-sizing: border-box; }
+  ::selection{ background:#F2C2C0; color:#2A1C1A; }
+  a{ color:#F2C2C0; text-decoration:none; }
+  a:hover{ color:#E8AEAC; }
+  @media (prefers-reduced-motion: reduce){ * { animation:none !important; transition:none !important; } }
+</style>
+</helmet>
+
+<div style="font-family:'Manrope',sans-serif; background:#241A18; color:#F5EBE8; min-height:100vh; display:flex; align-items:center; justify-content:center; padding:48px 24px;">
+  <div style="max-width:680px; width:100%; text-align:center;">
+
+    <div style="width:72px; height:72px; border-radius:999px; background:rgba(242,194,192,.14); display:flex; align-items:center; justify-content:center; margin:0 auto 28px;">
+      <div style="width:52px; height:52px; border-radius:999px; background:#F2C2C0; display:flex; align-items:center; justify-content:center;">
+        <i data-lucide="check" width="26" height="26" stroke-width="2.5" style="color:#2A1C1A;"></i>
+      </div>
+    </div>
+
+    <h1 style="font-family:'Oswald',sans-serif; font-weight:800; text-transform:uppercase; letter-spacing:-0.01em; font-size:clamp(34px,4.5vw,48px); margin:0 0 12px; color:#F5EBE8;">Вы записаны</h1>
+    <p style="font-size:15px; color:#9A807A; margin:0 0 32px;">Запись появилась в личном кабинете</p>
+
+    <div style="background:#2B201D; border:1px solid #4A3733; border-radius:24px; padding:28px; text-align:left; margin-bottom:20px;">
+      <span style="display:inline-flex; font-size:11px; font-weight:700; padding:4px 10px; border-radius:999px; background:rgba(143,191,120,.14); color:#8FBF78; margin-bottom:16px;">Подтверждена</span>
+      <div style="font-size:19px; font-weight:700; color:#F5EBE8; margin-bottom:18px; font-variant-numeric:tabular-nums;">Пятница, 23 октября 2026 · 14:00–16:00</div>
+
+      <div style="display:flex; align-items:center; gap:10px; margin-bottom:18px; padding-bottom:18px; border-bottom:1px solid #4A3733;">
+        <div style="width:34px; height:34px; border-radius:999px; background:#F2C2C0; color:#2A1C1A; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:12.5px; flex:none;">ОБ</div>
+        <span style="font-size:14.5px; font-weight:700; color:#F5EBE8;">Ольга Белова</span>
+      </div>
+
+      <div style="display:flex; flex-direction:column; gap:6px; margin-bottom:18px; padding-bottom:18px; border-bottom:1px solid #4A3733;">
+        <sc-for list="{{ services }}" as="srv" hint-placeholder-count="2">
+          <div style="font-size:14px; color:#C4ADA8;">{{ srv }}</div>
+        </sc-for>
+      </div>
+
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:18px;">
+        <span style="font-size:12px; color:#9A807A;">Итого</span>
+        <span style="font-size:17px; font-weight:700; color:#F5EBE8; font-variant-numeric:tabular-nums;">2 600 ₽ · 2 ч 00 мин</span>
+      </div>
+
+      <div style="display:flex; align-items:center; gap:8px; color:#9A807A; font-size:13px;">
+        <i data-lucide="map-pin" width="15" height="15" stroke-width="1.5" style="color:#F2C2C0; flex:none;"></i>м. Фрунзенская, ул. Студийная, 12
+      </div>
+    </div>
+
+    <div style="display:flex; gap:10px; align-items:flex-start; background:rgba(140,169,190,.12); border:1px solid rgba(140,169,190,.3); border-radius:14px; padding:14px 16px; margin-bottom:28px; text-align:left;">
+      <i data-lucide="info" width="16" height="16" stroke-width="1.5" style="color:#8CA9BE; flex:none; margin-top:1px;"></i>
+      <span style="font-size:13px; color:#C4ADA8; line-height:1.5;">Оплата на месте. Отменить или перенести можно в кабинете не позднее чем за 4 часа до визита.</span>
+    </div>
+
+    <div style="display:flex; flex-direction:column; gap:10px; margin-bottom:18px;">
+      <button onClick="{{ goToCabinet }}" style="background:#F2C2C0; color:#2A1C1A; border:none; border-radius:16px; padding:14px; font-size:14.5px; font-weight:700; font-family:'Manrope',sans-serif; cursor:pointer;">В личный кабинет</button>
+      <button onClick="{{ goToServices }}" style="background:transparent; color:#F5EBE8; border:1.5px solid #4A3733; border-radius:16px; padding:14px; font-size:14.5px; font-weight:700; font-family:'Manrope',sans-serif; cursor:pointer;">Записаться ещё раз</button>
+    </div>
+
+    <a href="#" style="font-size:13px; font-weight:700; display:inline-flex; align-items:center; gap:6px;"><i data-lucide="calendar-plus" width="15" height="15" stroke-width="1.5"></i>Добавить в календарь</a>
+
+  </div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  componentDidMount(){ this.renderIcons(); }
+  renderIcons(){ if(window.lucide) window.lucide.createIcons(); }
+  renderVals(){
+    const goToCabinet = () => { window.location.href = '7. Кабинет - Предстоящие записи.dc.html'; };
+    const goToServices = () => { window.location.href = '1. Запись - Шаг 1. Услуги.dc.html'; };
+    return { services: ['Маникюр с покрытием', 'Коррекция бровей'], goToCabinet, goToServices };
+  }
+}
+
+</script>
+</body>
+</html>

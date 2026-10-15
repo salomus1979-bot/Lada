@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta charset="utf-8">
+<title>Лада — Правила отмены и переноса</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+<style>
+  body{margin:0;-webkit-font-smoothing:antialiased;background:#241A18;}
+  * { box-sizing: border-box; }
+  ::selection{ background:#F2C2C0; color:#2A1C1A; }
+  a{ color:#F2C2C0; text-decoration:none; }
+  a:hover{ color:#E8AEAC; }
+  @media (prefers-reduced-motion: reduce){ * { animation:none !important; transition:none !important; } }
+</style>
+</helmet>
+
+<div style="font-family:'Manrope',sans-serif; background:#241A18; color:#F5EBE8; min-height:100vh;">
+
+  <header style="position:sticky; top:0; z-index:40; background:rgba(36,26,24,0.92); backdrop-filter:blur(8px); border-bottom:1px solid #4A3733;">
+    <div style="max-width:1200px; margin:0 auto; padding:16px 48px; display:flex; align-items:center; justify-content:space-between;">
+      <span style="font-family:'Oswald',sans-serif; font-weight:800; font-size:22px; color:#F2C2C0;">ЛАДА</span>
+      <a href="#" style="font-size:13px; font-weight:600; color:#C4ADA8;">← На сайт</a>
+    </div>
+  </header>
+
+  <main style="max-width:640px; margin:0 auto; padding:64px 24px 80px;">
+    <h1 style="font-family:'Oswald',sans-serif; font-weight:800; text-transform:uppercase; letter-spacing:-0.01em; font-size:clamp(30px,4vw,40px); margin:0 0 36px;">Правила отмены и переноса</h1>
+
+    <sc-for list="{{ sections }}" as="s" hint-placeholder-count="5">
+      <section style="padding:22px 0; border-top:1px solid #4A3733;">
+        <h2 style="font-family:'Oswald',sans-serif; font-weight:700; text-transform:uppercase; font-size:18px; margin:0 0 10px;">{{ s.title }}</h2>
+        <p style="font-size:14.5px; color:#C4ADA8; line-height:1.65; margin:0;">{{ s.text }}</p>
+      </section>
+    </sc-for>
+
+    <div style="margin-top:40px; text-align:center;">
+      <button style="background:#F2C2C0; color:#2A1C1A; border:none; border-radius:16px; padding:14px 28px; font-size:14px; font-weight:700; font-family:'Manrope',sans-serif;">Вернуться к записи</button>
+    </div>
+  </main>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  renderVals(){
+    const sections = [
+      {title:'Сроки бесплатной отмены', text:'Отменить запись без каких-либо последствий можно не позднее чем за 4 часа до начала визита — прямо в личном кабинете.'},
+      {title:'Поздняя отмена', text:'Отмена позднее чем за 4 часа до визита недоступна в кабинете. Свяжитесь со студией по телефону — мы постараемся найти решение.'},
+      {title:'Перенос и лимит переносов', text:'Перенести запись можно на свободное время того же мастера не позднее чем за 4 часа до визита. Одну запись можно переносить не более двух раз.'},
+      {title:'Опоздание', text:'Если вы опаздываете более чем на 15 минут, мастер вправе сократить длительность услуги или перенести визит на другое время по согласованию.'},
+      {title:'Неявка', text:'Неявка без предупреждения фиксируется в истории записей. После нескольких неявок студия может ограничить онлайн-запись для аккаунта.'},
+    ];
+    return { sections };
+  }
+}
+
+</script>
+</body>
+</html>

@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta charset="utf-8">
+<title>Лада — Мастер: Мои клиенты</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+<style>
+  body{margin:0;-webkit-font-smoothing:antialiased;background:#1C1412;}
+  * { box-sizing: border-box; }
+  ::selection{ background:#F2C2C0; color:#2A1C1A; }
+  @media (prefers-reduced-motion: reduce){ * { animation:none !important; transition:none !important; } }
+</style>
+</helmet>
+
+<div style="font-family:'Manrope',sans-serif; background:#1C1412; min-height:100vh; display:flex; gap:24px; justify-content:center; flex-wrap:wrap; padding:32px;">
+
+  <div style="width:390px; background:#241A18; color:#F5EBE8; border-radius:28px; overflow:hidden; display:flex; flex-direction:column; min-height:800px; position:relative;">
+    <div style="padding:20px 18px 0;">
+      <div style="display:flex; align-items:baseline; gap:10px; margin-bottom:2px;">
+        <h1 style="font-family:'Oswald',sans-serif; font-weight:700; text-transform:uppercase; font-size:21px; margin:0;">Мои клиенты</h1>
+        <span style="font-size:13px; color:#9A807A; font-variant-numeric:tabular-nums;">64 клиента</span>
+      </div>
+      <div style="font-size:11.5px; color:#6B5852; margin-bottom:14px;">Только те, кто записывался к вам</div>
+
+      <div style="background:#332522; border:1px solid #4A3733; border-radius:10px; padding:9px 12px; display:flex; align-items:center; gap:7px; margin-bottom:12px;">
+        <i data-lucide="search" width="15" height="15" stroke-width="1.5" style="color:#9A807A; flex:none;"></i>
+        <span style="font-size:13px; color:#9A807A;">Поиск по имени</span>
+      </div>
+
+      <div style="display:flex; gap:6px; margin-bottom:16px; overflow-x:auto;">
+        <sc-for list="{{ filterChips }}" as="fc" hint-placeholder-count="3">
+          <span style="font-size:11.5px; font-weight:700; padding:7px 13px; border-radius:999px; background:{{ fc.bg }}; color:{{ fc.fg }}; white-space:nowrap; flex:none;">{{ fc.label }}</span>
+        </sc-for>
+      </div>
+    </div>
+
+    <div style="flex:1; overflow-y:auto; padding:0 18px 90px; display:flex; flex-direction:column; gap:1px; background:#332522; border-radius:16px; margin:0 18px 90px;">
+      <sc-for list="{{ clients }}" as="c" hint-placeholder-count="7">
+        <div style="display:flex; align-items:center; gap:10px; padding:13px 14px; background:#241A18;">
+          <div style="width:36px; height:36px; border-radius:999px; background:#3D2B28; color:#F2C2C0; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:12.5px; flex:none;">{{ c.initials }}</div>
+          <div style="flex:1; min-width:0;">
+            <div style="font-size:13.5px; font-weight:700; color:#F5EBE8; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ c.name }}</div>
+            <div style="font-size:11.5px; color:#9A807A; font-variant-numeric:tabular-nums;">{{ c.visits }} визитов · {{ c.lastVisit }}</div>
+          </div>
+          <sc-if value="{{ c.badge }}"><span style="font-size:10px; font-weight:700; padding:3px 8px; border-radius:999px; background:{{ c.badgeBg }}; color:{{ c.badgeColor }}; white-space:nowrap; flex:none;">{{ c.badge }}</span></sc-if>
+          <button style="width:34px; height:34px; border-radius:999px; background:#3D2B28; display:flex; align-items:center; justify-content:center; flex:none;"><i data-lucide="phone" width="15" height="15" stroke-width="1.5" style="color:#F2C2C0;"></i></button>
+        </div>
+      </sc-for>
+    </div>
+
+    <div style="position:absolute; left:0; right:0; bottom:0; background:#2B201D; border-top:1px solid #4A3733; display:flex; padding:10px 8px 14px;">
+      <sc-for list="{{ navItems }}" as="n" hint-placeholder-count="4">
+        <div onClick="{{ n.onClick }}" style="flex:1; display:flex; flex-direction:column; align-items:center; gap:4px; color:{{ n.color }};">
+          <i data-lucide="{{ n.icon }}" width="19" height="19" stroke-width="1.5"></i>
+          <span style="font-size:10px; font-weight:600;">{{ n.label }}</span>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+
+  <div style="width:390px; background:#241A18; color:#F5EBE8; border-radius:28px; overflow:hidden; display:flex; flex-direction:column; min-height:800px; position:relative;">
+    <div style="padding:20px 18px 0;">
+      <h1 style="font-family:'Oswald',sans-serif; font-weight:700; text-transform:uppercase; font-size:21px; margin:0 0 14px;">Мои клиенты</h1>
+    </div>
+    <div style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:0 36px 90px;">
+      <div style="width:56px; height:56px; border-radius:16px; background:rgba(242,194,192,.1); display:flex; align-items:center; justify-content:center; margin-bottom:18px;">
+        <i data-lucide="users" width="26" height="26" stroke-width="1.5" style="color:#9A807A;"></i>
+      </div>
+      <div style="font-size:16px; font-weight:700; margin-bottom:8px;">Пока нет клиентов</div>
+      <div style="font-size:13px; color:#9A807A; line-height:1.5;">Здесь появятся те, кто к вам запишется</div>
+    </div>
+    <div style="position:absolute; left:0; right:0; bottom:0; background:#2B201D; border-top:1px solid #4A3733; display:flex; padding:10px 8px 14px;">
+      <sc-for list="{{ navItems }}" as="n2" hint-placeholder-count="4">
+        <div onClick="{{ n2.onClick }}" style="flex:1; display:flex; flex-direction:column; align-items:center; gap:4px; color:{{ n2.color }};">
+          <i data-lucide="{{ n2.icon }}" width="19" height="19" stroke-width="1.5"></i>
+          <span style="font-size:10px; font-weight:600;">{{ n2.label }}</span>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  componentDidMount(){ this.renderIcons(); }
+  renderIcons(){ if(window.lucide) window.lucide.createIcons(); }
+  renderVals(){
+    const filterChips = [ {label:'Все', bg:'#F2C2C0', fg:'#2A1C1A'}, {label:'Постоянные', bg:'#332522', fg:'#C4ADA8'}, {label:'С будущей записью', bg:'#332522', fg:'#C4ADA8'} ];
+    const clients = [
+      {initials:'АС', name:'Анна Соколова', visits:12, lastVisit:'28 сент.', badge:'23 окт', badgeBg:'rgba(242,194,192,.16)', badgeColor:'#F2C2C0'},
+      {initials:'ДМ', name:'Дарья Миронова', visits:7, lastVisit:'28 сент.', badge:null},
+      {initials:'КО', name:'Ксения Орлова', visits:3, lastVisit:'14 окт.', badge:null},
+      {initials:'ПР', name:'Полина Рябова', visits:5, lastVisit:'13 окт.', badge:'3 неявки', badgeBg:'rgba(227,165,72,.16)', badgeColor:'#E3A548'},
+      {initials:'ЕФ', name:'Елена Фомина', visits:4, lastVisit:'20 авг.', badge:null},
+      {initials:'МС', name:'Мария Седова', visits:6, lastVisit:'16 окт.', badge:'16 окт', badgeBg:'rgba(242,194,192,.16)', badgeColor:'#F2C2C0'},
+      {initials:'ВБ', name:'Виктория Белых', visits:2, lastVisit:'3 сент.', badge:null},
+    ];
+    const goToMyDay = () => { window.location.href = '36. Мастер - Мой день.dc.html'; };
+    const goToWeek = () => { window.location.href = '37. Мастер - Неделя.dc.html'; };
+    const goToProfile = () => { window.location.href = '42. Мастер - Профиль.dc.html'; };
+    const navItems = [
+      {icon:'sun', label:'Мой день', color:'#9A807A', onClick:goToMyDay},
+      {icon:'calendar-days', label:'Неделя', color:'#9A807A', onClick:goToWeek},
+      {icon:'users', label:'Клиенты', color:'#F2C2C0', onClick:null},
+      {icon:'user', label:'Профиль', color:'#9A807A', onClick:goToProfile},
+    ];
+    return { filterChips, clients, navItems };
+  }
+}
+
+</script>
+</body>
+</html>

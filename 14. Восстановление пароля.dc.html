@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta charset="utf-8">
+<title>Лада — Восстановление пароля</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+<style>
+  body{margin:0;-webkit-font-smoothing:antialiased;background:#241A18;}
+  * { box-sizing: border-box; }
+  ::selection{ background:#F2C2C0; color:#2A1C1A; }
+  a{ color:#F2C2C0; text-decoration:none; }
+  a:hover{ color:#E8AEAC; }
+  @media (prefers-reduced-motion: reduce){ * { animation:none !important; transition:none !important; } }
+</style>
+</helmet>
+
+<div style="font-family:'Manrope',sans-serif; background:#241A18; color:#F5EBE8; min-height:100vh; display:grid; grid-template-columns:minmax(0,480px) minmax(0,1fr); position:relative;">
+
+  <div style="display:flex; align-items:center; justify-content:center; padding:48px 32px;">
+    <div style="width:100%; max-width:380px;">
+      <a href="Лада - Лендинг.dc.html" style="display:block; font-family:'Oswald',sans-serif; font-weight:800; font-size:22px; color:#F2C2C0; margin-bottom:36px;">ЛАДА</a>
+      <h1 style="font-family:'Oswald',sans-serif; font-weight:700; text-transform:uppercase; font-size:24px; margin:0 0 12px;">Восстановление пароля</h1>
+      <p style="font-size:13.5px; color:#9A807A; line-height:1.5; margin:0 0 26px;">Укажите e-mail, на который зарегистрирован аккаунт — пришлём ссылку для смены пароля.</p>
+
+      <label style="display:block; font-size:12px; font-weight:600; color:#C4ADA8; margin-bottom:6px;">E-mail</label>
+      <input placeholder="anna@mail.ru" style="width:100%; background:#332522; border:1px solid #4A3733; border-radius:8px; padding:12px 14px; font-size:14px; color:#F5EBE8; font-family:'Manrope',sans-serif; margin-bottom:20px;" />
+
+      <button style="width:100%; background:#F2C2C0; color:#2A1C1A; border:none; border-radius:16px; padding:13px; font-size:14.5px; font-weight:700; font-family:'Manrope',sans-serif; margin-bottom:20px;">Отправить ссылку</button>
+
+      <div style="text-align:center;"><a href="12. Вход.dc.html" style="font-size:13px; font-weight:600; color:#9A807A;">← Вернуться ко входу</a></div>
+    </div>
+  </div>
+
+  <div style="position:relative; background:repeating-linear-gradient(135deg,#332522,#332522 12px,#3D2B28 12px,#3D2B28 24px);">
+    <div style="position:absolute; top:24px; left:24px; font-family:monospace; font-size:11px; color:#9A807A;">фото интерьера студии</div>
+
+    <div style="position:absolute; right:40px; bottom:40px; width:300px; display:flex; flex-direction:column; gap:16px;">
+      <div>
+        <div style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:#F5EBE8; margin-bottom:10px; text-shadow:0 2px 8px rgba(0,0,0,.5);">Состояние: письмо отправлено</div>
+        <div style="background:#2B201D; border:1px solid #4A3733; border-radius:20px; padding:20px;">
+          <div style="width:40px; height:40px; border-radius:12px; background:rgba(242,194,192,.14); display:flex; align-items:center; justify-content:center; margin-bottom:14px;">
+            <i data-lucide="mail" width="20" height="20" stroke-width="1.5" style="color:#F2C2C0;"></i>
+          </div>
+          <div style="font-size:14.5px; font-weight:700; color:#F5EBE8; margin-bottom:6px;">Проверьте почту</div>
+          <div style="font-size:12.5px; color:#9A807A; line-height:1.5; margin-bottom:16px;">Отправили ссылку на anna.sokolova@mail.ru. Ссылка действует 30 минут.</div>
+          <button disabled="{{ true }}" style="width:100%; background:transparent; color:#6B5852; border:1.5px solid #4A3733; border-radius:16px; padding:10px; font-size:12.5px; font-weight:700; font-family:'Manrope',sans-serif; margin-bottom:10px; opacity:.7; cursor:not-allowed;">Отправить ещё раз · через 0:45</button>
+          <div style="text-align:center;"><a href="#" style="font-size:12.5px; font-weight:700;">Изменить e-mail</a></div>
+        </div>
+      </div>
+
+      <div>
+        <div style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:#F5EBE8; margin-bottom:10px; text-shadow:0 2px 8px rgba(0,0,0,.5);">Состояние: e-mail не найден</div>
+        <div style="background:#2B201D; border:1px solid #4A3733; border-radius:20px; padding:16px;">
+          <input readonly="{{ true }}" value="anna.sokolov@mail.ru" style="width:100%; background:#332522; border:1px solid #E58078; border-radius:8px; padding:9px 12px; font-size:13px; color:#F5EBE8; margin-bottom:8px;" />
+          <div style="font-size:12px; color:#E58078; line-height:1.4;">Аккаунт с таким e-mail не найден. <a href="13. Регистрация.dc.html" style="font-weight:700;">Зарегистрироваться</a></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  componentDidMount(){ this.renderIcons(); }
+  renderIcons(){ if(window.lucide) window.lucide.createIcons(); }
+  renderVals(){ return {}; }
+}
+
+</script>
+</body>
+</html>

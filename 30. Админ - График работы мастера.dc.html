@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta charset="utf-8">
+<title>Лада — Админ: График работы</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+<style>
+  body{margin:0;-webkit-font-smoothing:antialiased;background:#FDF8F6;}
+  * { box-sizing: border-box; }
+  ::selection{ background:#F2C2C0; color:#2A1C1A; }
+  a{ color:#A65451; text-decoration:none; }
+  a:hover{ color:#8A423F; }
+  @media (prefers-reduced-motion: reduce){ * { animation:none !important; transition:none !important; } }
+</style>
+</helmet>
+
+<div style="font-family:'Manrope',sans-serif; background:#FDF8F6; color:#2A1C1A; min-height:100vh; display:flex; position:relative;">
+
+  <aside style="width:240px; flex:none; background:#2A1C1A; display:flex; flex-direction:column; padding:24px 16px; position:sticky; top:0; height:100vh;">
+    <div style="padding:0 8px; margin-bottom:6px;"><span onClick="{{ goToDashboard }}" style="font-family:'Oswald',sans-serif; font-weight:800; font-size:20px; color:#F2C2C0; cursor:pointer;">ЛАДА</span></div>
+    <div style="padding:0 8px; margin-bottom:24px;"><span style="font-size:10.5px; font-weight:700; padding:3px 9px; border-radius:999px; background:rgba(242,194,192,.16); color:#F2C2C0;">Администратор</span></div>
+    <nav style="display:flex; flex-direction:column; gap:2px; flex:1;">
+      <sc-for list="{{ sidebarItems }}" as="si" hint-placeholder-count="8">
+        <div onClick="{{ si.onClick }}" style="display:flex; align-items:center; justify-content:space-between; gap:10px; padding:10px 12px; border-radius:10px; background:{{ si.bg }}; color:{{ si.fg }}; font-size:13.5px; font-weight:600; cursor:pointer;">
+          <div style="display:flex; align-items:center; gap:10px;"><i data-lucide="{{ si.icon }}" width="17" height="17" stroke-width="1.5"></i>{{ si.label }}</div>
+          <sc-if value="{{ si.badge }}"><span style="width:18px; height:18px; border-radius:999px; background:#F2C2C0; color:#2A1C1A; font-size:10px; font-weight:800; display:flex; align-items:center; justify-content:center;">{{ si.badge }}</span></sc-if>
+        </div>
+      </sc-for>
+    </nav>
+    <div style="display:flex; align-items:center; gap:10px; padding:10px 8px; border-top:1px solid #3D2B28; margin-top:8px; padding-top:16px;">
+      <div style="width:32px; height:32px; border-radius:999px; background:#F2C2C0; color:#2A1C1A; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:12px; flex:none;">ЕК</div>
+      <div style="flex:1; min-width:0;">
+        <div style="font-size:13px; font-weight:600; color:#F5EBE8; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Елена Крылова</div>
+        <a href="Лада - Лендинг.dc.html" style="font-size:11.5px; color:#9A807A;">Выйти</a>
+      </div>
+    </div>
+  </aside>
+
+  <div style="flex:1; min-width:0;">
+    <main style="padding:32px; max-width:1200px;">
+
+      <div style="display:flex; align-items:center; gap:8px; font-size:13px; color:#8A726D; margin-bottom:18px; flex-wrap:wrap;">
+        <a href="28. Админ - Мастера.dc.html">Мастера</a><i data-lucide="chevron-right" width="13" height="13" stroke-width="1.5"></i><a href="#">Ольга Белова</a><i data-lucide="chevron-right" width="13" height="13" stroke-width="1.5"></i><span style="color:#5C4440;">График работы</span>
+      </div>
+
+      <div style="display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap; margin-bottom:24px;">
+        <div style="display:flex; align-items:center; gap:12px;">
+          <div style="width:40px; height:40px; border-radius:999px; background:#F3E9E6; color:#A65451; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:14px; flex:none;">ОБ</div>
+          <span style="font-family:'Oswald',sans-serif; font-weight:700; text-transform:uppercase; font-size:22px;">Ольга Белова</span>
+        </div>
+        <div style="display:flex; align-items:center; gap:12px;">
+          <i data-lucide="chevron-left" width="16" height="16" stroke-width="1.5" style="color:#5C4440;"></i>
+          <span style="font-size:14px; font-weight:700;">Октябрь 2026</span>
+          <i data-lucide="chevron-right" width="16" height="16" stroke-width="1.5" style="color:#5C4440;"></i>
+          <button style="background:transparent; color:#5C4440; border:1.5px solid #E8DAD6; border-radius:12px; padding:7px 14px; font-size:12.5px; font-weight:700; font-family:'Manrope',sans-serif; white-space:nowrap;">Сегодня</button>
+        </div>
+      </div>
+
+      <div style="display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.1fr); gap:28px; align-items:start;">
+
+        <div style="min-width:0;">
+          <div style="background:#FFFFFF; border:1px solid #E8DAD6; border-radius:20px; padding:22px; margin-bottom:18px;">
+            <div style="font-size:14px; font-weight:700; margin-bottom:16px;">Регулярный график</div>
+            <div style="display:flex; flex-direction:column; gap:10px;">
+              <sc-for list="{{ weekSchedule }}" as="d" hint-placeholder-count="7">
+                <div style="display:flex; align-items:center; gap:12px; opacity:{{ d.opacity }}; flex-wrap:wrap;">
+                  <div style="width:32px; height:19px; border-radius:999px; background:{{ d.switchBg }}; flex:none;"></div>
+                  <span style="font-size:13px; font-weight:600; width:32px; flex:none;">{{ d.label }}</span>
+                  <input readonly="{{ true }}" value="{{ d.from }}" disabled="{{ d.disabled }}" style="width:72px; background:#FDF8F6; border:1px solid #E8DAD6; border-radius:8px; padding:7px 10px; font-size:12.5px; font-variant-numeric:tabular-nums; color:#2A1C1A;" />
+                  <span style="font-size:12px; color:#8A726D;">—</span>
+                  <input readonly="{{ true }}" value="{{ d.to }}" disabled="{{ d.disabled }}" style="width:72px; background:#FDF8F6; border:1px solid #E8DAD6; border-radius:8px; padding:7px 10px; font-size:12.5px; font-variant-numeric:tabular-nums; color:#2A1C1A;" />
+                  <sc-if value="{{ d.disabled }}"><span style="font-size:12px; color:#B9A69F;">Выходной</span></sc-if>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+
+          <div style="background:#FFFFFF; border:1px solid #E8DAD6; border-radius:20px; padding:22px;">
+            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;">
+              <span style="font-size:14px; font-weight:700;">Перерыв</span>
+              <div style="width:32px; height:19px; border-radius:999px; background:#A65451; flex:none;"></div>
+            </div>
+            <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+              <input readonly="{{ true }}" value="14:00" style="width:72px; background:#FDF8F6; border:1px solid #E8DAD6; border-radius:8px; padding:7px 10px; font-size:12.5px; font-variant-numeric:tabular-nums; color:#2A1C1A;" />
+              <span style="font-size:12px; color:#8A726D;">—</span>
+              <input readonly="{{ true }}" value="15:00" style="width:72px; background:#FDF8F6; border:1px solid #E8DAD6; border-radius:8px; padding:7px 10px; font-size:12.5px; font-variant-numeric:tabular-nums; color:#2A1C1A;" />
+              <span style="font-size:12px; color:#8A726D;">ежедневно, кроме выходных</span>
+            </div>
+          </div>
+        </div>
+
+        <div style="min-width:0;">
+          <div style="background:#FFFFFF; border:1px solid #E8DAD6; border-radius:20px; padding:22px; margin-bottom:16px;">
+            <div style="font-size:14px; font-weight:700; margin-bottom:14px;">Исключения</div>
+            <div style="display:grid; grid-template-columns:repeat(7,1fr); gap:5px; margin-bottom:4px;">
+              <sc-for list="{{ weekdayLabels }}" as="wd" hint-placeholder-count="7"><div style="text-align:center; font-size:10px; color:#8A726D; text-transform:uppercase;">{{ wd }}</div></sc-for>
+            </div>
+            <div style="display:grid; grid-template-columns:repeat(7,1fr); gap:5px; margin-bottom:16px;">
+              <sc-for list="{{ calendarCells }}" as="c" hint-placeholder-count="35">
+                <div style="aspect-ratio:1; border-radius:8px; display:flex; align-items:center; justify-content:center; background:{{ c.bg }}; border:{{ c.border }};">
+                  <sc-if value="{{ c.num }}"><span style="font-size:11.5px; font-weight:700; color:{{ c.fg }}; font-variant-numeric:tabular-nums;">{{ c.num }}</span></sc-if>
+                </div>
+              </sc-for>
+            </div>
+            <div style="display:flex; gap:14px; flex-wrap:wrap;">
+              <sc-for list="{{ legend }}" as="lg" hint-placeholder-count="5"><div style="display:flex; align-items:center; gap:6px; font-size:11px; color:#5C4440;"><div style="{{ lg.swatch }}"></div>{{ lg.label }}</div></sc-for>
+            </div>
+          </div>
+
+          <div style="background:#FFFFFF; border:1px solid #E8DAD6; border-radius:20px; padding:22px;">
+            <div style="font-size:14px; font-weight:700; margin-bottom:14px;">Список исключений</div>
+            <div style="display:flex; flex-direction:column; gap:1px; background:#E8DAD6; border-radius:14px; overflow:hidden; margin-bottom:16px;">
+              <sc-for list="{{ exceptions }}" as="ex" hint-placeholder-count="3">
+                <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; padding:12px 14px; background:#FFFFFF;">
+                  <div style="min-width:0;">
+                    <div style="font-size:13px; font-weight:600; color:#2A1C1A;">{{ ex.label }}</div>
+                    <div style="font-size:11.5px; color:#8A726D; font-variant-numeric:tabular-nums;">{{ ex.range }}</div>
+                  </div>
+                  <i data-lucide="trash-2" width="15" height="15" stroke-width="1.5" style="color:#B23A32; cursor:pointer; flex:none;"></i>
+                </div>
+              </sc-for>
+            </div>
+            <button onClick="{{ openModal }}" style="background:transparent; color:#A65451; border:1.5px solid #E8DAD6; border-radius:14px; padding:10px 16px; font-size:12.5px; font-weight:700; font-family:'Manrope',sans-serif; display:flex; align-items:center; gap:6px;"><i data-lucide="plus" width="14" height="14" stroke-width="2"></i>Добавить исключение</button>
+          </div>
+        </div>
+
+      </div>
+    </main>
+  </div>
+
+  <sc-if value="{{ modalOpen }}">
+    <div style="position:fixed; inset:0; background:rgba(42,28,26,.45); display:flex; align-items:center; justify-content:center; z-index:100; padding:24px;">
+      <div style="background:#FFFFFF; border-radius:24px; padding:26px; width:420px; max-width:100%; box-shadow:0 24px 60px rgba(42,28,26,.3);">
+        <div style="font-size:17px; font-weight:700; margin-bottom:18px;">Добавить исключение</div>
+
+        <label style="display:block; font-size:12px; font-weight:600; color:#5C4440; margin-bottom:6px;">Тип</label>
+        <div style="position:relative; margin-bottom:14px;">
+          <select style="width:100%; background:#FDF8F6; border:1px solid #E8DAD6; border-radius:8px; padding:10px 30px 10px 14px; font-size:13.5px; color:#2A1C1A; font-family:'Manrope',sans-serif; appearance:none;">
+            <option>Отпуск</option><option>Больничный</option><option>Разовое изменение часов</option><option>Выходной</option>
+          </select>
+          <i data-lucide="chevron-down" width="14" height="14" stroke-width="1.5" style="position:absolute; right:12px; top:50%; transform:translateY(-50%); color:#8A726D; pointer-events:none;"></i>
+        </div>
+
+        <label style="display:block; font-size:12px; font-weight:600; color:#5C4440; margin-bottom:6px;">Период</label>
+        <div style="display:flex; align-items:center; gap:10px; margin-bottom:14px;">
+          <input readonly="{{ true }}" value="20.10.2026" style="flex:1; background:#FDF8F6; border:1px solid #E8DAD6; border-radius:8px; padding:10px 12px; font-size:13px; color:#2A1C1A; font-variant-numeric:tabular-nums;" />
+          <span style="color:#8A726D;">—</span>
+          <input readonly="{{ true }}" value="27.10.2026" style="flex:1; background:#FDF8F6; border:1px solid #E8DAD6; border-radius:8px; padding:10px 12px; font-size:13px; color:#2A1C1A; font-variant-numeric:tabular-nums;" />
+        </div>
+
+        <label style="display:block; font-size:12px; font-weight:600; color:#5C4440; margin-bottom:6px;">Часы (для разового изменения)</label>
+        <div style="display:flex; align-items:center; gap:10px; margin-bottom:14px;">
+          <input readonly="{{ true }}" placeholder="10:00" style="flex:1; background:#FDF8F6; border:1px solid #E8DAD6; border-radius:8px; padding:10px 12px; font-size:13px; color:#B9A69F;" />
+          <span style="color:#8A726D;">—</span>
+          <input readonly="{{ true }}" placeholder="19:00" style="flex:1; background:#FDF8F6; border:1px solid #E8DAD6; border-radius:8px; padding:10px 12px; font-size:13px; color:#B9A69F;" />
+        </div>
+
+        <label style="display:block; font-size:12px; font-weight:600; color:#5C4440; margin-bottom:6px;">Причина (необязательно)</label>
+        <input placeholder="Например: ежегодный отпуск" style="width:100%; background:#FDF8F6; border:1px solid #E8DAD6; border-radius:8px; padding:10px 14px; font-size:13.5px; color:#2A1C1A; font-family:'Manrope',sans-serif; margin-bottom:16px;" />
+
+        <div style="display:flex; gap:9px; align-items:flex-start; background:#FBF2E3; border:1px solid #E6C27D; border-radius:12px; padding:12px 14px; margin-bottom:18px;">
+          <i data-lucide="triangle-alert" width="15" height="15" stroke-width="1.5" style="color:#8A5A14; flex:none; margin-top:1px;"></i>
+          <div style="font-size:12px; color:#6B4A10; line-height:1.4;">На этот период есть 3 записи — их нужно перенести. <a href="23. Админ - Записи.dc.html" style="font-weight:700;">Открыть записи</a></div>
+        </div>
+
+        <div style="display:flex; gap:10px;">
+          <button onClick="{{ closeModal }}" style="flex:1; background:transparent; color:#5C4440; border:1.5px solid #E8DAD6; border-radius:14px; padding:11px; font-size:13px; font-weight:700; font-family:'Manrope',sans-serif;">Отмена</button>
+          <button onClick="{{ goToMasters }}" style="flex:1; background:#2A1C1A; color:#F2C2C0; border:none; border-radius:14px; padding:11px; font-size:13px; font-weight:700; font-family:'Manrope',sans-serif; cursor:pointer;">Сохранить</button>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { modalOpen: true };
+  componentDidMount(){ this.renderIcons(); }
+  componentDidUpdate(){ this.renderIcons(); }
+  renderIcons(){ if(window.lucide) window.lucide.createIcons(); }
+
+  renderVals(){
+    const goToDashboard = () => { window.location.href = '21. Админ - Дашборд дня.dc.html'; };
+    const goToSchedule = () => { window.location.href = '22. Админ - Сетка расписания.dc.html'; };
+    const goToBookings = () => { window.location.href = '23. Админ - Записи.dc.html'; };
+    const goToClients = () => { window.location.href = '26. Админ - Клиенты.dc.html'; };
+    const goToMasters = () => { window.location.href = '28. Админ - Мастера.dc.html'; };
+    const goToServices = () => { window.location.href = '31. Админ - Услуги.dc.html'; };
+    const goToSettings = () => { window.location.href = '33. Админ - Настройки студии.dc.html'; };
+    const goToRequests = () => { window.location.href = '34. Админ - Запросы мастеров.dc.html'; };
+    const goToMasters = () => { window.location.href = '28. Админ - Мастера.dc.html'; };
+    const sidebarItems = [
+      {icon:'layout-dashboard', label:'Дашборд', bg:'transparent', fg:'#C4ADA8', badge:null, onClick:goToDashboard},
+      {icon:'calendar', label:'Расписание', bg:'transparent', fg:'#C4ADA8', badge:null, onClick:goToSchedule},
+      {icon:'list', label:'Записи', bg:'transparent', fg:'#C4ADA8', badge:null, onClick:goToBookings},
+      {icon:'users', label:'Клиенты', bg:'transparent', fg:'#C4ADA8', badge:null, onClick:goToClients},
+      {icon:'user-cog', label:'Мастера', bg:'rgba(242,194,192,.14)', fg:'#F2C2C0', badge:null, onClick:null},
+      {icon:'droplet', label:'Услуги', bg:'transparent', fg:'#C4ADA8', badge:null, onClick:goToServices},
+      {icon:'settings', label:'Настройки студии', bg:'transparent', fg:'#C4ADA8', badge:null, onClick:goToSettings},
+      {icon:'inbox', label:'Запросы', bg:'transparent', fg:'#C4ADA8', badge:'2', onClick:goToRequests},
+    ];
+
+    const weekSchedule = [
+      {label:'Пн', from:'10:00', to:'19:00', disabled:false, opacity:1, switchBg:'#A65451'},
+      {label:'Вт', from:'10:00', to:'19:00', disabled:false, opacity:1, switchBg:'#A65451'},
+      {label:'Ср', from:'12:00', to:'21:00', disabled:false, opacity:1, switchBg:'#A65451'},
+      {label:'Чт', from:'12:00', to:'21:00', disabled:false, opacity:1, switchBg:'#A65451'},
+      {label:'Пт', from:'10:00', to:'19:00', disabled:false, opacity:1, switchBg:'#A65451'},
+      {label:'Сб', from:'11:00', to:'18:00', disabled:false, opacity:1, switchBg:'#A65451'},
+      {label:'Вс', from:'—', to:'—', disabled:true, opacity:.55, switchBg:'#E8DAD6'},
+    ];
+
+    const weekdayLabels = ['пн','вт','ср','чт','пт','сб','вс'];
+    const leadingBlanks = 3, today = 12;
+    const calendarCells = [];
+    for(let i=0;i<leadingBlanks;i++) calendarCells.push({num:null, bg:'transparent', border:'none'});
+    for(let d=1; d<=31; d++){
+      let bg='transparent', border='none', fg='#2A1C1A';
+      if(d<today) fg='#D9C3BC';
+      if(d===today) border='1.5px solid #A65451';
+      if(d>=20 && d<=27){ bg='#E6C27D'; fg='#5C4012'; border='none'; }
+      if(d===19 || d===26) { bg='#F3E9E6'; fg='#8A726D'; } // weekend-by-schedule example (sun)
+      calendarCells.push({num:d, bg, border, fg});
+    }
+    while(calendarCells.length % 7 !== 0) calendarCells.push({num:null, bg:'transparent', border:'none'});
+
+    const legend = [
+      {swatch:'width:10px;height:10px;border-radius:3px;border:1px solid #D9C3BC;', label:'Рабочий'},
+      {swatch:'width:10px;height:10px;border-radius:3px;background:#F3E9E6;', label:'Выходной по графику'},
+      {swatch:'width:10px;height:10px;border-radius:3px;background:#E6C27D;', label:'Отпуск'},
+      {swatch:'width:10px;height:10px;border-radius:3px;background:#E8ADA6;', label:'Больничный'},
+      {swatch:'width:10px;height:10px;border-radius:3px;background:#A9C3D6;', label:'Разовое изменение часов'},
+    ];
+
+    const exceptions = [
+      {label:'Отпуск', range:'20–27 октября 2026'},
+      {label:'Разовое изменение часов — 12:00–17:00', range:'5 ноября 2026'},
+    ];
+
+    return { sidebarItems, weekSchedule, weekdayLabels, calendarCells, legend, exceptions, modalOpen: this.state.modalOpen,
+      openModal: ()=>this.setState({modalOpen:true}), closeModal: ()=>this.setState({modalOpen:false}) };
+  }
+}
+
+</script>
+</body>
+</html>
