@@ -124,6 +124,9 @@ function appointmentAdminView(row, services, { timezone } = {}) {
   const base = appointmentView(row, services, { timezone });
   return {
     ...base,
+    // Признак осознанного наложения виден только персоналу: клиенту
+    // не нужно знать, что его визит поставили поверх другого.
+    is_override: row.is_override === 1,
     client: {
       id: row.client_user_id,
       name: row.client_name,

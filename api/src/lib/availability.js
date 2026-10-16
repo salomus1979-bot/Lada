@@ -272,8 +272,11 @@ function nearestSlots({ masterId, fromDate, occupiedMin, settings, holdOwnerUser
  * Проверка конкретного начала визита. Используется при удержании слота,
  * создании записи и переносе — всегда внутри транзакции.
  * Бросает 409, если время не подходит.
+ *
+ * allowOverlap — осознанное наложение администратора: пропускает занятость,
+ * но не отменяет остальные проверки. Решение о роли принимает роут, не здесь.
  */
-function assertSlotBookable({ masterId, startAtUtc, occupiedMin, settings, holdOwnerUserId = null, excludeAppointmentId = null, excludeHoldToken = null }) {
+function assertSlotBookable({ masterId, startAtUtc, occupiedMin, settings, holdOwnerUserId = null, excludeAppointmentId = null, excludeHoldToken = null, allowOverlap = false }) {
   const startDate = new Date(startAtUtc);
   const startMs = startDate.getTime();
   const endMs = startMs + occupiedMin * 60000;
@@ -308,6 +311,13 @@ function assertSlotBookable({ masterId, startAtUtc, occupiedMin, settings, holdO
   });
   if (!onGrid) {
     throw conflict(`Начало визита должно попадать в сетку ${settings.slot_step_min} мин`);
+  }
+
+  // allowOverlap снимает ТОЛЬКО проверку занятости — осознанное наложение
+  // администратора. Прошедшее время, горизонт, рабочее окно и сетка
+  // проверяются по-прежнему.
+  if (allowOverlap) {
+    return { endAtUtc: toUtcIso(new Date(endMs)) };
   }
 
   const busy = busyIntervals(masterId, toUtcIso(startDate), toUtcIso(new Date(endMs)), {

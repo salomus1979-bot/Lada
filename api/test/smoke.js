@@ -732,6 +732,111 @@ async function main() {
     && dupe.json.error.details.nearest_slots.every((x) => x.at_utc && x.local_time),
     dupe.json.error.details);
 
+  console.log('');
+  console.log('— Осознанное наложение администратора —');
+
+  const busySpot = db.one(
+    `SELECT id, master_id, starts_at_utc FROM appointments
+      WHERE status IN ('pending','confirmed') ORDER BY id LIMIT 1`,
+  );
+  const overrideBody = (extra = {}) => ({
+    master_id: busySpot.master_id,
+    service_ids: [manicure.id, brows.id],
+    starts_at: busySpot.starts_at_utc,
+    consent: true,
+    ...extra,
+  });
+
+  // Клиент передаёт признак вручную — он игнорируется, наложения нет.
+  const clientTriesOverride = await call('POST', '/api/appointments', {
+    token: marinaToken, body: overrideBody({ is_override: true }),
+  });
+  check('клиент с is_override=true -> всё равно 409',
+    clientTriesOverride.status === 409, clientTriesOverride.json);
+  check('отказ клиенту не ссылается на права, а говорит про занятость',
+    clientTriesOverride.json.error.details.reason === 'overlap');
+
+  const beforeCount = db.one(
+    'SELECT COUNT(*) AS n FROM appointments WHERE master_id = ? AND starts_at_utc = ?',
+    [busySpot.master_id, busySpot.starts_at_utc],
+  ).n;
+  check('запись клиента не создалась', beforeCount === 1, beforeCount);
+
+  // Тот же запрос от администратора проходит.
+  const adminOverride = await call('POST', '/api/appointments', {
+    token: adminToken, body: overrideBody({ is_override: true }),
+  });
+  check('администратор с is_override=true -> 201',
+    adminOverride.status === 201, adminOverride.json);
+  const overrideId = adminOverride.status === 201 ? adminOverride.json.appointment.id : null;
+  check('в базе признак выставлен',
+    overrideId !== null
+    && db.one('SELECT is_override FROM appointments WHERE id = ?', [overrideId]).is_override === 1);
+
+  // Администратор без признака получает обычный отказ.
+  const adminNoFlag = await call('POST', '/api/appointments', {
+    token: adminToken, body: overrideBody(),
+  });
+  check('администратор без признака -> 409 как обычно',
+    adminNoFlag.status === 409, adminNoFlag.json);
+
+  // Главное: наложенная запись дальше работает как обычная и блокирует others.
+  const thirdOnTop = await call('POST', '/api/appointments', {
+    token: marinaToken, body: overrideBody(),
+  });
+  check('наложенная запись сама блокирует следующие попытки',
+    thirdOnTop.status === 409, thirdOnTop.json);
+
+  let blockedByOverride = false;
+  try {
+    db.run(
+      `INSERT INTO appointments
+         (client_user_id, master_id, starts_at_utc, ends_at_utc, service_duration_min,
+          total_price_kopecks, status, created_at_utc, updated_at_utc)
+       VALUES (?, ?, ?, ?, 60, 100000, 'pending', ?, ?)`,
+      [busySpot.client_user_id || 1, busySpot.master_id, busySpot.starts_at_utc,
+        new Date(new Date(busySpot.starts_at_utc).getTime() + 30 * 60000)
+          .toISOString().replace(/\.\d{3}Z$/, 'Z'),
+        '2026-01-01T00:00:00Z', '2026-01-01T00:00:00Z'],
+    );
+  } catch (err) {
+    blockedByOverride = err.message === 'appointment_overlap';
+  }
+  check('триггер по-прежнему видит наложенную запись как занимающую время',
+    blockedByOverride);
+
+  // Признак описывает размещение: перенос не-администратором его сбрасывает.
+  if (overrideId !== null) {
+    db.run('UPDATE appointments SET is_override = 1 WHERE id = ?', [overrideId]);
+    const freeDay = await call('GET',
+      `/api/masters/${busySpot.master_id}/availability?date=${day.date}`
+      + `&service_ids=${manicure.id},${brows.id}`, { token: adminToken });
+    if (freeDay.json.slots.length > 0) {
+      const moved = await call('POST', `/api/appointments/${overrideId}/reschedule`, {
+        token: adminToken, body: { starts_at: freeDay.json.slots[0].at_utc },
+      });
+      check('перенос без признака сбрасывает is_override в 0',
+        moved.status === 200
+        && db.one('SELECT is_override FROM appointments WHERE id = ?', [overrideId]).is_override === 0,
+        moved.json);
+    }
+  }
+
+  // Признак виден в админском списке. Через GET /api/appointments/:id его не
+  // видно: эту запись создал сам админ, поэтому он её владелец и получает
+  // клиентское представление — там признака нет и не должно быть.
+  const adminList = await call('GET', '/api/admin/appointments', { token: adminToken });
+  const listed = adminList.json.appointments.find((a) => a.id === overrideId);
+  check('в админском списке признак присутствует',
+    !!listed && listed.is_override !== undefined, listed);
+  check('в админском списке есть и данные клиента',
+    !!listed && listed.client !== undefined);
+
+  const asOwner = await call('GET', `/api/appointments/${overrideId}`, { token: adminToken });
+  check('владельцу записи отдаётся клиентский вид, без признака',
+    asOwner.status === 200 && asOwner.json.appointment.is_override === undefined
+    && asOwner.json.appointment.client === undefined);
+
   console.log('\n— Отмена и выход —');
   const foreignCancel = await call('POST', `/api/appointments/${appointmentId}/cancel`,
     { token: marinaToken, body: {} });

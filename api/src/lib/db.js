@@ -16,8 +16,39 @@ function open() {
   db = new DatabaseSync(DB_PATH);
   db.exec('PRAGMA foreign_keys = ON');
   db.exec('PRAGMA busy_timeout = 5000');
+  migrate();
   db.exec(fs.readFileSync(SCHEMA_PATH, 'utf8'));
   return db;
+}
+
+/**
+ * Колонки, добавленные к уже существующим таблицам.
+ * schema.sql описывает актуальное состояние и годится для новой базы,
+ * но CREATE TABLE IF NOT EXISTS не достроит колонку в уже созданной.
+ *
+ * Выполняется ДО schema.sql: триггеры из него ссылаются на NEW.is_override,
+ * и без колонки их создание упало бы.
+ */
+const ADDED_COLUMNS = [
+  {
+    table: 'appointments',
+    column: 'is_override',
+    ddl: 'INTEGER NOT NULL DEFAULT 0 CHECK (is_override IN (0, 1))',
+  },
+];
+
+function migrate() {
+  for (const { table, column, ddl } of ADDED_COLUMNS) {
+    const exists = db.prepare(
+      "SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = ?",
+    ).get(table);
+    if (!exists) continue; // новая база — колонка придёт из schema.sql
+
+    const columns = db.prepare(`PRAGMA table_info(${table})`).all().map((c) => c.name);
+    if (columns.includes(column)) continue;
+
+    db.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${ddl}`);
+  }
 }
 
 function get() {

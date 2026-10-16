@@ -74,7 +74,7 @@ router.get('/appointments', (req, res) => {
   const rows = db.all(
     `SELECT a.id, a.client_user_id, a.master_id, a.starts_at_utc, a.ends_at_utc,
             a.service_duration_min, a.total_price_kopecks, a.status, a.client_comment,
-            a.cancel_reason, a.reschedule_count, a.created_at_utc,
+            a.cancel_reason, a.reschedule_count, a.is_override, a.created_at_utc,
             m.first_name AS master_first_name, m.last_name AS master_last_name,
             u.name AS client_name, u.phone AS client_phone, u.email AS client_email
        FROM appointments a

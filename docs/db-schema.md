@@ -180,6 +180,7 @@ UNIQUE: `(master_id, weekday)`.
 | `cancel_reason` | TEXT | NULL | |
 | `cancelled_at_utc` | TEXT | NULL | |
 | `reschedule_count` | INTEGER | NOT NULL DEFAULT 0 | лимит — `salon_settings.max_reschedules` |
+| `is_override` | INTEGER | NOT NULL DEFAULT 0, CHECK in (0,1) | осознанное наложение: администратор поставил визит поверх занятого времени. Описывает текущее размещение, а не историю — при переносе пересчитывается |
 | `created_at_utc` | TEXT | NOT NULL | |
 | `updated_at_utc` | TEXT | NOT NULL | |
 

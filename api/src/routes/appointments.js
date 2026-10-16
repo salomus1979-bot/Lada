@@ -59,7 +59,7 @@ function rethrowAsConflict(err, context) {
 const APPOINTMENT_COLUMNS = `
   a.id, a.client_user_id, a.master_id, a.starts_at_utc, a.ends_at_utc,
   a.service_duration_min, a.total_price_kopecks, a.status, a.client_comment,
-  a.cancel_reason, a.reschedule_count, a.created_at_utc,
+  a.cancel_reason, a.reschedule_count, a.is_override, a.created_at_utc,
   m.first_name AS master_first_name, m.last_name AS master_last_name`;
 
 function fetchAppointment(id) {
@@ -123,6 +123,7 @@ router.post('/', requireAuth, (req, res) => {
     .utcInstant('starts_at')
     .string('client_comment', { required: false, max: 1000 })
     .string('hold_token', { required: false, min: 64, max: 64 })
+    .bool('is_override', { required: false, def: false })
     .bool('consent')
     .done();
 
@@ -134,6 +135,14 @@ router.post('/', requireAuth, (req, res) => {
   if (req.user.isBlocked) {
     throw forbidden('Онлайн-запись для аккаунта ограничена, позвоните администратору');
   }
+
+  // ── ПРОВЕРКА РОЛИ для осознанного наложения ──────────────────────────────
+  // Признак действует, только если его прислал администратор или владелец.
+  // Клиенту и мастеру поле молча игнорируется (а не отклоняется с ошибкой):
+  // для них applyOverride остаётся false, проверка занятости выполняется
+  // полностью, и попытка сесть на занятое время упирается в обычный 409.
+  const applyOverride = input.is_override === true && isStaff(req.user);
+
   if (input.hold_token && !/^[0-9a-f]{64}$/.test(input.hold_token)) {
     throw badRequest('Неверные входные данные', { hold_token: 'неверный формат' });
   }
@@ -169,16 +178,19 @@ router.post('/', requireAuth, (req, res) => {
       settings,
       holdOwnerUserId: req.user.id,
       excludeHoldToken: input.hold_token || null,
+      allowOverlap: applyOverride,
     });
 
     const timestamp = nowUtc();
     const info = db.run(
       `INSERT INTO appointments
          (client_user_id, master_id, starts_at_utc, ends_at_utc, service_duration_min,
-          total_price_kopecks, status, client_comment, created_at_utc, updated_at_utc)
-       VALUES (?, ?, ?, ?, ?, ?, 'pending', ?, ?, ?)`,
+          total_price_kopecks, status, client_comment, is_override,
+          created_at_utc, updated_at_utc)
+       VALUES (?, ?, ?, ?, ?, ?, 'pending', ?, ?, ?, ?)`,
       [req.user.id, input.master_id, input.starts_at, endAtUtc, serviceDurationMin,
-        totalPriceKopecks, input.client_comment || null, timestamp, timestamp],
+        totalPriceKopecks, input.client_comment || null, applyOverride ? 1 : 0,
+        timestamp, timestamp],
     );
     const newId = Number(info.lastInsertRowid);
 
@@ -294,7 +306,16 @@ router.post('/:id/reschedule', requireAuth, (req, res) => {
   const input = new Validator(req.body)
     .utcInstant('starts_at')
     .string('hold_token', { required: false, min: 64, max: 64 })
+    .bool('is_override', { required: false, def: false })
     .done();
+
+  // ── ПРОВЕРКА РОЛИ при переносе ───────────────────────────────────────────
+  // Признак описывает текущее размещение визита, поэтому при переносе он
+  // вычисляется заново. Для клиента он всегда false, и ниже в UPDATE
+  // записывается 0 — иначе визит, однажды поставленный администратором
+  // внахлёст, навсегда остался бы невидимым для UPDATE-триггера, и клиент
+  // мог бы переносить его на занятое время мимо последнего рубежа.
+  const applyOverride = input.is_override === true && isStaff(req.user);
 
   const settings = db.settings();
   let occupiedForSuggest = 0;
@@ -338,14 +359,15 @@ router.post('/:id/reschedule', requireAuth, (req, res) => {
       holdOwnerUserId: req.user.id,
       excludeHoldToken: input.hold_token || null,
       excludeAppointmentId: id,
+      allowOverlap: applyOverride,
     });
 
     db.run(
       `UPDATE appointments
-          SET starts_at_utc = ?, ends_at_utc = ?,
+          SET starts_at_utc = ?, ends_at_utc = ?, is_override = ?,
               reschedule_count = reschedule_count + 1, updated_at_utc = ?
         WHERE id = ?`,
-      [input.starts_at, endAtUtc, nowUtc(), id],
+      [input.starts_at, endAtUtc, applyOverride ? 1 : 0, nowUtc(), id],
     );
     db.run('DELETE FROM slot_holds WHERE user_id = ?', [req.user.id]);
   });

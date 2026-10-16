@@ -130,6 +130,9 @@ CREATE TABLE IF NOT EXISTS appointments (
   cancel_reason        TEXT,
   cancelled_at_utc     TEXT,
   reschedule_count     INTEGER NOT NULL DEFAULT 0 CHECK (reschedule_count >= 0),
+  -- Осознанное наложение: администратор поставил визит поверх занятого времени.
+  -- Описывает ТЕКУЩЕЕ размещение, а не историю: при переносе пересчитывается.
+  is_override          INTEGER NOT NULL DEFAULT 0 CHECK (is_override IN (0, 1)),
   created_at_utc       TEXT    NOT NULL,
   updated_at_utc       TEXT    NOT NULL,
   CHECK (ends_at_utc > starts_at_utc)
@@ -142,6 +145,11 @@ CREATE INDEX IF NOT EXISTS idx_appointments_status ON appointments (status);
 -- запрещено на уровне БД, даже если проверка в приложении не сработала или
 -- запись пришла в обход API.
 --
+-- Триггеры СНАЧАЛА удаляются, а потом создаются заново: schema.sql выполняется
+-- при каждом открытии базы, и CREATE TRIGGER IF NOT EXISTS молча оставил бы
+-- старое определение. Для триггеров это дёшево и избавляет от расхождения
+-- между файлом и базой.
+--
 -- Пересечение: NEW.starts < существующий.ends AND NEW.ends > существующий.starts.
 -- Визиты встык (15:00-16:00 и 16:00-17:00) пересечением НЕ считаются:
 -- при равенстве границ оба строгих сравнения ложны.
@@ -152,11 +160,16 @@ CREATE INDEX IF NOT EXISTS idx_appointments_status ON appointments (status);
 --
 -- Отменённые и завершённые визиты слот не держат, поэтому и в NEW (WHEN),
 -- и в проверяемых строках учитываются только 'pending' и 'confirmed'.
+--
+-- NEW.is_override = 1 снимает проверку ТОЛЬКО с записываемой строки.
+-- Подзапрос намеренно НЕ фильтрует по is_override: визит, поставленный
+-- внахлёст, дальше участвует в проверках как обычный и блокирует другие.
 
-CREATE TRIGGER IF NOT EXISTS appointments_no_overlap_insert
+DROP TRIGGER IF EXISTS appointments_no_overlap_insert;
+CREATE TRIGGER appointments_no_overlap_insert
 BEFORE INSERT ON appointments
 FOR EACH ROW
-WHEN NEW.status IN ('pending', 'confirmed')
+WHEN NEW.status IN ('pending', 'confirmed') AND NEW.is_override = 0
 BEGIN
   SELECT RAISE(ABORT, 'appointment_overlap')
   WHERE EXISTS (
@@ -171,10 +184,15 @@ END;
 -- Отдельный триггер на UPDATE: перенос времени и смена мастера проходят
 -- через него же. Строка исключает саму себя (a.id <> NEW.id), иначе любая
 -- правка активной записи конфликтовала бы со своим прежним интервалом.
-CREATE TRIGGER IF NOT EXISTS appointments_no_overlap_update
+--
+-- is_override здесь тоже снимает проверку, поэтому API обязан сбрасывать
+-- признак в 0 при переносе не-администратором: иначе клиент, перенося свой
+-- визит, протащил бы наложение мимо триггера.
+DROP TRIGGER IF EXISTS appointments_no_overlap_update;
+CREATE TRIGGER appointments_no_overlap_update
 BEFORE UPDATE ON appointments
 FOR EACH ROW
-WHEN NEW.status IN ('pending', 'confirmed')
+WHEN NEW.status IN ('pending', 'confirmed') AND NEW.is_override = 0
 BEGIN
   SELECT RAISE(ABORT, 'appointment_overlap')
   WHERE EXISTS (
