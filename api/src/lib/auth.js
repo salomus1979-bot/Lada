@@ -9,6 +9,13 @@ const SESSION_COOKIE = 'lada_session';
 const SESSION_TTL_DAYS = 30;
 const SCRYPT = { N: 16384, r: 8, p: 1, keylen: 64 };
 
+/**
+ * Схема хеширования пароля. Вынесена в константу, потому что по этому
+ * префиксу отличают аккаунт с паролем от аккаунта без входа — в том числе
+ * запросом в SQL, чтобы сам хеш не вытаскивать из базы.
+ */
+const PASSWORD_SCHEME = 'scrypt';
+
 /** Хеш пароля: `scrypt$N$r$p$salt$hash`. Наружу не отдаётся никогда. */
 function hashPassword(password) {
   const salt = crypto.randomBytes(16);
@@ -16,16 +23,31 @@ function hashPassword(password) {
     N: SCRYPT.N, r: SCRYPT.r, p: SCRYPT.p,
   });
   return [
-    'scrypt', SCRYPT.N, SCRYPT.r, SCRYPT.p,
+    PASSWORD_SCHEME, SCRYPT.N, SCRYPT.r, SCRYPT.p,
     salt.toString('base64'), hash.toString('base64'),
   ].join('$');
+}
+
+/**
+ * Заглушка вместо хеша для аккаунта без входа: клиента, которого создал
+ * администратор, пароль ему не задавали, и войти по нему нельзя.
+ *
+ * `users.password_hash` — NOT NULL, а пустая строка или фиксированный текст
+ * означали бы «у всех таких аккаунтов пароль одинаковый». Поэтому схема здесь
+ * не `scrypt`, и verifyPassword отказывает на первой же проверке, какой бы
+ * пароль ни пришёл. Случайные байты добавлены, чтобы значение не повторялось
+ * от аккаунта к аккаунту и его нельзя было подставить снаружи.
+ */
+function noLoginHash() {
+  return `nologin$${crypto.randomBytes(32).toString('hex')}`;
 }
 
 /** Сравнение в постоянном времени; при любом повреждении хеша — отказ, а не исключение. */
 function verifyPassword(password, stored) {
   try {
     const [scheme, N, r, p, saltB64, hashB64] = String(stored).split('$');
-    if (scheme !== 'scrypt') return false;
+    // Чужая схема — отказ: так же отсеивается заглушка noLoginHash().
+    if (scheme !== PASSWORD_SCHEME) return false;
     const salt = Buffer.from(saltB64, 'base64');
     const expected = Buffer.from(hashB64, 'base64');
     const actual = crypto.scryptSync(password, salt, expected.length, {
@@ -141,7 +163,9 @@ const isStaff = (user) => !!user && (user.role === 'admin' || user.role === 'own
 
 module.exports = {
   SESSION_COOKIE,
+  PASSWORD_SCHEME,
   hashPassword,
+  noLoginHash,
   verifyPassword,
   createSession,
   destroySession,

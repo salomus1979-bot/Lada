@@ -10,7 +10,7 @@ const {
   assertMasterPerformsServices, assertSlotBookable, nearestSlots,
 } = require('../lib/availability');
 const { nowUtc, diffMinutes, utcToZoned, presentInstant } = require('../lib/time');
-const { appointmentView, appointmentAdminView } = require('../lib/presenters');
+const { appointmentView, appointmentAdminView, STAFF_SOURCES } = require('../lib/presenters');
 
 const router = express.Router();
 
@@ -59,7 +59,7 @@ function rethrowAsConflict(err, context) {
 const APPOINTMENT_COLUMNS = `
   a.id, a.client_user_id, a.master_id, a.starts_at_utc, a.ends_at_utc,
   a.service_duration_min, a.total_price_kopecks, a.status, a.client_comment,
-  a.cancel_reason, a.reschedule_count, a.is_override, a.created_at_utc,
+  a.cancel_reason, a.reschedule_count, a.is_override, a.source, a.created_at_utc,
   m.first_name AS master_first_name, m.last_name AS master_last_name`;
 
 function fetchAppointment(id) {
@@ -115,6 +115,13 @@ function assertMayModify(row, user) {
  * Если передан `hold_token`, удержание снимается этой же транзакцией:
  * слот переходит из «удержан» в «занят» без промежутка, в который
  * его мог бы занять другой клиент.
+ *
+ * `client_user_id` — запись за клиента: администратор оформляет визит по
+ * телефону или на месте. Поле действует только у персонала; остальной путь
+ * создания — проверки, транзакция, 409 с подсказками — остаётся общим.
+ *
+ * `source` — как визит попал в студию; тоже поле персонала. Запись, которую
+ * клиент оформил сам, помечается 'online'.
  */
 router.post('/', requireAuth, (req, res) => {
   const input = new Validator(req.body)
@@ -124,17 +131,10 @@ router.post('/', requireAuth, (req, res) => {
     .string('client_comment', { required: false, max: 1000 })
     .string('hold_token', { required: false, min: 64, max: 64 })
     .bool('is_override', { required: false, def: false })
-    .bool('consent')
+    .int('client_user_id', { required: false, min: 1 })
+    .enum('source', STAFF_SOURCES, { required: false })
+    .bool('consent', { required: false })
     .done();
-
-  if (input.consent !== true) {
-    throw badRequest('Неверные входные данные', {
-      consent: 'нужно согласие на обработку персональных данных',
-    });
-  }
-  if (req.user.isBlocked) {
-    throw forbidden('Онлайн-запись для аккаунта ограничена, позвоните администратору');
-  }
 
   // ── ПРОВЕРКА РОЛИ для осознанного наложения ──────────────────────────────
   // Признак действует, только если его прислал администратор или владелец.
@@ -143,8 +143,69 @@ router.post('/', requireAuth, (req, res) => {
   // полностью, и попытка сесть на занятое время упирается в обычный 409.
   const applyOverride = input.is_override === true && isStaff(req.user);
 
+  // ── ПРОВЕРКА РОЛИ для записи за клиента ──────────────────────────────────
+  // Та же схема, что у is_override: у персонала поле выбирает клиента визита,
+  // у клиента и мастера молча игнорируется — визит оформляется на них самих.
+  // Администратор, приславший свой же id, записывается на себя: это обычный
+  // путь, а не админский.
+  const clientUserId = isStaff(req.user) && input.client_user_id
+    ? input.client_user_id
+    : req.user.id;
+  const forClient = clientUserId !== req.user.id;
+
+  // ── ПРОВЕРКА РОЛИ для источника записи ───────────────────────────────────
+  // Та же схема: у персонала поле называет источник (телефон, лично,
+  // WhatsApp), у клиента молча игнорируется — его запись помечается 'online'
+  // самим API. Поэтому `source = 'online'` всегда означает «клиент оформил
+  // сам», а не «так сказал вызывающий»: значение 'online' извне не
+  // принимается вовсе (STAFF_SOURCES), и попытка прислать его даёт 400.
+  // Персонал без поля оставляет NULL — источник не указан, а не придуман.
+  const source = isStaff(req.user) ? (input.source || null) : 'online';
+
+  // Согласие на обработку данных — свойство клиента, а не оформителя:
+  // администратор не может дать его за другого человека, и галочка, стоящая
+  // чужой рукой, ничего не подтверждает. Записать можно только существующий
+  // аккаунт, а регистрация (POST /api/auth/register) согласия уже требует —
+  // значит у клиента оно есть и без этого поля. Поэтому обязательным оно
+  // остаётся там, где человек записывается сам.
+  if (!forClient && input.consent !== true) {
+    throw badRequest('Неверные входные данные', {
+      consent: 'нужно согласие на обработку персональных данных',
+    });
+  }
+
   if (input.hold_token && !/^[0-9a-f]{64}$/.test(input.hold_token)) {
     throw badRequest('Неверные входные данные', { hold_token: 'неверный формат' });
+  }
+  // Удержание — часть клиентского оформления: оно привязано к user_id того,
+  // кто его взял, и снимается при создании записи. В админском пути удержаний
+  // нет — администратор видит сетку и ставит визит сразу. Поэтому токен тут
+  // не игнорируется молча, а считается ошибкой входных данных: иначе
+  // непонятно, чьё удержание имел в виду вызывающий.
+  if (forClient && input.hold_token) {
+    throw badRequest('Неверные входные данные', {
+      hold_token: 'не применим при записи за клиента',
+    });
+  }
+
+  // Клиент визита. Записать можно только аккаунт с ролью `client`: персонал и
+  // мастера записываются сами, без этого поля. Неизвестный id и аккаунт с
+  // другой ролью дают одинаковый 404 — существование чужого аккаунта API не
+  // подтверждает.
+  const client = forClient
+    ? db.one("SELECT id, is_blocked FROM users WHERE id = ? AND role = 'client'", [clientUserId])
+    : { id: req.user.id, is_blocked: req.user.isBlocked ? 1 : 0 };
+  if (!client) throw notFound('Клиент не найден');
+
+  // Блокировка закрывает САМОСТОЯТЕЛЬНУЮ онлайн-запись, и её текст прямо
+  // отправляет клиента звонить администратору. Поэтому проверка живёт на
+  // своём пути: действуй она и на админском, звонок перестал бы помогать, а
+  // снять блокировку в API пока нечем — она выставляется автоматически после
+  // неявок (POST /api/admin/appointments/:id/status), и аккаунт остался бы
+  // без записи вообще. Администратор, оформляя визит такому клиенту,
+  // принимает решение осознанно — как и с наложением.
+  if (!forClient && client.is_blocked === 1) {
+    throw forbidden('Онлайн-запись для аккаунта ограничена, позвоните администратору');
   }
 
   const settings = db.settings();
@@ -156,11 +217,13 @@ router.post('/', requireAuth, (req, res) => {
   const createAppointment = () => db.transaction(() => {
     purgeExpiredHolds();
 
+    // Лимит активных записей — ограничение клиента визита, а не оформителя:
+    // иначе администратор упёрся бы в него за всю студию сразу.
     const active = db.one(
       `SELECT COUNT(*) AS n FROM appointments
         WHERE client_user_id = ? AND status IN (${ACTIVE_STATUSES.map(() => '?').join(',')})
           AND starts_at_utc > ?`,
-      [req.user.id, ...ACTIVE_STATUSES, nowUtc()],
+      [clientUserId, ...ACTIVE_STATUSES, nowUtc()],
     );
     if (active.n >= settings.max_active_appointments) {
       throw conflict(`Превышен лимит активных записей: ${settings.max_active_appointments}`);
@@ -176,7 +239,10 @@ router.post('/', requireAuth, (req, res) => {
       startAtUtc: input.starts_at,
       occupiedMin,
       settings,
-      holdOwnerUserId: req.user.id,
+      // Удержание клиента визита не мешает поставить ему же эту запись: на
+      // своём пути это своё удержание, на админском — удержание того, кого
+      // записывают. Удержания других клиентов слот держат как обычно.
+      holdOwnerUserId: clientUserId,
       excludeHoldToken: input.hold_token || null,
       allowOverlap: applyOverride,
     });
@@ -185,11 +251,11 @@ router.post('/', requireAuth, (req, res) => {
     const info = db.run(
       `INSERT INTO appointments
          (client_user_id, master_id, starts_at_utc, ends_at_utc, service_duration_min,
-          total_price_kopecks, status, client_comment, is_override,
+          total_price_kopecks, status, client_comment, is_override, source,
           created_at_utc, updated_at_utc)
-       VALUES (?, ?, ?, ?, ?, ?, 'pending', ?, ?, ?, ?)`,
-      [req.user.id, input.master_id, input.starts_at, endAtUtc, serviceDurationMin,
-        totalPriceKopecks, input.client_comment || null, applyOverride ? 1 : 0,
+       VALUES (?, ?, ?, ?, ?, ?, 'pending', ?, ?, ?, ?, ?)`,
+      [clientUserId, input.master_id, input.starts_at, endAtUtc, serviceDurationMin,
+        totalPriceKopecks, input.client_comment || null, applyOverride ? 1 : 0, source,
         timestamp, timestamp],
     );
     const newId = Number(info.lastInsertRowid);
@@ -205,7 +271,10 @@ router.post('/', requireAuth, (req, res) => {
       );
     }
 
-    db.run('DELETE FROM slot_holds WHERE user_id = ?', [req.user.id]);
+    // Свои удержания снимаем — оформление закончено. Удержания клиента на
+    // админском пути не трогаем: он мог держать слот для другого визита,
+    // и администратор об этом ничего не знает.
+    if (!forClient) db.run('DELETE FROM slot_holds WHERE user_id = ?', [req.user.id]);
     return newId;
   });
 
@@ -223,11 +292,17 @@ router.post('/', requireAuth, (req, res) => {
   }
 
   const row = fetchAppointment(appointmentId);
+  const createdServices = fetchServices(appointmentId);
+  // Запись за клиента возвращается в админском виде: оформителю нужны данные
+  // клиента и признак наложения, а clientRules описывают права владельца
+  // записи — к администратору они не относятся.
   res.status(201).json({
-    appointment: appointmentView(row, fetchServices(appointmentId), {
-      timezone: settings.timezone,
-      rules: clientRules(row, settings),
-    }),
+    appointment: forClient
+      ? appointmentAdminView(row, createdServices, { timezone: settings.timezone })
+      : appointmentView(row, createdServices, {
+        timezone: settings.timezone,
+        rules: clientRules(row, settings),
+      }),
   });
 });
 
@@ -362,6 +437,9 @@ router.post('/:id/reschedule', requireAuth, (req, res) => {
       allowOverlap: applyOverride,
     });
 
+    // `source` здесь намеренно не меняется, в отличие от is_override:
+    // признак наложения описывает текущее размещение и пересчитывается,
+    // а источник — происхождение записи, и перенос его не отменяет.
     db.run(
       `UPDATE appointments
           SET starts_at_utc = ?, ends_at_utc = ?, is_override = ?,

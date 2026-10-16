@@ -15,6 +15,25 @@ const STATUS_LABELS = {
   cancelled_by_studio: 'Отменена студией',
 };
 
+/**
+ * Источник записи (страница 24). `online` ставит сам API, когда клиент
+ * записался через кабинет; остальные значения называет администратор.
+ */
+const SOURCE_LABELS = {
+  online: 'Онлайн',
+  phone: 'Телефон',
+  in_person: 'Лично',
+  whatsapp: 'WhatsApp',
+};
+
+/**
+ * Что администратор может прислать в `source`. `online` в список не входит:
+ * это отметка самого API о самостоятельной записи, и если бы её принимали
+ * извне, по колонке больше нельзя было бы отличить «клиент оформил сам»
+ * от «оформила студия».
+ */
+const STAFF_SOURCES = Object.keys(SOURCE_LABELS).filter((key) => key !== 'online');
+
 const rubles = (kopecks) => `${(kopecks / 100).toLocaleString('ru-RU')} ₽`;
 
 /** Собственный профиль. Без password_hash — он не покидает БД. */
@@ -127,12 +146,45 @@ function appointmentAdminView(row, services, { timezone } = {}) {
     // Признак осознанного наложения виден только персоналу: клиенту
     // не нужно знать, что его визит поставили поверх другого.
     is_override: row.is_override === 1,
+    // Источник — внутренний учёт студии, клиенту он не нужен: он и так знает,
+    // как записался. Поэтому поле только в админском представлении.
+    source: row.source || null,
+    source_label: row.source ? SOURCE_LABELS[row.source] : null,
     client: {
       id: row.client_user_id,
       name: row.client_name,
       phone: row.client_phone,
       email: row.client_email,
     },
+  };
+}
+
+/**
+ * Клиент студии для списка персонала (страница «Админ — Клиенты»).
+ * Без password_hash и без служебных полей: перечислено только то,
+ * что видно в интерфейсе.
+ */
+function clientAdminView(row, { timezone } = {}) {
+  return {
+    id: row.id,
+    name: row.name,
+    phone: row.phone,
+    email: row.email,
+    is_blocked: row.is_blocked === 1,
+    // Есть ли у аккаунта пароль. Клиента, созданного администратором,
+    // паролем не наделяют — на странице 26 это статус «Без аккаунта».
+    // Флаг считается в SQL, поэтому сам хеш из базы не поднимается.
+    has_login: row.has_login === 1,
+    visits_count: row.visits_count,
+    no_show_count: row.no_show_count,
+    // Последний завершённый визит и ближайший активный — то, что
+    // администратор смотрит перед тем, как записать клиента.
+    last_visit_at: row.last_visit_at_utc
+      ? presentInstant(row.last_visit_at_utc, timezone) : null,
+    next_visit_at: row.next_visit_at_utc
+      ? presentInstant(row.next_visit_at_utc, timezone) : null,
+    created_at_utc: row.created_at_utc,
+    last_login_at_utc: row.last_login_at_utc,
   };
 }
 
@@ -152,6 +204,8 @@ function settingsPublicView(row) {
 
 module.exports = {
   STATUS_LABELS,
+  SOURCE_LABELS,
+  STAFF_SOURCES,
   rubles,
   selfUser,
   serviceView,
@@ -160,5 +214,6 @@ module.exports = {
   masterAdminView,
   appointmentView,
   appointmentAdminView,
+  clientAdminView,
   settingsPublicView,
 };

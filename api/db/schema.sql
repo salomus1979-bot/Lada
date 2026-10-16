@@ -133,6 +133,15 @@ CREATE TABLE IF NOT EXISTS appointments (
   -- Осознанное наложение: администратор поставил визит поверх занятого времени.
   -- Описывает ТЕКУЩЕЕ размещение, а не историю: при переносе пересчитывается.
   is_override          INTEGER NOT NULL DEFAULT 0 CHECK (is_override IN (0, 1)),
+  -- Как визит попал в студию (страница 24: телефон / лично / WhatsApp).
+  -- 'online' ставит сам API, когда клиент записался через кабинет, — поэтому
+  -- извне это значение не принимается, и признак «клиент оформил сам»
+  -- остаётся достоверным. NULL — источник не указан: так лежат записи,
+  -- созданные до появления колонки, и админские записи без указания.
+  -- В отличие от is_override описывает происхождение, а не размещение,
+  -- поэтому при переносе не меняется.
+  source               TEXT    CHECK (source IS NULL OR source IN
+                         ('online','phone','in_person','whatsapp')),
   created_at_utc       TEXT    NOT NULL,
   updated_at_utc       TEXT    NOT NULL,
   CHECK (ends_at_utc > starts_at_utc)

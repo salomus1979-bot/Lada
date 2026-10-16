@@ -16,6 +16,7 @@
 | Дни недели | ISO-8601: 1 = понедельник … 7 = воскресенье |
 | Удаление | услуги и мастера не удаляются физически, а скрываются (`is_active = 0`) — иначе ломается история записей |
 | Внешние ключи | `PRAGMA foreign_keys = ON` обязателен для каждого соединения |
+| Добавленные колонки | `api/db/schema.sql` описывает актуальное состояние и годится для новой базы. В уже созданную базу колонка досоздаётся шагом `ADDED_COLUMNS` в `api/src/lib/db.js` (сейчас `appointments.is_override` и `appointments.source`). Полноценного версионирования схемы (`PRAGMA user_version`) нет |
 
 Заранее подготовленных слотов в БД **нет**. Свободное время всегда вычисляется на лету
 из `master_work_schedule` + `master_schedule_exceptions` + `appointments` + `time_blocks` + `slot_holds`.
@@ -33,7 +34,7 @@
 | `name` | TEXT | NOT NULL | имя (прототип: регистрация просит только имя) |
 | `email` | TEXT | NOT NULL UNIQUE (COLLATE NOCASE) | логин |
 | `phone` | TEXT | NOT NULL | формат `+7XXXXXXXXXX` после нормализации |
-| `password_hash` | TEXT | NOT NULL | `scrypt$N$r$p$salt_b64$hash_b64`. **Никогда не выходит за пределы БД** |
+| `password_hash` | TEXT | NOT NULL | `scrypt$N$r$p$salt_b64$hash_b64`. **Никогда не выходит за пределы БД**. У клиента, которого создал администратор, пароля нет: там лежит заглушка `nologin$<random>` — схема не `scrypt`, поэтому проверка пароля отказывает всегда. Это статус «Без аккаунта» со страницы 26 |
 | `is_blocked` | INTEGER | NOT NULL DEFAULT 0 | автоблокировка после неявок (`salon_settings.no_show_block_threshold`) |
 | `no_show_count` | INTEGER | NOT NULL DEFAULT 0 | счётчик неявок |
 | `created_at_utc` | TEXT | NOT NULL | |
@@ -169,7 +170,7 @@ UNIQUE: `(master_id, weekday)`.
 | Колонка | Тип | Ограничения | Назначение |
 |---|---|---|---|
 | `id` | INTEGER | PK | |
-| `client_user_id` | INTEGER | NOT NULL → `users.id` | |
+| `client_user_id` | INTEGER | NOT NULL → `users.id` | клиент визита. Запись мог оформить администратор за него (страница 24) — кто именно её создал, схема не хранит |
 | `master_id` | INTEGER | NOT NULL → `masters.id` | |
 | `starts_at_utc` | TEXT | NOT NULL | начало визита |
 | `ends_at_utc` | TEXT | NOT NULL, CHECK > `starts_at_utc` | конец **с буферами** услуг |
@@ -181,6 +182,7 @@ UNIQUE: `(master_id, weekday)`.
 | `cancelled_at_utc` | TEXT | NULL | |
 | `reschedule_count` | INTEGER | NOT NULL DEFAULT 0 | лимит — `salon_settings.max_reschedules` |
 | `is_override` | INTEGER | NOT NULL DEFAULT 0, CHECK in (0,1) | осознанное наложение: администратор поставил визит поверх занятого времени. Описывает текущее размещение, а не историю — при переносе пересчитывается |
+| `source` | TEXT | NULL, CHECK in (`online`,`phone`,`in_person`,`whatsapp`) | источник записи (страница 24). `online` ставит сам API, когда клиент записался через кабинет, — извне это значение не принимается, поэтому признак «клиент оформил сам» достоверен. NULL — источник не указан: записи, созданные до появления колонки, и админские записи без указания. В отличие от `is_override` описывает происхождение, а не размещение, поэтому при переносе не меняется |
 | `created_at_utc` | TEXT | NOT NULL | |
 | `updated_at_utc` | TEXT | NOT NULL | |
 

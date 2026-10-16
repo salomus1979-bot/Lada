@@ -837,6 +837,522 @@ async function main() {
     asOwner.status === 200 && asOwner.json.appointment.is_override === undefined
     && asOwner.json.appointment.client === undefined);
 
+  console.log('');
+  console.log('— Клиенты для администратора —');
+
+  const marinaId = register.json.user.id;
+  const annaUserId = login.json.user.id;
+  const ownerUserId = db.one("SELECT id FROM users WHERE email = 'owner@lada.local'").id;
+
+  const clientsForClient = await call('GET', '/api/admin/clients', { token: clientToken });
+  check('список клиентов клиенту -> 403', clientsForClient.status === 403, clientsForClient.json);
+
+  const clientsAll = await call('GET', '/api/admin/clients', { token: adminToken });
+  check('GET /api/admin/clients -> 200 с постраничным выводом',
+    clientsAll.status === 200 && Number.isInteger(clientsAll.json.total)
+    && clientsAll.json.limit === 50 && clientsAll.json.offset === 0, clientsAll.json);
+  check('в списке только клиенты, персонала в нём нет',
+    clientsAll.json.clients.some((c) => c.email === 'client@lada.local')
+    && clientsAll.json.clients.some((c) => c.email === 'marina@example.com')
+    && !clientsAll.json.clients.some(
+      (c) => c.email === 'admin@lada.local' || c.email === 'owner@lada.local'),
+    clientsAll.json.clients.map((c) => c.email));
+  check('хеш пароля в списке клиентов не появляется',
+    !JSON.stringify(clientsAll.json).toLowerCase().includes('scrypt')
+    && clientsAll.json.clients.every((c) => c.password_hash === undefined));
+
+  const annaClient = clientsAll.json.clients.find((c) => c.email === 'client@lada.local');
+  check('в строке клиента есть счётчики визитов и неявок',
+    !!annaClient && Number.isInteger(annaClient.visits_count)
+    && Number.isInteger(annaClient.no_show_count) && annaClient.is_blocked === false,
+    annaClient);
+  check('ближайшая запись клиента отдана моментом в UTC и в поясе салона',
+    annaClient.next_visit_at !== null
+    && annaClient.next_visit_at.at_utc.endsWith('Z')
+    && annaClient.next_visit_at.timezone === 'Europe/Moscow', annaClient.next_visit_at);
+  check('завершённых визитов у клиента ещё нет',
+    annaClient.visits_count === 0 && annaClient.last_visit_at === null, annaClient);
+
+  const byName = await call('GET',
+    `/api/admin/clients?q=${encodeURIComponent('марина тест')}`, { token: adminToken });
+  check('поиск по имени в нижнем регистре находит клиента',
+    byName.status === 200 && byName.json.total === 1
+    && byName.json.clients[0].id === marinaId, byName.json);
+
+  const byNameUpper = await call('GET',
+    `/api/admin/clients?q=${encodeURIComponent('МАРИНА')}`, { token: adminToken });
+  check('поиск по имени в верхнем регистре находит того же клиента',
+    byNameUpper.json.total === 1 && byNameUpper.json.clients[0].id === marinaId, byNameUpper.json);
+
+  const byPhone = await call('GET',
+    `/api/admin/clients?q=${encodeURIComponent('000-11-22')}`, { token: adminToken });
+  check('поиск по телефону не зависит от формата ввода',
+    byPhone.json.total === 1 && byPhone.json.clients[0].id === marinaId, byPhone.json);
+
+  const byEmail = await call('GET', '/api/admin/clients?q=MARINA@exa', { token: adminToken });
+  check('поиск по части e-mail без учёта регистра',
+    byEmail.json.total === 1 && byEmail.json.clients[0].id === marinaId, byEmail.json);
+
+  const byMiss = await call('GET',
+    `/api/admin/clients?q=${encodeURIComponent('Зоркина')}`, { token: adminToken });
+  check('поиск без совпадений -> 200 и пустой список',
+    byMiss.status === 200 && byMiss.json.total === 0 && byMiss.json.clients.length === 0);
+
+  const wildcard = await call('GET', '/api/admin/clients?q=%25%25', { token: adminToken });
+  check('символы шаблона LIKE в запросе ищутся как литералы',
+    wildcard.status === 200 && wildcard.json.total === 0, wildcard.json);
+
+  const shortQuery = await call('GET', '/api/admin/clients?q=%D0%BC', { token: adminToken });
+  check('слишком короткий запрос -> 400', shortQuery.status === 400, shortQuery.json);
+
+  const badClientStatus = await call('GET', '/api/admin/clients?status=unknown', { token: adminToken });
+  check('неизвестный status -> 400', badClientStatus.status === 400, badClientStatus.json);
+
+  const blockedOnly = await call('GET', '/api/admin/clients?status=blocked', { token: adminToken });
+  check('фильтр status=blocked -> 200 и пока никого',
+    blockedOnly.status === 200 && blockedOnly.json.total === 0, blockedOnly.json);
+
+  const firstPage = await call('GET', '/api/admin/clients?limit=1', { token: adminToken });
+  const secondPage = await call('GET', '/api/admin/clients?limit=1&offset=1', { token: adminToken });
+  check('пагинация: страница по одному, total считает всех',
+    firstPage.json.clients.length === 1 && firstPage.json.total >= 2
+    && secondPage.json.clients.length === 1
+    && firstPage.json.clients[0].id !== secondPage.json.clients[0].id,
+    [firstPage.json, secondPage.json]);
+
+  console.log('');
+  console.log('— Запись за клиента (администратор) —');
+
+  // Свободный слот ищем заново перед каждой записью: предыдущие проверки
+  // уже заняли часть сетки.
+  const findFreeSlot = async () => {
+    for (let offset = 1; offset <= 14; offset += 1) {
+      const date = new Date(Date.now() + offset * 86400_000).toISOString().slice(0, 10);
+      const res = await call('GET',
+        `/api/masters/${master.id}/availability?date=${date}&service_ids=${manicure.id}`);
+      if (res.status === 200 && res.json.slots.length > 0) return res.json.slots[0];
+    }
+    return null;
+  };
+  const bookFor = (token, extra) => call('POST', '/api/appointments', {
+    token,
+    body: { master_id: master.id, service_ids: [manicure.id], ...extra },
+  });
+
+  const slotForMarina = await findFreeSlot();
+  check('есть свободный слот для записи за клиента', slotForMarina !== null);
+
+  const forMarina = await bookFor(adminToken, {
+    starts_at: slotForMarina.at_utc,
+    client_user_id: marinaId,
+    client_comment: 'Записана по телефону',
+  });
+  check('администратор записывает клиента (consent не требуется) -> 201',
+    forMarina.status === 201, forMarina.json);
+  const forMarinaId = forMarina.status === 201 ? forMarina.json.appointment.id : null;
+  check('визит оформлен на клиента, а не на администратора',
+    forMarinaId !== null
+    && db.one('SELECT client_user_id FROM appointments WHERE id = ?',
+      [forMarinaId]).client_user_id === marinaId,
+    forMarinaId);
+  check('оформителю отдан админский вид с данными клиента',
+    !!forMarina.json.appointment.client
+    && forMarina.json.appointment.client.id === marinaId
+    && forMarina.json.appointment.is_override === false,
+    forMarina.json.appointment.client);
+
+  const marinaSees = await call('GET', '/api/appointments', { token: marinaToken });
+  check('клиент видит запись, созданную администратором',
+    marinaSees.status === 200
+    && marinaSees.json.appointments.some((a) => a.id === forMarinaId),
+    marinaSees.json.appointments.map((a) => a.id));
+  const marinaDetails = await call('GET', `/api/appointments/${forMarinaId}`, { token: marinaToken });
+  check('клиенту отдаётся клиентский вид с правилами отмены',
+    marinaDetails.status === 200 && marinaDetails.json.appointment.can_cancel === true
+    && marinaDetails.json.appointment.can_reschedule === true
+    && marinaDetails.json.appointment.is_override === undefined, marinaDetails.json);
+
+  // Наложение за клиента — то, ради чего поле и нужно: без client_user_id
+  // администратор оформлял бы такой визит на себя.
+  const overlapNoFlag = await bookFor(adminToken, {
+    starts_at: slotForMarina.at_utc, client_user_id: annaUserId,
+  });
+  check('то же время без is_override -> 409 как обычно',
+    overlapNoFlag.status === 409, overlapNoFlag.json);
+
+  const overlapForAnna = await bookFor(adminToken, {
+    starts_at: slotForMarina.at_utc, client_user_id: annaUserId, is_override: true,
+  });
+  check('наложение за клиента -> 201', overlapForAnna.status === 201, overlapForAnna.json);
+  const overlapRow = overlapForAnna.status === 201
+    ? db.one('SELECT client_user_id, is_override FROM appointments WHERE id = ?',
+      [overlapForAnna.json.appointment.id])
+    : null;
+  check('наложенный визит принадлежит клиенту и помечен признаком',
+    !!overlapRow && overlapRow.client_user_id === annaUserId && overlapRow.is_override === 1,
+    overlapRow);
+
+  // Клиент распоряжается такой записью сам, по обычным правилам.
+  const moveTarget = await findFreeSlot();
+  const marinaMoves = await call('POST', `/api/appointments/${forMarinaId}/reschedule`, {
+    token: marinaToken, body: { starts_at: moveTarget.at_utc },
+  });
+  check('клиент переносит её по обычным правилам -> 200',
+    marinaMoves.status === 200 && marinaMoves.json.appointment.reschedule_count === 1,
+    marinaMoves.json);
+  const marinaCancels = await call('POST', `/api/appointments/${forMarinaId}/cancel`, {
+    token: marinaToken, body: { cancel_reason: 'Не смогу прийти' },
+  });
+  check('клиент сам отменяет её -> cancelled_by_client',
+    marinaCancels.status === 200
+    && marinaCancels.json.appointment.status === 'cancelled_by_client', marinaCancels.json);
+
+  // Клиенту и мастеру поле молча игнорируется — как и is_override.
+  const selfSlot = await findFreeSlot();
+  const clientWithField = await bookFor(marinaToken, {
+    starts_at: selfSlot.at_utc, client_user_id: annaUserId, consent: true,
+  });
+  check('клиент с client_user_id -> 201, но запись на него самого',
+    clientWithField.status === 201
+    && db.one('SELECT client_user_id FROM appointments WHERE id = ?',
+      [clientWithField.json.appointment.id]).client_user_id === marinaId,
+    clientWithField.json);
+  check('клиенту по-прежнему отдаётся свой вид, без данных клиента',
+    clientWithField.json.appointment.client === undefined);
+
+  const unknownClient = await bookFor(adminToken, {
+    starts_at: selfSlot.at_utc, client_user_id: 999999,
+  });
+  check('неизвестный client_user_id -> 404', unknownClient.status === 404, unknownClient.json);
+
+  const staffAsClient = await bookFor(adminToken, {
+    starts_at: selfSlot.at_utc, client_user_id: ownerUserId,
+  });
+  check('аккаунт персонала в client_user_id -> 404, роль не раскрывается',
+    staffAsClient.status === 404
+    && staffAsClient.json.error.message === unknownClient.json.error.message,
+    staffAsClient.json);
+
+  const withHold = await bookFor(adminToken, {
+    starts_at: selfSlot.at_utc, client_user_id: marinaId, hold_token: 'a'.repeat(64),
+  });
+  check('hold_token вместе с client_user_id -> 400',
+    withHold.status === 400 && !!withHold.json.error.details.hold_token, withHold.json);
+
+  const selfNoConsent = await bookFor(marinaToken, { starts_at: selfSlot.at_utc });
+  check('клиент без consent по-прежнему -> 400',
+    selfNoConsent.status === 400 && !!selfNoConsent.json.error.details.consent,
+    selfNoConsent.json);
+
+  // Блокировка закрывает самостоятельную запись, но не запись через студию:
+  // её текст как раз отправляет клиента звонить администратору.
+  db.run('UPDATE users SET is_blocked = 1 WHERE id = ?', [marinaId]);
+  const blockedSlot = await findFreeSlot();
+  const blockedSelf = await bookFor(marinaToken, {
+    starts_at: blockedSlot.at_utc, consent: true,
+  });
+  check('заблокированный клиент сам записаться не может -> 403',
+    blockedSelf.status === 403, blockedSelf.json);
+  const blockedByAdmin = await bookFor(adminToken, {
+    starts_at: blockedSlot.at_utc, client_user_id: marinaId,
+  });
+  check('администратор записывает заблокированного клиента -> 201',
+    blockedByAdmin.status === 201, blockedByAdmin.json);
+  const blockedListed = await call('GET', '/api/admin/clients?status=blocked', { token: adminToken });
+  check('заблокированный клиент виден в фильтре status=blocked',
+    blockedListed.json.total === 1 && blockedListed.json.clients[0].is_blocked === true,
+    blockedListed.json);
+  db.run('UPDATE users SET is_blocked = 0 WHERE id = ?', [marinaId]);
+
+  // Лимит активных записей — ограничение клиента визита, а не оформителя.
+  // Доводим одного клиента до лимита записями за него же.
+  const maxActive = db.settings().max_active_appointments;
+  const countActive = (userId) => db.one(
+    `SELECT COUNT(*) AS n FROM appointments
+      WHERE client_user_id = ? AND status IN ('pending','confirmed') AND starts_at_utc > ?`,
+    [userId, new Date().toISOString().replace(/\.\d{3}Z$/, 'Z')],
+  ).n;
+
+  let marinaActive = countActive(marinaId);
+  while (marinaActive < maxActive) {
+    const fillerSlot = await findFreeSlot();
+    const filler = await bookFor(adminToken, {
+      starts_at: fillerSlot.at_utc, client_user_id: marinaId,
+    });
+    if (filler.status !== 201) break;
+    marinaActive += 1;
+  }
+  check('клиент доведён до лимита активных записей',
+    marinaActive === maxActive && countActive(annaUserId) < maxActive,
+    [marinaActive, countActive(annaUserId)]);
+
+  const overLimitSlot = await findFreeSlot();
+  const overLimit = await bookFor(adminToken, {
+    starts_at: overLimitSlot.at_utc, client_user_id: marinaId,
+  });
+  check('запись за клиента сверх его лимита -> 409',
+    overLimit.status === 409 && overLimit.json.error.message.includes('лимит'), overLimit.json);
+
+  const otherClient = await bookFor(adminToken, {
+    starts_at: overLimitSlot.at_utc, client_user_id: annaUserId,
+  });
+  check('лимит считается по клиенту визита, а не по администратору',
+    otherClient.status === 201, otherClient.json);
+
+  console.log('');
+  console.log('— Создание клиента администратором —');
+
+  const newClient = {
+    name: 'Виктория Белых',
+    email: 'Victoria.B@Example.com',
+    phone: '+7 999 321-11-00',
+    consent: true,
+  };
+
+  const createByClient = await call('POST', '/api/admin/clients',
+    { token: clientToken, body: newClient });
+  check('создание клиента клиентом -> 403', createByClient.status === 403, createByClient.json);
+
+  const createNoConsent = await call('POST', '/api/admin/clients',
+    { token: adminToken, body: { ...newClient, consent: false } });
+  check('создание без подтверждения согласия -> 400',
+    createNoConsent.status === 400 && !!createNoConsent.json.error.details.consent,
+    createNoConsent.json);
+
+  const createBadPhone = await call('POST', '/api/admin/clients',
+    { token: adminToken, body: { ...newClient, phone: '123' } });
+  check('создание с неверным телефоном -> 400',
+    createBadPhone.status === 400 && !!createBadPhone.json.error.details.phone,
+    createBadPhone.json);
+
+  const createTakenEmail = await call('POST', '/api/admin/clients',
+    { token: adminToken, body: { ...newClient, email: 'client@lada.local' } });
+  check('создание на занятый e-mail -> 409',
+    createTakenEmail.status === 409 && !!createTakenEmail.json.error.details.email,
+    createTakenEmail.json);
+
+  const createdClient = await call('POST', '/api/admin/clients',
+    { token: adminToken, body: newClient });
+  check('администратор создаёт клиента -> 201', createdClient.status === 201, createdClient.json);
+  const createdId = createdClient.status === 201 ? createdClient.json.client.id : null;
+  check('e-mail приведён к нижнему регистру, телефон нормализован',
+    createdClient.json.client.email === 'victoria.b@example.com'
+    && createdClient.json.client.phone === '+79993211100', createdClient.json.client);
+  check('созданный клиент без доступа в кабинет и без истории',
+    createdClient.json.client.has_login === false
+    && createdClient.json.client.is_blocked === false
+    && createdClient.json.client.visits_count === 0
+    && createdClient.json.client.last_visit_at === null
+    && createdClient.json.client.next_visit_at === null, createdClient.json.client);
+  check('ни хеш пароля, ни его заглушка в ответе не появляются',
+    createdClient.json.client.password_hash === undefined
+    && !JSON.stringify(createdClient.json).includes('scrypt')
+    && !JSON.stringify(createdClient.json).includes('nologin'), createdClient.json);
+  check('в базе вместо хеша лежит заглушка чужой схемы',
+    db.one('SELECT password_hash FROM users WHERE id = ?', [createdId])
+      .password_hash.startsWith('nologin$'));
+
+  const cantLogin = await call('POST', '/api/auth/login',
+    { body: { email: 'victoria.b@example.com', password: 'Lada12345' } });
+  const unknownLogin = await call('POST', '/api/auth/login',
+    { body: { email: 'nobody@example.com', password: 'Lada12345' } });
+  check('войти в созданный аккаунт нельзя -> 401', cantLogin.status === 401, cantLogin.json);
+  check('ответ тот же, что для неизвестного e-mail: отсутствие пароля не выдаётся',
+    cantLogin.json.error.message === unknownLogin.json.error.message, cantLogin.json);
+
+  const createdInList = await call('GET',
+    `/api/admin/clients?q=${encodeURIComponent('Белых')}`, { token: adminToken });
+  check('созданный клиент виден в списке со статусом «без аккаунта»',
+    createdInList.json.total === 1 && createdInList.json.clients[0].id === createdId
+    && createdInList.json.clients[0].has_login === false, createdInList.json);
+
+  const registeredInList = await call('GET',
+    `/api/admin/clients?q=${encodeURIComponent('Марина Тест')}`, { token: adminToken });
+  check('у клиента, зарегистрировавшегося сам, has_login = true',
+    registeredInList.json.clients[0].has_login === true, registeredInList.json.clients[0]);
+
+  const createdSlot = await findFreeSlot();
+  const bookCreated = await bookFor(adminToken, {
+    starts_at: createdSlot.at_utc, client_user_id: createdId, source: 'phone',
+  });
+  check('созданного клиента можно записать -> 201', bookCreated.status === 201, bookCreated.json);
+  check('источник записи сохранён и подписан для показа',
+    bookCreated.json.appointment.source === 'phone'
+    && bookCreated.json.appointment.source_label === 'Телефон', bookCreated.json.appointment);
+
+  console.log('');
+  console.log('— Правка клиента и блокировка —');
+
+  const patchByClient = await call('PATCH', `/api/admin/clients/${createdId}`,
+    { token: clientToken, body: { name: 'Чужое имя' } });
+  check('правка клиента клиентом -> 403', patchByClient.status === 403, patchByClient.json);
+
+  const emptyClientPatch = await call('PATCH', `/api/admin/clients/${createdId}`,
+    { token: adminToken, body: {} });
+  check('PATCH без полей -> 400',
+    emptyClientPatch.status === 400 && !!emptyClientPatch.json.error.details.body, emptyClientPatch.json);
+
+  const badIdPatch = await call('PATCH', '/api/admin/clients/abc',
+    { token: adminToken, body: { name: 'Кто-то' } });
+  check('нечисловой id в PATCH -> 400', badIdPatch.status === 400, badIdPatch.json);
+
+  const unknownPatch = await call('PATCH', '/api/admin/clients/999999',
+    { token: adminToken, body: { name: 'Кто-то' } });
+  check('правка неизвестного клиента -> 404', unknownPatch.status === 404, unknownPatch.json);
+
+  const staffPatch = await call('PATCH', `/api/admin/clients/${ownerUserId}`,
+    { token: adminToken, body: { name: 'Не владелец' } });
+  check('правка аккаунта персонала -> 404, роль не раскрывается',
+    staffPatch.status === 404
+    && staffPatch.json.error.message === unknownPatch.json.error.message, staffPatch.json);
+
+  const contactsPatch = await call('PATCH', `/api/admin/clients/${createdId}`, {
+    token: adminToken,
+    body: { name: 'Виктория Белых-Орлова', phone: '8 999 321-11-01', email: 'Vika@Example.com' },
+  });
+  check('контакты из карточки клиента обновляются -> 200',
+    contactsPatch.status === 200
+    && contactsPatch.json.client.name === 'Виктория Белых-Орлова'
+    && contactsPatch.json.client.phone === '+79993211101'
+    && contactsPatch.json.client.email === 'vika@example.com', contactsPatch.json);
+
+  const sameEmailPatch = await call('PATCH', `/api/admin/clients/${createdId}`,
+    { token: adminToken, body: { email: 'vika@example.com' } });
+  check('свой же e-mail занятым не считается -> 200',
+    sameEmailPatch.status === 200, sameEmailPatch.json);
+
+  const takenEmailPatch = await call('PATCH', `/api/admin/clients/${createdId}`,
+    { token: adminToken, body: { email: 'client@lada.local' } });
+  check('чужой e-mail в PATCH -> 409',
+    takenEmailPatch.status === 409 && !!takenEmailPatch.json.error.details.email,
+    takenEmailPatch.json);
+
+  // Счётчик неявок и роль через этот эндпоинт не меняются: в SET попадают
+  // только перечисленные в валидаторе поля.
+  db.run('UPDATE users SET no_show_count = 3 WHERE id = ?', [createdId]);
+  const forgedPatch = await call('PATCH', `/api/admin/clients/${createdId}`, {
+    token: adminToken,
+    body: { name: 'Виктория Белых-Орлова', role: 'owner', no_show_count: 0, has_login: true },
+  });
+  check('посторонние поля в PATCH игнорируются: роль и счётчик неявок на месте',
+    forgedPatch.status === 200 && forgedPatch.json.client.no_show_count === 3
+    && db.one('SELECT role FROM users WHERE id = ?', [createdId]).role === 'client'
+    && forgedPatch.json.client.has_login === false, forgedPatch.json);
+
+  const blockPatch = await call('PATCH', `/api/admin/clients/${createdId}`,
+    { token: adminToken, body: { is_blocked: true } });
+  check('блокировка вручную -> 200 и признак выставлен',
+    blockPatch.status === 200 && blockPatch.json.client.is_blocked === true, blockPatch.json);
+
+  const unblockPatch = await call('PATCH', `/api/admin/clients/${createdId}`,
+    { token: adminToken, body: { is_blocked: false } });
+  check('разблокировка -> 200 и признак снят',
+    unblockPatch.status === 200 && unblockPatch.json.client.is_blocked === false,
+    unblockPatch.json);
+  check('разблокировка не стирает историю неявок',
+    unblockPatch.json.client.no_show_count === 3, unblockPatch.json.client);
+
+  // Как блокировка и разблокировка действуют на клиента, который может войти.
+  const olga = await call('POST', '/api/auth/register', {
+    body: {
+      name: 'Ольга Источникова',
+      email: 'olga.src@example.com',
+      phone: '+7 999 555-01-01',
+      password: 'Lada12345',
+      password_confirm: 'Lada12345',
+      consent: true,
+    },
+  });
+  const olgaToken = olga.json.session_token;
+  const olgaId = olga.json.user.id;
+
+  const olgaBlock = await call('PATCH', `/api/admin/clients/${olgaId}`,
+    { token: adminToken, body: { is_blocked: true } });
+  check('администратор блокирует клиента с доступом -> 200', olgaBlock.status === 200);
+  const olgaSlot = await findFreeSlot();
+  const olgaBlockedSelf = await bookFor(olgaToken, {
+    starts_at: olgaSlot.at_utc, consent: true,
+  });
+  check('заблокированный вручную клиент сам записаться не может -> 403',
+    olgaBlockedSelf.status === 403, olgaBlockedSelf.json);
+  const olgaBlockedLogin = await call('POST', '/api/auth/login',
+    { body: { email: 'olga.src@example.com', password: 'Lada12345' } });
+  check('вход заблокированному клиенту закрыт -> 403',
+    olgaBlockedLogin.status === 403, olgaBlockedLogin.json);
+
+  const olgaUnblock = await call('PATCH', `/api/admin/clients/${olgaId}`,
+    { token: adminToken, body: { is_blocked: false } });
+  check('администратор снимает блокировку -> 200',
+    olgaUnblock.status === 200 && olgaUnblock.json.client.is_blocked === false,
+    olgaUnblock.json);
+  const olgaSelf = await bookFor(olgaToken, { starts_at: olgaSlot.at_utc, consent: true });
+  check('после разблокировки клиент записывается сам -> 201',
+    olgaSelf.status === 201, olgaSelf.json);
+
+  console.log('');
+  console.log('— Источник записи —');
+
+  check('запись, оформленная клиентом, помечена источником online',
+    db.one('SELECT source FROM appointments WHERE id = ?',
+      [olgaSelf.json.appointment.id]).source === 'online');
+  check('источник клиенту не показывается',
+    olgaSelf.json.appointment.source === undefined
+    && olgaSelf.json.appointment.source_label === undefined);
+
+  const unknownSource = await bookFor(adminToken, {
+    starts_at: createdSlot.at_utc, client_user_id: createdId, source: 'mail',
+  });
+  check('неизвестный источник -> 400',
+    unknownSource.status === 400 && !!unknownSource.json.error.details.source,
+    unknownSource.json);
+
+  const onlineSource = await bookFor(adminToken, {
+    starts_at: createdSlot.at_utc, client_user_id: createdId, source: 'online',
+  });
+  check('источник online извне не принимается -> 400',
+    onlineSource.status === 400 && !!onlineSource.json.error.details.source,
+    onlineSource.json);
+
+  const noSourceSlot = await findFreeSlot();
+  const noSource = await bookFor(adminToken, {
+    starts_at: noSourceSlot.at_utc, client_user_id: createdId,
+  });
+  check('запись за клиента без источника -> 201 и source = null',
+    noSource.status === 201 && noSource.json.appointment.source === null
+    && noSource.json.appointment.source_label === null, noSource.json);
+
+  const whatsappSlot = await findFreeSlot();
+  const whatsapp = await bookFor(adminToken, {
+    starts_at: whatsappSlot.at_utc, client_user_id: createdId, source: 'whatsapp',
+  });
+  check('запись за клиента с источником WhatsApp -> 201',
+    whatsapp.status === 201 && whatsapp.json.appointment.source === 'whatsapp'
+    && whatsapp.json.appointment.source_label === 'WhatsApp', whatsapp.json);
+
+  const whatsappId = whatsapp.status === 201 ? whatsapp.json.appointment.id : null;
+  const sourceMoveSlot = await findFreeSlot();
+  const sourceMove = await call('POST', `/api/appointments/${whatsappId}/reschedule`,
+    { token: adminToken, body: { starts_at: sourceMoveSlot.at_utc } });
+  check('перенос не меняет источник записи',
+    sourceMove.status === 200
+    && db.one('SELECT source FROM appointments WHERE id = ?', [whatsappId]).source === 'whatsapp',
+    sourceMove.json);
+
+  const olgaSourceSlot = await findFreeSlot();
+  const olgaWithSource = await bookFor(olgaToken, {
+    starts_at: olgaSourceSlot.at_utc, consent: true, source: 'phone',
+  });
+  check('присланный клиентом источник игнорируется: в базе online',
+    olgaWithSource.status === 201
+    && db.one('SELECT source FROM appointments WHERE id = ?',
+      [olgaWithSource.json.appointment.id]).source === 'online', olgaWithSource.json);
+
+  const adminFeed = await call('GET', '/api/admin/appointments?limit=200', { token: adminToken });
+  const whatsappRow = adminFeed.json.appointments.find((a) => a.id === whatsappId);
+  check('источник виден персоналу в общем списке записей',
+    !!whatsappRow && whatsappRow.source === 'whatsapp'
+    && whatsappRow.source_label === 'WhatsApp', whatsappRow);
+
   console.log('\n— Отмена и выход —');
   const foreignCancel = await call('POST', `/api/appointments/${appointmentId}/cancel`,
     { token: marinaToken, body: {} });

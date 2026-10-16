@@ -35,6 +35,14 @@ const ADDED_COLUMNS = [
     column: 'is_override',
     ddl: 'INTEGER NOT NULL DEFAULT 0 CHECK (is_override IN (0, 1))',
   },
+  {
+    table: 'appointments',
+    column: 'source',
+    // Без NOT NULL и без DEFAULT: в уже созданной базе колонка появляется
+    // пустой, и это правда — про старые записи источник неизвестен.
+    // DEFAULT 'online' задним числом записал бы в них неверный источник.
+    ddl: "TEXT CHECK (source IS NULL OR source IN ('online','phone','in_person','whatsapp'))",
+  },
 ];
 
 function migrate() {

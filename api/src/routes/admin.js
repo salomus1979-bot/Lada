@@ -2,13 +2,13 @@
 
 const express = require('express');
 const db = require('../lib/db');
-const { requireRole } = require('../lib/auth');
+const { requireRole, noLoginHash, PASSWORD_SCHEME } = require('../lib/auth');
 const { Validator, requireIdParam } = require('../lib/validate');
 const { badRequest, conflict, forbidden, notFound } = require('../lib/errors');
 const { ACTIVE_STATUSES } = require('../lib/availability');
 const { nowUtc, zonedToUtc, toUtcIso, addDays } = require('../lib/time');
 const {
-  serviceAdminView, masterAdminView, appointmentAdminView, STATUS_LABELS,
+  serviceAdminView, masterAdminView, appointmentAdminView, clientAdminView, STATUS_LABELS,
 } = require('../lib/presenters');
 
 const router = express.Router();
@@ -74,7 +74,7 @@ router.get('/appointments', (req, res) => {
   const rows = db.all(
     `SELECT a.id, a.client_user_id, a.master_id, a.starts_at_utc, a.ends_at_utc,
             a.service_duration_min, a.total_price_kopecks, a.status, a.client_comment,
-            a.cancel_reason, a.reschedule_count, a.is_override, a.created_at_utc,
+            a.cancel_reason, a.reschedule_count, a.is_override, a.source, a.created_at_utc,
             m.first_name AS master_first_name, m.last_name AS master_last_name,
             u.name AS client_name, u.phone AS client_phone, u.email AS client_email
        FROM appointments a
@@ -173,6 +173,235 @@ router.post('/appointments/:id/status', (req, res) => {
   }
 
   res.json({ ok: true, id, status: input.status });
+});
+
+/* ---------------------------------------------------------------- клиенты */
+
+const CLIENT_COLUMNS = `
+  u.id, u.name, u.email, u.phone, u.is_blocked, u.no_show_count,
+  u.created_at_utc, u.last_login_at_utc,
+  -- Есть ли пароль, то есть может ли клиент войти в кабинет. Сравнение
+  -- со схемой хеширования идёт в SQL: наружу уходит 0/1, а сам хеш
+  -- из базы не поднимается. PASSWORD_SCHEME — константа модуля auth,
+  -- не пользовательский ввод, поэтому подставляется в текст запроса.
+  (u.password_hash LIKE '${PASSWORD_SCHEME}$%') AS has_login,
+  (SELECT COUNT(*) FROM appointments a
+    WHERE a.client_user_id = u.id AND a.status = 'completed') AS visits_count,
+  (SELECT MAX(a.starts_at_utc) FROM appointments a
+    WHERE a.client_user_id = u.id AND a.status = 'completed') AS last_visit_at_utc,
+  (SELECT MIN(a.starts_at_utc) FROM appointments a
+    WHERE a.client_user_id = u.id
+      AND a.status IN (${ACTIVE_STATUSES.map(() => '?').join(',')})
+      AND a.starts_at_utc > ?) AS next_visit_at_utc`;
+
+/** В LIKE-шаблоне `%`, `_` и сам экранирующий символ — литералы. */
+const escapeLike = (value) => value.replace(/[\\%_]/g, (ch) => `\\${ch}`);
+
+/**
+ * Варианты регистра для поиска по имени.
+ *
+ * SQLite без расширения ICU сравнивает без учёта регистра только ASCII:
+ * и LIKE, и LOWER() оставляют кириллицу как есть, поэтому «дарья» не нашло бы
+ * «Дарью». Вместо одного шаблона подставляем три — как ввели, в нижнем
+ * регистре и с заглавной буквы в каждом слове. Этого хватает для имён;
+ * e-mail и телефон латиницей и цифрами, им регистр не важен.
+ */
+function nameVariants(query) {
+  const lower = query.toLocaleLowerCase('ru-RU');
+  const title = lower.replace(
+    /(^|[\s-])(\p{L})/gu,
+    (_, sep, ch) => sep + ch.toLocaleUpperCase('ru-RU'),
+  );
+  return [...new Set([query, lower, title])];
+}
+
+/**
+ * GET /api/admin/clients — клиенты студии.
+ *
+ * Нужен и для списка клиентов, и для выбора клиента при записи за него.
+ * `?q` ищет по имени, телефону и e-mail: цифры из запроса сравниваются с
+ * номером, остальное — с именем и адресом. `?status=active|blocked`,
+ * `?limit`, `?offset`.
+ */
+router.get('/clients', (req, res) => {
+  const input = new Validator(req.query)
+    .string('q', { required: false, min: 2, max: 100 })
+    .enum('status', ['active', 'blocked', 'all'], { required: false })
+    .int('limit', { required: false, min: 1, max: 100 })
+    .int('offset', { required: false, min: 0 })
+    .done();
+
+  const settings = db.settings();
+  // Персонал и мастера в списке клиентов не нужны: их нельзя записать
+  // за клиента, и показывать их администратору тут нечего.
+  const where = ["u.role = 'client'"];
+  const params = [];
+
+  if (input.q) {
+    const conditions = [];
+    for (const variant of nameVariants(input.q)) {
+      conditions.push("u.name LIKE ? ESCAPE '\\'");
+      params.push(`%${escapeLike(variant)}%`);
+    }
+    conditions.push("u.email LIKE ? ESCAPE '\\'");
+    params.push(`%${escapeLike(input.q)}%`);
+
+    // Телефон в базе лежит одним форматом (+7XXXXXXXXXX), а вводят его
+    // по-разному — поэтому сравниваем только цифры запроса.
+    const digits = input.q.replace(/\D/g, '');
+    if (digits.length >= 3) {
+      conditions.push('u.phone LIKE ?');
+      params.push(`%${digits}%`);
+    }
+    where.push(`(${conditions.join(' OR ')})`);
+  }
+
+  if (input.status === 'active') where.push('u.is_blocked = 0');
+  if (input.status === 'blocked') where.push('u.is_blocked = 1');
+
+  const limit = input.limit || 50;
+  const offset = input.offset || 0;
+  const whereSql = `WHERE ${where.join(' AND ')}`;
+
+  const total = db.one(`SELECT COUNT(*) AS n FROM users u ${whereSql}`, params).n;
+  const rows = db.all(
+    `SELECT ${CLIENT_COLUMNS}
+       FROM users u
+       ${whereSql}
+      ORDER BY u.name, u.id
+      LIMIT ? OFFSET ?`,
+    // Параметры идут в порядке самого SQL: сначала подзапрос в SELECT,
+    // потом условия WHERE, потом страница.
+    [...ACTIVE_STATUSES, nowUtc(), ...params, limit, offset],
+  );
+
+  res.json({
+    total,
+    limit,
+    offset,
+    clients: rows.map((row) => clientAdminView(row, { timezone: settings.timezone })),
+  });
+});
+
+/** Одна строка клиента в том же виде, что в списке: те же поля и счётчики. */
+function fetchClient(id, settings) {
+  const row = db.one(
+    `SELECT ${CLIENT_COLUMNS}
+       FROM users u
+      WHERE u.id = ? AND u.role = 'client'`,
+    [...ACTIVE_STATUSES, nowUtc(), id],
+  );
+  return row ? clientAdminView(row, { timezone: settings.timezone }) : null;
+}
+
+/**
+ * POST /api/admin/clients — администратор создаёт клиента.
+ *
+ * «Добавить клиента» на странице 26 и «Новый клиент» в форме записи на
+ * странице 24: человек позвонил или пришёл, аккаунта у него нет, а записать
+ * его нужно сейчас.
+ *
+ * Пароль НЕ задаётся. `users.password_hash` — NOT NULL, поэтому туда идёт
+ * заглушка noLoginHash(): войти по такому аккаунту нельзя ничем. Он нужен,
+ * чтобы у визита был клиент с именем, телефоном и историей; доступ в кабинет
+ * появится, когда клиент сам задаст пароль через восстановление. Это ровно
+ * статус «Без аккаунта» со страницы 26 — его видно по `has_login: false`.
+ *
+ * Почему не случайный пароль и не таблица приглашений — в api/README.md,
+ * раздел «Создание клиента администратором».
+ */
+router.post('/clients', (req, res) => {
+  const input = new Validator(req.body)
+    .string('name', { min: 2, max: 100 })
+    .email('email')
+    .phone('phone')
+    .bool('consent')
+    .done();
+
+  // Согласие на обработку данных. При записи за клиента поле не требуется:
+  // аккаунт уже есть, а значит согласие дали при регистрации. Здесь аккаунта
+  // ещё нет, и раньше согласия взять было негде — поэтому администратор
+  // подтверждает, что получил его у человека голосом или на бланке.
+  // Проверка остаётся воротами, а не записью: колонки под согласие в
+  // контракте нет, и заводить её без спроса не стали.
+  if (input.consent !== true) {
+    throw badRequest('Неверные входные данные', {
+      consent: 'подтвердите, что клиент дал согласие на обработку персональных данных',
+    });
+  }
+
+  // E-mail — логин, он уникален в масштабе всех ролей. Телефон намеренно не
+  // проверяется на уникальность: один номер на семью — обычное дело, а чтобы
+  // не создать дубль, администратор сначала ищет клиента в GET /clients.
+  const taken = db.one('SELECT id FROM users WHERE email = ? COLLATE NOCASE', [input.email]);
+  if (taken) {
+    throw conflict('Такой e-mail уже зарегистрирован', { email: 'занят' });
+  }
+
+  const settings = db.settings();
+  const info = db.run(
+    `INSERT INTO users (role, name, email, phone, password_hash, created_at_utc)
+     VALUES ('client', ?, ?, ?, ?, ?)`,
+    [input.name, input.email, input.phone, noLoginHash(), nowUtc()],
+  );
+
+  res.status(201).json({ client: fetchClient(Number(info.lastInsertRowid), settings) });
+});
+
+/**
+ * PATCH /api/admin/clients/:id — контакты клиента и доступ к онлайн-записи.
+ *
+ * Правка имени, телефона и e-mail — из карточки клиента (страница 27).
+ * `is_blocked` — кнопка «Заблокировать» там же и в списке на странице 26;
+ * ею же блокировка снимается: до этого эндпоинта снять её было нечем, она
+ * выставлялась только автоматически после неявок.
+ */
+router.patch('/clients/:id', (req, res) => {
+  const id = requireIdParam(req.params.id);
+  const input = new Validator(req.body)
+    .string('name', { required: false, min: 2, max: 100 })
+    .email('email', { required: false })
+    .phone('phone', { required: false })
+    .bool('is_blocked', { required: false })
+    .done();
+
+  const fields = ['name', 'email', 'phone', 'is_blocked'].filter(
+    (field) => input[field] !== undefined,
+  );
+  if (fields.length === 0) {
+    throw badRequest('Неверные входные данные', { body: 'укажите хотя бы одно поле' });
+  }
+
+  const settings = db.settings();
+  // Менять можно только аккаунт с ролью `client`. Персонал и мастера правятся
+  // своими эндпоинтами, и 404 здесь одинаков для неизвестного id и для чужой
+  // роли — существование чужого аккаунта API не подтверждает.
+  const client = db.one("SELECT id FROM users WHERE id = ? AND role = 'client'", [id]);
+  if (!client) throw notFound('Клиент не найден');
+
+  if (input.email !== undefined) {
+    const taken = db.one(
+      'SELECT id FROM users WHERE email = ? COLLATE NOCASE AND id <> ?', [input.email, id],
+    );
+    if (taken) throw conflict('Такой e-mail уже зарегистрирован', { email: 'занят' });
+  }
+
+  // Счётчик неявок при разблокировке НЕ сбрасывается: это история клиента,
+  // её видно в списке и в карточке. Поэтому автоблокировка вернётся на
+  // следующей же неявке — условие в POST /appointments/:id/status сравнивает
+  // накопленный счётчик с порогом. Снятая блокировка — прощение текущей
+  // блокировки, а не стирание прошлого.
+  //
+  // Действующие сессии клиента при блокировке не удаляются: блокировка
+  // закрывает онлайн-запись, а не доступ к своим визитам. Запись такой сессией
+  // всё равно не создать — POST /api/appointments проверяет признак у клиента.
+  const assignments = fields.map((field) => `${field} = ?`);
+  const values = fields.map(
+    (field) => (field === 'is_blocked' ? (input.is_blocked ? 1 : 0) : input[field]),
+  );
+  db.run(`UPDATE users SET ${assignments.join(', ')} WHERE id = ?`, [...values, id]);
+
+  res.json({ client: fetchClient(id, settings) });
 });
 
 /* ----------------------------------------------------------------- услуги */
