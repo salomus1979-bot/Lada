@@ -190,6 +190,22 @@ UNIQUE: `(master_id, weekday)`.
 
 Активными (занимающими время) считаются статусы `pending` и `confirmed`.
 
+**Эту таблицу меняет только `api/src/lib/booking.js`** — по одной функции на операцию:
+
+| Операция | Функция | Запись в БД |
+|---|---|---|
+| создание | `createAppointment` | единственный `INSERT INTO appointments` |
+| перенос | `rescheduleAppointment` | `starts_at_utc`, `ends_at_utc`, `is_override`, `reschedule_count` |
+| отмена | `cancelAppointment` | `status`, `cancel_reason`, `cancelled_at_utc` |
+| смена статуса | `changeAppointmentStatus` | только `status`; `cancelled_by_studio` уходит в `cancelAppointment` |
+
+Роль вызывающего выбирает не путь, а доступные поля и правила: один и тот же
+`POST /api/appointments` обслуживает и клиента, и администратора. Роуты
+(`routes/appointments.js`, `routes/admin.js`) своего SQL по этой таблице не
+имеют — иначе проверку занятости можно было бы обойти новым эндпоинтом.
+Роль `master` своего пути записи пока не имеет: эндпоинтов мастера в API нет,
+и на общем пути аккаунт с этой ролью записывает себя как обычный клиент.
+
 ## 11. `appointment_services` — состав записи
 
 Цена и длительность копируются в момент создания: «Изменение длительности не затронет

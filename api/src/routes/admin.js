@@ -10,6 +10,7 @@ const { nowUtc, zonedToUtc, toUtcIso, addDays } = require('../lib/time');
 const {
   serviceAdminView, masterAdminView, appointmentAdminView, clientAdminView, STATUS_LABELS,
 } = require('../lib/presenters');
+const { changeAppointmentStatus } = require('../lib/booking');
 
 const router = express.Router();
 
@@ -116,63 +117,16 @@ router.get('/appointments', (req, res) => {
  * POST /api/admin/appointments/:id/status — смена статуса визита.
  * `no_show` увеличивает счётчик неявок и при достижении порога
  * блокирует онлайн-запись клиенту.
+ *
+ * Своего SQL здесь нет: статус меняет changeAppointmentStatus, а
+ * `cancelled_by_studio` уходит оттуда в ту же функцию отмены, которой
+ * пользуется клиент (lib/booking.js).
  */
 router.post('/appointments/:id/status', (req, res) => {
   const id = requireIdParam(req.params.id);
-  const input = new Validator(req.body)
-    .enum('status', ['confirmed', 'completed', 'no_show', 'cancelled_by_studio'])
-    .string('cancel_reason', { required: false, max: 500 })
-    .done();
+  const { status } = changeAppointmentStatus(req.user, id, req.body);
 
-  const settings = db.settings();
-
-  const applyStatus = () => db.transaction(() => {
-    const row = db.one(
-      'SELECT id, client_user_id, status FROM appointments WHERE id = ?', [id],
-    );
-    if (!row) throw notFound('Запись не найдена');
-    if (row.status === input.status) {
-      throw conflict('Запись уже в этом статусе');
-    }
-    if (!ACTIVE_STATUSES.includes(row.status)) {
-      throw conflict('Статус завершённой или отменённой записи менять нельзя');
-    }
-
-    const timestamp = nowUtc();
-    db.run(
-      `UPDATE appointments
-          SET status = ?, cancel_reason = ?, cancelled_at_utc = ?, updated_at_utc = ?
-        WHERE id = ?`,
-      [input.status,
-        input.status === 'cancelled_by_studio' ? (input.cancel_reason || null) : null,
-        input.status === 'cancelled_by_studio' ? timestamp : null,
-        timestamp, id],
-    );
-
-    if (input.status === 'no_show') {
-      db.run('UPDATE users SET no_show_count = no_show_count + 1 WHERE id = ?',
-        [row.client_user_id]);
-      db.run(
-        `UPDATE users SET is_blocked = 1
-          WHERE id = ? AND no_show_count >= ? AND role = 'client'`,
-        [row.client_user_id, settings.no_show_block_threshold],
-      );
-    }
-  });
-
-  try {
-    applyStatus();
-  } catch (err) {
-    // Подтверждение визита тоже проходит через триггер пересечения.
-    // Альтернативы здесь не предлагаем: решение за администратором.
-    if (db.isOverlapError(err)) {
-      throw conflict('Время визита пересекается с другой записью этого мастера',
-        { reason: 'overlap' });
-    }
-    throw err;
-  }
-
-  res.json({ ok: true, id, status: input.status });
+  res.json({ ok: true, id, status });
 });
 
 /* ---------------------------------------------------------------- клиенты */

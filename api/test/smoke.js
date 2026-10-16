@@ -1399,6 +1399,92 @@ async function main() {
     staffCancel.status === 200
     && staffCancel.json.appointment.status === 'cancelled_by_studio', staffCancel.json);
 
+  console.log('\n— Отмена: один путь на весь API —');
+  // Свой клиент на этот раздел: у остальных лимит активных записей уже выбран.
+  const cancelClient = await call('POST', '/api/admin/clients', {
+    token: adminToken,
+    body: { name: 'Ольга Тестова', email: 'olga.cancel@example.com', phone: '+7 999 777-00-11', consent: true },
+  });
+  check('клиент для проверки отмены создан -> 201', cancelClient.status === 201, cancelClient.json);
+  const cancelClientId = cancelClient.json.client.id;
+
+  // Отмена через админскую смену статуса своего UPDATE не имеет: она уходит в
+  // ту же функцию, которой отменяет клиент. Проверяем, что результат совпадает
+  // до колонок, а не только по коду ответа.
+  const viaStatusSlot = await findFreeSlot();
+  const viaStatus = await bookFor(adminToken, {
+    starts_at: viaStatusSlot.at_utc, client_user_id: cancelClientId,
+  });
+  check('запись для отмены через смену статуса -> 201', viaStatus.status === 201, viaStatus.json);
+  const viaStatusId = viaStatus.json.appointment.id;
+
+  const adminCancel = await call('POST', `/api/admin/appointments/${viaStatusId}/status`, {
+    token: adminToken, body: { status: 'cancelled_by_studio', cancel_reason: 'Студия закрыта' },
+  });
+  check('администратор отменяет сменой статуса -> 200',
+    adminCancel.status === 200 && adminCancel.json.status === 'cancelled_by_studio',
+    adminCancel.json);
+  const cancelledRow = db.one(
+    'SELECT status, cancel_reason, cancelled_at_utc FROM appointments WHERE id = ?',
+    [viaStatusId],
+  );
+  check('смена статуса заполнила те же колонки, что и обычная отмена',
+    cancelledRow.status === 'cancelled_by_studio'
+    && cancelledRow.cancel_reason === 'Студия закрыта'
+    && typeof cancelledRow.cancelled_at_utc === 'string', cancelledRow);
+  check('после отмены время снова свободно и для админского пути',
+    (await call('GET', `/api/masters/${master.id}/availability`
+      + `?date=${viaStatusSlot.at_utc.slice(0, 10)}&service_ids=${manicure.id}`))
+      .json.slots.some((s) => s.at_utc === viaStatusSlot.at_utc));
+
+  const adminCancelTwice = await call('POST', `/api/admin/appointments/${viaStatusId}/status`, {
+    token: adminToken, body: { status: 'cancelled_by_studio' },
+  });
+  check('повторная отмена сменой статуса -> 409', adminCancelTwice.status === 409,
+    adminCancelTwice.json);
+
+  // Визит, оформленный на самого администратора: в разделе студии он отменяет
+  // его как студия, а не как владелец записи, и окно отмены к нему не применяется.
+  const ownSlot = await findFreeSlot();
+  const adminOwn = await bookFor(adminToken, { starts_at: ownSlot.at_utc, consent: true });
+  check('администратор записывает себя -> 201', adminOwn.status === 201, adminOwn.json);
+  const adminOwnCancel = await call('POST',
+    `/api/admin/appointments/${adminOwn.json.appointment.id}/status`,
+    { token: adminToken, body: { status: 'cancelled_by_studio' } });
+  check('свой визит админ отменяет от имени студии',
+    adminOwnCancel.status === 200
+    && db.one('SELECT status FROM appointments WHERE id = ?',
+      [adminOwn.json.appointment.id]).status === 'cancelled_by_studio', adminOwnCancel.json);
+
+  // Статус, отмену не оформляющий, колонки отмены не трогает.
+  const keepSlot = await findFreeSlot();
+  const keepBooking = await bookFor(adminToken,
+    { starts_at: keepSlot.at_utc, client_user_id: cancelClientId });
+  const confirmKept = await call('POST',
+    `/api/admin/appointments/${keepBooking.json.appointment.id}/status`,
+    { token: adminToken, body: { status: 'confirmed', cancel_reason: 'не относится' } });
+  const keptRow = db.one(
+    'SELECT status, cancel_reason, cancelled_at_utc FROM appointments WHERE id = ?',
+    [keepBooking.json.appointment.id],
+  );
+  check('подтверждение не заполняет колонки отмены',
+    confirmKept.status === 200 && keptRow.status === 'confirmed'
+    && keptRow.cancel_reason === null && keptRow.cancelled_at_utc === null, keptRow);
+
+  // Несуществующая запись — это 404 на всех трёх операциях, а не 500:
+  // подсказки к 409 строятся по записи, которой может не быть вовсе.
+  const missingReschedule = await call('POST', '/api/appointments/999999/reschedule',
+    { token: clientToken, body: { starts_at: second.at_utc } });
+  check('перенос несуществующей записи -> 404', missingReschedule.status === 404,
+    missingReschedule.json);
+  const missingCancel = await call('POST', '/api/appointments/999999/cancel',
+    { token: clientToken, body: {} });
+  check('отмена несуществующей записи -> 404', missingCancel.status === 404, missingCancel.json);
+  const missingStatus = await call('POST', '/api/admin/appointments/999999/status',
+    { token: adminToken, body: { status: 'cancelled_by_studio' } });
+  check('отмена несуществующей записи администратором -> 404',
+    missingStatus.status === 404, missingStatus.json);
+
   const logout = await call('POST', '/api/auth/logout', { token: clientToken });
   check('выход -> 200', logout.status === 200);
   const afterLogout = await call('GET', '/api/appointments', { token: clientToken });
