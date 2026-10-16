@@ -43,6 +43,13 @@ const ADDED_COLUMNS = [
     // DEFAULT 'online' задним числом записал бы в них неверный источник.
     ddl: "TEXT CHECK (source IS NULL OR source IN ('online','phone','in_person','whatsapp'))",
   },
+  {
+    table: 'sessions',
+    column: 'user_agent',
+    // Без NOT NULL: у сессий, открытых до появления колонки, устройство
+    // неизвестно, и список активных сессий покажет это честно.
+    ddl: 'TEXT',
+  },
 ];
 
 function migrate() {

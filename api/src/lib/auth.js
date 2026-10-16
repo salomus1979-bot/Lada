@@ -59,14 +59,93 @@ function verifyPassword(password, stored) {
   }
 }
 
-function createSession(userId) {
+function createSession(userId, userAgent = null) {
   const token = crypto.randomBytes(32).toString('hex');
   const expiresAt = toUtcIso(new Date(Date.now() + SESSION_TTL_DAYS * 86400_000));
   db.run(
-    `INSERT INTO sessions (token, user_id, created_at_utc, expires_at_utc) VALUES (?, ?, ?, ?)`,
-    [token, userId, nowUtc(), expiresAt],
+    `INSERT INTO sessions (token, user_id, created_at_utc, expires_at_utc, user_agent)
+     VALUES (?, ?, ?, ?, ?)`,
+    // User-Agent обрезаем: это чужая строка произвольной длины, а нужна она
+    // только чтобы назвать устройство в списке сессий.
+    [token, userId, nowUtc(), expiresAt, userAgent ? String(userAgent).slice(0, 400) : null],
   );
   return { token, expiresAt };
+}
+
+/**
+ * Непрозрачный идентификатор сессии для списка «Активные сессии».
+ *
+ * Сам токен наружу не отдаётся НИКОГДА, кроме как своему владельцу при входе:
+ * список сессий показывает все устройства сразу, и вернись там токены —
+ * одна утечка ответа отдала бы все входы человека разом. Поэтому наружу
+ * уходит SHA-256 от токена: он стабилен, по нему сессию можно завершить,
+ * а восстановить из него токен нельзя.
+ */
+function sessionId(token) {
+  return crypto.createHash('sha256').update(String(token)).digest('hex');
+}
+
+const BROWSERS = [
+  [/Edg\//i, 'Edge'],
+  [/YaBrowser/i, 'Яндекс.Браузер'],
+  [/OPR\/|Opera/i, 'Opera'],
+  [/Firefox/i, 'Firefox'],
+  [/Chrome|CriOS/i, 'Chrome'],
+  [/Safari/i, 'Safari'],
+];
+const PLATFORMS = [
+  [/iPhone/i, 'iPhone', 'mobile'],
+  [/iPad/i, 'iPad', 'mobile'],
+  [/Android/i, 'Android', 'mobile'],
+  [/Windows/i, 'Windows', 'desktop'],
+  [/Mac OS X|Macintosh/i, 'macOS', 'desktop'],
+  [/Linux/i, 'Linux', 'desktop'],
+];
+
+/**
+ * Подпись устройства для списка сессий: «Chrome · Windows».
+ *
+ * Разбор нарочно грубый — User-Agent врёт по устройству и по браузеру, и
+ * строить на нём что-то кроме подписи в интерфейсе нельзя. Неизвестный или
+ * отсутствующий агент так и называется неизвестным, а не угадывается.
+ */
+function describeDevice(userAgent) {
+  if (!userAgent) return { device: 'Неизвестное устройство', kind: 'unknown' };
+  const browser = BROWSERS.find(([re]) => re.test(userAgent));
+  const platform = PLATFORMS.find(([re]) => re.test(userAgent));
+  const parts = [browser && browser[1], platform && platform[1]].filter(Boolean);
+  return {
+    device: parts.length > 0 ? parts.join(' · ') : 'Неизвестное устройство',
+    kind: platform ? platform[2] : 'unknown',
+  };
+}
+
+/** Действующие сессии пользователя, свежие сверху. Токены не возвращаются. */
+function listSessions(userId, currentToken) {
+  dropExpiredSessions();
+  return db.all(
+    `SELECT token, created_at_utc, expires_at_utc, user_agent
+       FROM sessions WHERE user_id = ? ORDER BY created_at_utc DESC`,
+    [userId],
+  ).map((row) => ({
+    id: sessionId(row.token),
+    ...describeDevice(row.user_agent),
+    created_at_utc: row.created_at_utc,
+    expires_at_utc: row.expires_at_utc,
+    is_current: row.token === currentToken,
+  }));
+}
+
+/**
+ * Завершает одну свою сессию по непрозрачному id. Чужая сессия и
+ * несуществующая неотличимы: обе возвращают false.
+ */
+function destroySessionById(userId, id) {
+  const row = db.all('SELECT token FROM sessions WHERE user_id = ?', [userId])
+    .find((r) => sessionId(r.token) === id);
+  if (!row) return null;
+  db.run('DELETE FROM sessions WHERE token = ?', [row.token]);
+  return row.token;
 }
 
 function destroySession(token) {
@@ -168,7 +247,11 @@ module.exports = {
   noLoginHash,
   verifyPassword,
   createSession,
+  sessionId,
+  describeDevice,
+  listSessions,
   destroySession,
+  destroySessionById,
   dropExpiredSessions,
   setSessionCookie,
   clearSessionCookie,

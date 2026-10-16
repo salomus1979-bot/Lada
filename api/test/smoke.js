@@ -1353,6 +1353,63 @@ async function main() {
     !!whatsappRow && whatsappRow.source === 'whatsapp'
     && whatsappRow.source_label === 'WhatsApp', whatsappRow);
 
+  console.log('\n— Активные сессии —');
+  // Блок «Активные сессии» на странице 16. Основную сессию клиента не трогаем:
+  // открываем вторую и завершаем из первой.
+  const secondLogin = await call('POST', '/api/auth/login',
+    { body: { email: 'client@lada.local', password: 'Lada12345' } });
+  check('второй вход тем же клиентом -> 200', secondLogin.status === 200);
+  const secondToken = secondLogin.json.session_token;
+
+  const sessionList = await call('GET', '/api/auth/sessions', { token: clientToken });
+  check('список активных сессий -> 200 и обе сессии в нём',
+    sessionList.status === 200 && sessionList.json.sessions.length >= 2, sessionList.json);
+  check('текущая сессия помечена ровно одна',
+    sessionList.json.sessions.filter((s) => s.is_current).length === 1);
+  check('у сессии есть подпись устройства и срок',
+    sessionList.json.sessions.every((s) => typeof s.device === 'string' && s.device.length > 0
+      && typeof s.expires_at_utc === 'string'));
+
+  // Главное свойство этого списка: он показывает все устройства разом,
+  // поэтому токенов в нём быть не должно.
+  const listText = JSON.stringify(sessionList.json);
+  check('токены сессий наружу не отдаются',
+    !listText.includes(clientToken) && !listText.includes(secondToken), listText.slice(0, 200));
+  check('id сессии — не токен, а его необратимый отпечаток',
+    sessionList.json.sessions.every((s) => /^[0-9a-f]{64}$/.test(s.id))
+    && db.one('SELECT COUNT(*) AS n FROM sessions WHERE token = ?',
+      [sessionList.json.sessions[0].id]).n === 0);
+
+  const otherSession = sessionList.json.sessions.find((s) => !s.is_current);
+  check('чужую сессию завершить нельзя -> 404',
+    (await call('DELETE', `/api/auth/sessions/${otherSession.id}`,
+      { token: adminToken })).status === 404);
+  check('несуществующий id -> 404',
+    (await call('DELETE', `/api/auth/sessions/${'f'.repeat(64)}`,
+      { token: clientToken })).status === 404);
+  check('id не того формата -> 400',
+    (await call('DELETE', '/api/auth/sessions/abc', { token: clientToken })).status === 400);
+  check('список сессий без входа -> 401',
+    (await call('GET', '/api/auth/sessions')).status === 401);
+
+  const ended = await call('DELETE', `/api/auth/sessions/${otherSession.id}`,
+    { token: clientToken });
+  check('«Завершить» на другом устройстве -> 200',
+    ended.status === 200 && ended.json.was_current === false, ended.json);
+  check('завершённый токен больше не работает -> 401',
+    (await call('GET', '/api/auth/me', { token: secondToken })).status === 401);
+  check('своя сессия после этого цела',
+    (await call('GET', '/api/auth/me', { token: clientToken })).status === 200);
+
+  // Подпись устройства разбирается из User-Agent; HTTP-клиент теста своего
+  // не шлёт, поэтому саму таблицу разбора проверяем напрямую.
+  const { describeDevice } = require('../src/lib/auth');
+  check('User-Agent разбирается в подпись устройства',
+    describeDevice('Mozilla/5.0 (Windows NT 10.0; Win64) Chrome/120 Safari/537.36').device === 'Chrome · Windows'
+    && describeDevice('Mozilla/5.0 (iPhone; CPU iPhone OS 17_0) Version/17.0 Mobile Safari/604.1').kind === 'mobile'
+    && describeDevice(null).device === 'Неизвестное устройство',
+    describeDevice('Mozilla/5.0 (Windows NT 10.0; Win64) Chrome/120 Safari/537.36'));
+
   console.log('\n— Кабинет мастера —');
   // Основной `master` в тесте — Елена Смирнова, у неё доступа намеренно нет.
   // Кабинет проверяем на Анне, у которой аккаунт в сиде есть.

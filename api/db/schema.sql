@@ -22,7 +22,10 @@ CREATE TABLE IF NOT EXISTS sessions (
   token          TEXT    PRIMARY KEY,
   user_id        INTEGER NOT NULL REFERENCES users (id) ON DELETE CASCADE,
   created_at_utc TEXT    NOT NULL,
-  expires_at_utc TEXT    NOT NULL
+  expires_at_utc TEXT    NOT NULL,
+  -- User-Agent входа. Нужен только чтобы показать «Chrome · Windows» в списке
+  -- активных сессий; наружу уходит разобранная подпись, а не строка целиком.
+  user_agent     TEXT
 );
 CREATE INDEX IF NOT EXISTS idx_sessions_user ON sessions (user_id);
 CREATE INDEX IF NOT EXISTS idx_sessions_expires ON sessions (expires_at_utc);

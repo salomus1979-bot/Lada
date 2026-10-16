@@ -4,7 +4,7 @@ const express = require('express');
 const db = require('../lib/db');
 const auth = require('../lib/auth');
 const { Validator } = require('../lib/validate');
-const { badRequest, conflict, unauthorized, forbidden } = require('../lib/errors');
+const { badRequest, conflict, notFound, unauthorized, forbidden } = require('../lib/errors');
 const { selfUser } = require('../lib/presenters');
 const { nowUtc } = require('../lib/time');
 
@@ -47,7 +47,7 @@ router.post('/register', (req, res) => {
   );
 
   const userId = Number(info.lastInsertRowid);
-  const session = auth.createSession(userId);
+  const session = auth.createSession(userId, req.headers['user-agent']);
   auth.setSessionCookie(res, session.token, session.expiresAt);
 
   res.status(201).json({
@@ -81,7 +81,7 @@ router.post('/login', (req, res) => {
   }
 
   auth.dropExpiredSessions();
-  const session = auth.createSession(user.id);
+  const session = auth.createSession(user.id, req.headers['user-agent']);
   db.run('UPDATE users SET last_login_at_utc = ? WHERE id = ?', [nowUtc(), user.id]);
   auth.setSessionCookie(res, session.token, session.expiresAt);
 
@@ -93,6 +93,38 @@ router.post('/logout', auth.requireAuth, (req, res) => {
   auth.destroySession(req.sessionToken);
   auth.clearSessionCookie(res);
   res.json({ ok: true });
+});
+
+/**
+ * GET /api/auth/sessions — «Активные сессии» со страницы 16.
+ *
+ * Токены не возвращаются: список показывает все устройства разом, и утечка
+ * такого ответа отдала бы все входы человека сразу. Наружу уходит
+ * непрозрачный id, по нему сессию и завершают.
+ */
+router.get('/sessions', auth.requireAuth, (req, res) => {
+  res.json({ sessions: auth.listSessions(req.user.id, req.sessionToken) });
+});
+
+/**
+ * DELETE /api/auth/sessions/:id — «Завершить» на чужом устройстве.
+ *
+ * Завершить можно только свою сессию: чужой и несуществующий id дают
+ * одинаковый 404. Свою текущую завершить тоже можно — это обычный выход,
+ * поэтому вместе с ней сбрасывается cookie.
+ */
+router.delete('/sessions/:id', auth.requireAuth, (req, res) => {
+  const id = String(req.params.id || '');
+  if (!/^[0-9a-f]{64}$/.test(id)) {
+    throw badRequest('Неверный идентификатор', { id: 'ожидается 64 шестнадцатеричных символа' });
+  }
+
+  const removed = auth.destroySessionById(req.user.id, id);
+  if (!removed) throw notFound('Сессия не найдена');
+
+  const wasCurrent = removed === req.sessionToken;
+  if (wasCurrent) auth.clearSessionCookie(res);
+  res.json({ ok: true, was_current: wasCurrent });
 });
 
 /** GET /api/auth/me — профиль текущего пользователя. */
