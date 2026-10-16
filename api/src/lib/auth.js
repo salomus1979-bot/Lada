@@ -16,6 +16,23 @@ const SCRYPT = { N: 16384, r: 8, p: 1, keylen: 64 };
  */
 const PASSWORD_SCHEME = 'scrypt';
 
+/**
+ * Хеш токена сессии — то, что лежит в `sessions.token_hash`. Сам токен в базу
+ * не попадает никогда: он живёт только в cookie у владельца, поэтому по копии
+ * таблицы войти нельзя.
+ *
+ * Здесь SHA-256, а не scrypt, и это не оплошность. scrypt нарочно медленный,
+ * чтобы перебирать пароли было дорого; у пароля мало энтропии, и защищаться
+ * надо именно от перебора. Токен — 32 случайных байта от crypto, перебирать
+ * его бессмысленно при любой скорости хеша, а проверять его приходится на
+ * КАЖДОМ запросе: scrypt превратил бы каждый запрос в сотни миллисекунд
+ * работы процессора. Для значения с такой энтропией быстрый хеш — верный
+ * выбор, и соль ему не нужна: солью служит сама случайность токена.
+ */
+function hashToken(token) {
+  return crypto.createHash('sha256').update(String(token)).digest('hex');
+}
+
 /** Хеш пароля: `scrypt$N$r$p$salt$hash`. Наружу не отдаётся никогда. */
 function hashPassword(password) {
   const salt = crypto.randomBytes(16);
@@ -63,27 +80,23 @@ function createSession(userId, userAgent = null) {
   const token = crypto.randomBytes(32).toString('hex');
   const expiresAt = toUtcIso(new Date(Date.now() + SESSION_TTL_DAYS * 86400_000));
   db.run(
-    `INSERT INTO sessions (token, user_id, created_at_utc, expires_at_utc, user_agent)
+    `INSERT INTO sessions (token_hash, user_id, created_at_utc, expires_at_utc, user_agent)
      VALUES (?, ?, ?, ?, ?)`,
+    // В базу идёт хеш; сам токен возвращается вызывающему и уходит в cookie.
     // User-Agent обрезаем: это чужая строка произвольной длины, а нужна она
     // только чтобы назвать устройство в списке сессий.
-    [token, userId, nowUtc(), expiresAt, userAgent ? String(userAgent).slice(0, 400) : null],
+    [hashToken(token), userId, nowUtc(), expiresAt,
+      userAgent ? String(userAgent).slice(0, 400) : null],
   );
   return { token, expiresAt };
 }
 
 /**
- * Непрозрачный идентификатор сессии для списка «Активные сессии».
- *
- * Сам токен наружу не отдаётся НИКОГДА, кроме как своему владельцу при входе:
- * список сессий показывает все устройства сразу, и вернись там токены —
- * одна утечка ответа отдала бы все входы человека разом. Поэтому наружу
- * уходит SHA-256 от токена: он стабилен, по нему сессию можно завершить,
- * а восстановить из него токен нельзя.
+ * Идентификатор сессии для списка «Активные сессии» — это и есть хранимый
+ * `token_hash`. Отдавать его наружу безопасно: восстановить из него токен
+ * нельзя, а для кнопки «Завершить» достаточно.
  */
-function sessionId(token) {
-  return crypto.createHash('sha256').update(String(token)).digest('hex');
-}
+const sessionId = hashToken;
 
 const BROWSERS = [
   [/Edg\//i, 'Edge'],
@@ -123,16 +136,17 @@ function describeDevice(userAgent) {
 /** Действующие сессии пользователя, свежие сверху. Токены не возвращаются. */
 function listSessions(userId, currentToken) {
   dropExpiredSessions();
+  const currentHash = currentToken ? hashToken(currentToken) : null;
   return db.all(
-    `SELECT token, created_at_utc, expires_at_utc, user_agent
+    `SELECT token_hash, created_at_utc, expires_at_utc, user_agent
        FROM sessions WHERE user_id = ? ORDER BY created_at_utc DESC`,
     [userId],
   ).map((row) => ({
-    id: sessionId(row.token),
+    id: row.token_hash,
     ...describeDevice(row.user_agent),
     created_at_utc: row.created_at_utc,
     expires_at_utc: row.expires_at_utc,
-    is_current: row.token === currentToken,
+    is_current: row.token_hash === currentHash,
   }));
 }
 
@@ -141,16 +155,16 @@ function listSessions(userId, currentToken) {
  * несуществующая неотличимы: обе возвращают false.
  */
 function destroySessionById(userId, id) {
-  const row = db.all('SELECT token FROM sessions WHERE user_id = ?', [userId])
-    .find((r) => sessionId(r.token) === id);
-  if (!row) return null;
-  db.run('DELETE FROM sessions WHERE token = ?', [row.token]);
-  return row.token;
+  // id — это сам token_hash, поэтому удаляем условием, а не перебором.
+  // user_id в условии обязателен: иначе чужую сессию можно было бы закрыть,
+  // подставив её id.
+  const info = db.run('DELETE FROM sessions WHERE user_id = ? AND token_hash = ?', [userId, id]);
+  return info.changes > 0;
 }
 
 function destroySession(token) {
   if (!token) return 0;
-  return db.run('DELETE FROM sessions WHERE token = ?', [token]).changes;
+  return db.run('DELETE FROM sessions WHERE token_hash = ?', [hashToken(token)]).changes;
 }
 
 function dropExpiredSessions() {
@@ -202,8 +216,8 @@ function attachUser(req, _res, next) {
     const row = db.one(
       `SELECT u.id, u.role, u.name, u.email, u.phone, u.is_blocked, s.expires_at_utc
          FROM sessions s JOIN users u ON u.id = s.user_id
-        WHERE s.token = ?`,
-      [req.sessionToken],
+        WHERE s.token_hash = ?`,
+      [hashToken(req.sessionToken)],
     );
     if (row) {
       if (row.expires_at_utc <= nowUtc()) {
@@ -247,6 +261,7 @@ module.exports = {
   noLoginHash,
   verifyPassword,
   createSession,
+  hashToken,
   sessionId,
   describeDevice,
   listSessions,

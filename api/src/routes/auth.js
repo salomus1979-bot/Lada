@@ -119,10 +119,11 @@ router.delete('/sessions/:id', auth.requireAuth, (req, res) => {
     throw badRequest('Неверный идентификатор', { id: 'ожидается 64 шестнадцатеричных символа' });
   }
 
-  const removed = auth.destroySessionById(req.user.id, id);
-  if (!removed) throw notFound('Сессия не найдена');
+  // Сравниваем ДО удаления: id — это хранимый хеш токена, поэтому своя
+  // текущая сессия узнаётся без обращения к базе и без самого токена.
+  const wasCurrent = id === auth.hashToken(req.sessionToken);
 
-  const wasCurrent = removed === req.sessionToken;
+  if (!auth.destroySessionById(req.user.id, id)) throw notFound('Сессия не найдена');
   if (wasCurrent) auth.clearSessionCookie(res);
   res.json({ ok: true, was_current: wasCurrent });
 });

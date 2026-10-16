@@ -52,7 +52,32 @@ const ADDED_COLUMNS = [
   },
 ];
 
+/**
+ * Сессии со старой схемой, где в PRIMARY KEY лежал сам токен.
+ *
+ * ADD COLUMN тут не поможет: меняется не набор колонок, а первичный ключ.
+ * Старые строки НЕ переносятся — и это не лень, а смысл правки. Токены в них
+ * лежали открытым текстом; перенеся их (пусть даже захешировав), мы бы
+ * продлили жизнь ровно тем значениям, которые и хотели перестать хранить.
+ * Таблица удаляется, schema.sql создаёт её заново уже с token_hash, а все,
+ * кто был залогинен, входят ещё раз. Для сессий это нормальная цена.
+ */
+function migrateSessionTokens() {
+  const exists = db.prepare(
+    "SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'sessions'",
+  ).get();
+  if (!exists) return;
+
+  const columns = db.prepare('PRAGMA table_info(sessions)').all().map((c) => c.name);
+  if (columns.includes('token_hash')) return;
+
+  db.exec('DROP TABLE sessions');
+  console.log('[db] сессии переведены на хранение хеша токена; прежние входы сброшены');
+}
+
 function migrate() {
+  migrateSessionTokens();
+
   for (const { table, column, ddl } of ADDED_COLUMNS) {
     const exists = db.prepare(
       "SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = ?",

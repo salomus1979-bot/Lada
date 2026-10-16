@@ -1375,10 +1375,22 @@ async function main() {
   const listText = JSON.stringify(sessionList.json);
   check('токены сессий наружу не отдаются',
     !listText.includes(clientToken) && !listText.includes(secondToken), listText.slice(0, 200));
-  check('id сессии — не токен, а его необратимый отпечаток',
+  check('id сессии — хранимый хеш токена, а не сам токен',
     sessionList.json.sessions.every((s) => /^[0-9a-f]{64}$/.test(s.id))
-    && db.one('SELECT COUNT(*) AS n FROM sessions WHERE token = ?',
-      [sessionList.json.sessions[0].id]).n === 0);
+    && db.one('SELECT COUNT(*) AS n FROM sessions WHERE token_hash = ?',
+      [sessionList.json.sessions[0].id]).n === 1);
+
+  // Главное требование к хранению: по копии таблицы войти нельзя.
+  const { hashToken } = require('../src/lib/auth');
+  check('сам токен в базе не хранится',
+    db.one('SELECT COUNT(*) AS n FROM sessions WHERE token_hash = ?', [clientToken]).n === 0
+    && db.one('SELECT COUNT(*) AS n FROM sessions WHERE token_hash = ?',
+      [hashToken(clientToken)]).n === 1);
+  check('колонки token в таблице sessions нет вовсе',
+    db.all('PRAGMA table_info(sessions)').every((c) => c.name !== 'token'));
+  check('ни одно значение в sessions не совпадает с действующим токеном',
+    db.all('SELECT * FROM sessions').every(
+      (row) => !Object.values(row).some((v) => v === clientToken || v === secondToken)));
 
   const otherSession = sessionList.json.sessions.find((s) => !s.is_current);
   check('чужую сессию завершить нельзя -> 404',

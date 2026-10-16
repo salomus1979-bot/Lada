@@ -19,7 +19,9 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_users_email ON users (email COLLATE NOCASE
 CREATE INDEX IF NOT EXISTS idx_users_role ON users (role);
 
 CREATE TABLE IF NOT EXISTS sessions (
-  token          TEXT    PRIMARY KEY,
+  -- SHA-256 от токена, hex. Сам токен не хранится нигде: он существует только
+  -- в cookie у владельца. Укради кто-нибудь эту таблицу — войти по ней нельзя.
+  token_hash     TEXT    PRIMARY KEY,
   user_id        INTEGER NOT NULL REFERENCES users (id) ON DELETE CASCADE,
   created_at_utc TEXT    NOT NULL,
   expires_at_utc TEXT    NOT NULL,
