@@ -159,6 +159,57 @@ function appointmentAdminView(row, services, { timezone } = {}) {
   };
 }
 
+/** Инициалы для кружка-аватара в списках (страницы 36, 40). */
+function initials(name) {
+  return String(name || '')
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0].toLocaleUpperCase('ru-RU'))
+    .join('');
+}
+
+/**
+ * Визит для кабинета мастера (страница 38).
+ *
+ * Контакты клиента здесь есть — страница говорит об этом прямо: «Вы видите
+ * контакты только своих клиентов». А вот `is_override` и `source` не
+ * отдаются: наложение и источник — внутренний учёт студии, и к работе
+ * мастера они отношения не имеют.
+ */
+function appointmentMasterView(row, services, { timezone, clientStats = null } = {}) {
+  const base = appointmentView(row, services, { timezone });
+  return {
+    ...base,
+    client: {
+      id: row.client_user_id,
+      name: row.client_name,
+      initials: initials(row.client_name),
+      phone: row.client_phone,
+      // «12 визитов ко мне · 1 неявка» — счёт по визитам к этому мастеру,
+      // а не по студии целиком.
+      ...(clientStats ? { visits_with_me: clientStats.visits, no_shows_with_me: clientStats.no_shows } : {}),
+    },
+  };
+}
+
+/** Клиент в списке «Мои клиенты» мастера (страницы 40 и 41). */
+function masterClientView(row, { timezone } = {}) {
+  return {
+    id: row.id,
+    name: row.name,
+    initials: initials(row.name),
+    phone: row.phone,
+    visits_count: row.visits_count,
+    no_show_count: row.no_show_count_with_me,
+    last_visit_at: row.last_visit_at_utc
+      ? presentInstant(row.last_visit_at_utc, timezone) : null,
+    next_visit_at: row.next_visit_at_utc
+      ? presentInstant(row.next_visit_at_utc, timezone) : null,
+    is_regular: row.visits_count >= 3,
+  };
+}
+
 /**
  * Клиент студии для списка персонала (страница «Админ — Клиенты»).
  * Без password_hash и без служебных полей: перечислено только то,
@@ -214,6 +265,9 @@ module.exports = {
   masterAdminView,
   appointmentView,
   appointmentAdminView,
+  appointmentMasterView,
+  masterClientView,
   clientAdminView,
   settingsPublicView,
+  initials,
 };

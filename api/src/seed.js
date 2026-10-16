@@ -51,6 +51,8 @@ const SERVICES = [
 const MASTERS = [
   {
     first_name: 'Анна', last_name: 'Ковалева',
+    // Доступ в кабинет мастера выдан: masters.user_id ссылается на этот аккаунт.
+    account: { email: 'anna@lada.local', phone: '+79991234510' },
     specialization: 'Маникюр и педикюр', experience_years: 6,
     bio: 'Маникюр, педикюр, наращивание и дизайн ногтей.',
     sort_order: 1,
@@ -63,6 +65,7 @@ const MASTERS = [
   },
   {
     first_name: 'Марина', last_name: 'Орлова',
+    account: { email: 'marina.master@lada.local', phone: '+79991234511' },
     specialization: 'Брови', experience_years: 5,
     bio: 'Коррекция и окрашивание бровей, долговременная укладка.',
     sort_order: 2,
@@ -72,6 +75,8 @@ const MASTERS = [
   },
   {
     first_name: 'Елена', last_name: 'Смирнова',
+    // Доступ намеренно не выдан — состояние «Доступ не выдан» со страницы 28.
+    account: null,
     specialization: 'Универсальный мастер', experience_years: 8,
     bio: 'Маникюр и наращивание ногтей, коррекция, окрашивание и ламинирование бровей.',
     sort_order: 3,
@@ -197,12 +202,28 @@ function seed() {
 
   const masterIds = new Map();
   for (const master of MASTERS) {
+    // Аккаунт мастера. В прототипе доступ выдаёт администратор ссылкой-
+    // приглашением на 7 дней (страница 35), но почты в проекте нет, поэтому
+    // здесь аккаунт заводится сразу с тем же тестовым паролем, что у остальных
+    // ролей. У Елены доступа нет вовсе — это состояние «Доступ не выдан»
+    // со страницы 28, в админском представлении access.granted = false.
+    let masterUserId = null;
+    if (master.account) {
+      const accountInfo = db.run(
+        `INSERT INTO users (role, name, email, phone, password_hash, created_at_utc)
+         VALUES ('master', ?, ?, ?, ?, ?)`,
+        [`${master.first_name} ${master.last_name}`, master.account.email,
+          master.account.phone, hashPassword(TEST_PASSWORD), timestamp],
+      );
+      masterUserId = Number(accountInfo.lastInsertRowid);
+    }
+
     const info = db.run(
       `INSERT INTO masters
-         (first_name, last_name, specialization, experience_years, bio,
+         (user_id, first_name, last_name, specialization, experience_years, bio,
           is_visible, is_active, sort_order, created_at_utc)
-       VALUES (?, ?, ?, ?, ?, 1, 1, ?, ?)`,
-      [master.first_name, master.last_name, master.specialization,
+       VALUES (?, ?, ?, ?, ?, ?, 1, 1, ?, ?)`,
+      [masterUserId, master.first_name, master.last_name, master.specialization,
         master.experience_years, master.bio, master.sort_order, timestamp],
     );
     const masterId = Number(info.lastInsertRowid);
@@ -232,6 +253,8 @@ function seed() {
   console.log(`  категорий: ${CATEGORIES.length}, услуг: ${SERVICES.length}, мастеров: ${MASTERS.length}`);
   console.log(`  блокировок времени: ${blockCount} (${TIME_BLOCKS.length} недельных правила на горизонт записи)`);
   console.log(`  владелец: owner@lada.local, админ: admin@lada.local, клиент: client@lada.local`);
+  const withAccess = MASTERS.filter((m) => m.account).map((m) => m.account.email);
+  console.log(`  мастера с доступом: ${withAccess.join(', ')}`);
   console.log(`  тестовый пароль для всех: ${TEST_PASSWORD}`);
 }
 

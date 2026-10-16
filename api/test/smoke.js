@@ -1353,6 +1353,178 @@ async function main() {
     !!whatsappRow && whatsappRow.source === 'whatsapp'
     && whatsappRow.source_label === 'WhatsApp', whatsappRow);
 
+  console.log('\n— Кабинет мастера —');
+  // Основной `master` в тесте — Елена Смирнова, у неё доступа намеренно нет.
+  // Кабинет проверяем на Анне, у которой аккаунт в сиде есть.
+  const allMasters = (await call('GET', '/api/admin/masters', { token: adminToken })).json.masters;
+  const annaCard = allMasters.find((m) => m.display_name === 'Анна Ковалева');
+  const elenaCard = allMasters.find((m) => m.display_name === 'Елена Смирнова');
+  check('доступ мастера виден админу: у Анны выдан, у Елены нет',
+    annaCard.access.granted === true && annaCard.access.email === 'anna@lada.local'
+    && elenaCard.access.granted === false,
+    { anna: annaCard.access, elena: elenaCard.access });
+
+  const annaLogin = await call('POST', '/api/auth/login',
+    { body: { email: 'anna@lada.local', password: 'Lada12345' } });
+  check('мастер входит по своему аккаунту -> 200', annaLogin.status === 200, annaLogin.json);
+  const annaToken = annaLogin.json.session_token;
+  const marinaMasterLogin = await call('POST', '/api/auth/login',
+    { body: { email: 'marina.master@lada.local', password: 'Lada12345' } });
+  const marinaMasterToken = marinaMasterLogin.json.session_token;
+
+  check('клиенту кабинет мастера закрыт -> 403',
+    (await call('GET', '/api/master/day', { token: clientToken })).status === 403);
+  check('администратору кабинет мастера закрыт -> 403',
+    (await call('GET', '/api/master/day', { token: adminToken })).status === 403);
+  check('без входа кабинет мастера -> 401',
+    (await call('GET', '/api/master/day')).status === 401);
+
+  const annaMe = await call('GET', '/api/master/me', { token: annaToken });
+  check('мастер видит свою карточку -> 200',
+    annaMe.status === 200 && annaMe.json.master.id === annaCard.id
+    && annaMe.json.account.email === 'anna@lada.local', annaMe.json);
+
+  // Визит к Анне: оформляет администратор, как на странице 24.
+  const annaSvc = (await call('GET', `/api/services?master_id=${annaCard.id}`)).json.services[0];
+  let annaSlot = null;
+  let annaDate = null;
+  for (let i = 1; i <= 14 && annaSlot === null; i += 1) {
+    annaDate = new Date(Date.now() + i * 86400_000).toISOString().slice(0, 10);
+    const av = await call('GET',
+      `/api/masters/${annaCard.id}/availability?date=${annaDate}&service_ids=${annaSvc.id}`);
+    if (av.status === 200 && av.json.slots.length > 0) annaSlot = av.json.slots[0];
+  }
+  check('есть свободный слот у мастера с доступом', annaSlot !== null);
+
+  const masterClient = await call('POST', '/api/admin/clients', {
+    token: adminToken,
+    body: { name: 'Дарья Миронова', email: 'daria.m@example.com', phone: '+7 999 555-10-20', consent: true },
+  });
+  const annaVisit = await call('POST', '/api/appointments', {
+    token: adminToken,
+    body: {
+      master_id: annaCard.id, service_ids: [annaSvc.id],
+      starts_at: annaSlot.at_utc, client_user_id: masterClient.json.client.id,
+    },
+  });
+  check('визит к мастеру создан администратором -> 201', annaVisit.status === 201, annaVisit.json);
+  const annaVisitId = annaVisit.json.appointment.id;
+
+  const annaDay = await call('GET', `/api/master/day?date=${annaDate}`, { token: annaToken });
+  const dayVisit = annaDay.json.timeline.find((i) => i.kind === 'appointment');
+  check('«Мой день»: визит, свободное окно и сводка',
+    annaDay.status === 200 && annaDay.json.summary.appointments_count === 1
+    && dayVisit.appointment_id === annaVisitId
+    && dayVisit.client_name === 'Дарья Миронова'
+    && annaDay.json.timeline.some((i) => i.kind === 'free')
+    && annaDay.json.summary.free_min > 0,
+    annaDay.json.summary);
+
+  const annaWeek = await call('GET', `/api/master/week?date=${annaDate}`, { token: annaToken });
+  check('«Неделя»: семь дней, загрузка и свой визит внутри',
+    annaWeek.status === 200 && annaWeek.json.days.length === 7
+    && annaWeek.json.summary.appointments_count >= 1
+    && annaWeek.json.summary.load_percent > 0
+    && annaWeek.json.days.some((d) => d.visits.some((v) => v.appointment_id === annaVisitId)),
+    annaWeek.json.summary);
+
+  const visitCard = await call('GET', `/api/master/appointments/${annaVisitId}`, { token: annaToken });
+  check('детали визита: мастер видит контакты своего клиента',
+    visitCard.status === 200 && visitCard.json.appointment.client.phone === '+79995551020'
+    && visitCard.json.appointment.client.initials === 'ДМ'
+    && visitCard.json.appointment.client.visits_with_me === 0, visitCard.json);
+  check('внутренний учёт студии мастеру не отдаётся',
+    visitCard.json.appointment.is_override === undefined
+    && visitCard.json.appointment.source === undefined);
+
+  check('чужой визит мастеру -> 404',
+    (await call('GET', `/api/master/appointments/${annaVisitId}`,
+      { token: marinaMasterToken })).status === 404);
+
+  const arrived = await call('POST', `/api/master/appointments/${annaVisitId}/status`,
+    { token: annaToken, body: { status: 'confirmed' } });
+  check('«Клиент пришёл» от мастера -> 200',
+    arrived.status === 200 && arrived.json.status === 'confirmed', arrived.json);
+  check('статус записан той же функцией, что у админа',
+    db.one('SELECT status FROM appointments WHERE id = ?', [annaVisitId]).status === 'confirmed');
+
+  const masterCancel = await call('POST', `/api/master/appointments/${annaVisitId}/status`,
+    { token: annaToken, body: { status: 'cancelled_by_studio' } });
+  check('отмена мастеру недоступна -> 400, её нет среди значений',
+    masterCancel.status === 400
+    && /confirmed, completed, no_show/.test(masterCancel.json.error.details.status),
+    masterCancel.json);
+  check('колонки отмены после отказа пусты',
+    db.one('SELECT status, cancelled_at_utc FROM appointments WHERE id = ?',
+      [annaVisitId]).cancelled_at_utc === null);
+
+  check('чужой визит мастер не переводит -> 404',
+    (await call('POST', `/api/master/appointments/${annaVisitId}/status`,
+      { token: marinaMasterToken, body: { status: 'completed' } })).status === 404);
+
+  const myClients = await call('GET', '/api/master/clients', { token: annaToken });
+  check('«Мои клиенты»: только те, кто записывался к этому мастеру',
+    myClients.status === 200
+    && myClients.json.clients.some((c) => c.name === 'Дарья Миронова')
+    && myClients.json.clients.every((c) => c.name !== 'Марина Волкова'), myClients.json);
+  check('поиск по имени в своих клиентах',
+    (await call('GET', '/api/master/clients?q=дарья', { token: annaToken }))
+      .json.clients.length === 1);
+  check('у Марины-мастера своих клиентов нет',
+    (await call('GET', '/api/master/clients', { token: marinaMasterToken })).json.total === 0);
+
+  // Блокировка времени — страница 39.
+  const blockOverVisit = await call('POST', '/api/master/time-blocks', {
+    token: annaToken,
+    body: { type: 'break', starts_at: annaSlot.at_utc, ends_at: annaVisit.json.appointment.ends_at.at_utc },
+  });
+  check('блокировка поверх своего визита -> 409',
+    blockOverVisit.status === 409, blockOverVisit.json);
+
+  const farStart = new Date(Date.now() + 200 * 86400_000).toISOString().replace(/\.\d{3}Z$/, 'Z');
+  const overHorizon = await call('POST', '/api/master/time-blocks', {
+    token: annaToken,
+    body: {
+      type: 'vacation', starts_at: farStart,
+      ends_at: new Date(Date.now() + 201 * 86400_000).toISOString().replace(/\.\d{3}Z$/, 'Z'),
+    },
+  });
+  check('блокировка дальше горизонта -> 409', overHorizon.status === 409, overHorizon.json);
+
+  const freeSlot = annaDay.json.timeline.find((i) => i.kind === 'free');
+  const myBlock = await call('POST', '/api/master/time-blocks', {
+    token: annaToken,
+    body: {
+      type: 'break', starts_at: freeSlot.starts_at.at_utc,
+      ends_at: new Date(new Date(freeSlot.starts_at.at_utc).getTime() + 30 * 60000)
+        .toISOString().replace(/\.\d{3}Z$/, 'Z'),
+      comment: 'Обед',
+    },
+  });
+  check('мастер блокирует своё свободное время -> 201', myBlock.status === 201, myBlock.json);
+  check('блокировка записана на самого мастера, а не на присланный id',
+    db.one('SELECT master_id, created_by_user_id FROM time_blocks WHERE id = ?',
+      [myBlock.json.time_block.id]).master_id === annaCard.id);
+  check('заблокированное время ушло из свободных слотов',
+    !(await call('GET',
+      `/api/masters/${annaCard.id}/availability?date=${annaDate}&service_ids=${annaSvc.id}`))
+      .json.slots.some((s) => s.at_utc === freeSlot.starts_at.at_utc));
+
+  check('чужую блокировку снять нельзя -> 404',
+    (await call('DELETE', `/api/master/time-blocks/${myBlock.json.time_block.id}`,
+      { token: marinaMasterToken })).status === 404);
+  check('свою блокировку мастер снимает -> 200',
+    (await call('DELETE', `/api/master/time-blocks/${myBlock.json.time_block.id}`,
+      { token: annaToken })).status === 200);
+  check('после снятия время снова свободно',
+    (await call('GET',
+      `/api/masters/${annaCard.id}/availability?date=${annaDate}&service_ids=${annaSvc.id}`))
+      .json.slots.some((s) => s.at_utc === freeSlot.starts_at.at_utc));
+
+  check('создать запись через кабинет мастера нельзя: эндпоинта нет',
+    (await call('POST', '/api/master/appointments',
+      { token: annaToken, body: { master_id: annaCard.id } })).status === 404);
+
   console.log('\n— Отмена и выход —');
   const foreignCancel = await call('POST', `/api/appointments/${appointmentId}/cancel`,
     { token: marinaToken, body: {} });

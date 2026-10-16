@@ -10,6 +10,7 @@ const catalogRoutes = require('./routes/catalog');
 const availabilityRoutes = require('./routes/availability');
 const holdRoutes = require('./routes/holds');
 const appointmentRoutes = require('./routes/appointments');
+const masterRoutes = require('./routes/master');
 const adminRoutes = require('./routes/admin');
 
 function createApp() {
@@ -44,6 +45,7 @@ function createApp() {
   app.use('/api', availabilityRoutes);
   app.use('/api/holds', holdRoutes);
   app.use('/api/appointments', appointmentRoutes);
+  app.use('/api/master', masterRoutes);
   app.use('/api/admin', adminRoutes);
 
   app.use((_req, _res, next) => next(notFound('Эндпоинт не найден')));

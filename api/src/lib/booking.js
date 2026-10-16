@@ -27,10 +27,23 @@
  * отклоняются: иначе подменённый запрос из браузера получал бы 400 вместо
  * обычной записи на себя.
  *
- * Роль `master` своего пути записи пока не имеет: у мастера в API нет ни
- * одного эндпоинта, и на этом общем пути он — такой же клиент, записывающий
- * себя (`isStaff` его не включает). Это состояние, а не решение: когда
- * появится раздел мастера, он придёт в эти же функции новым видом актора.
+ * Роль `master` своего пути записи не имеет и иметь не должна. Это сверено с
+ * прототипом, а не упущено:
+ *   - создания записи у мастера нет ни на одной из страниц 35–42; «Новая
+ *     запись за клиента» — только админская страница 24;
+ *   - отмена запрещена прямым текстом страницы 38: «Отменить запись может
+ *     только администратор. Мы отправим ему ваш запрос»;
+ *   - перенос там же остаётся за администратором: «получит запрос и решит,
+ *     отменить или перенести визит».
+ * Поэтому createAppointment, cancelAppointment и rescheduleAppointment вида
+ * актора `master` получать не должны. На общем пути создания аккаунт с ролью
+ * `master` — такой же клиент, записывающий себя (`isStaff` его не включает).
+ *
+ * Единственная операция мастера над визитом — смена статуса: кнопки «Клиент
+ * пришёл», «Не пришёл», «Завершён» на странице 38. Она живёт в
+ * changeAppointmentStatus, там же, где админская, и роль только сужает её:
+ * MASTER_STATUSES без отмены плюс запрет на чужие визиты. Кабинет —
+ * routes/master.js.
  */
 
 const db = require('./db');
@@ -46,6 +59,13 @@ const { STAFF_SOURCES } = require('./presenters');
 
 /** Статусы, которые ставит администратор помимо отмены. */
 const STAFF_STATUSES = ['confirmed', 'completed', 'no_show', 'cancelled_by_studio'];
+
+/**
+ * Статусы, доступные мастеру: кнопки «Клиент пришёл», «Не пришёл» и
+ * «Завершён» со страницы 38. Отмены среди них нет намеренно — по прототипу
+ * мастер её только запрашивает у администратора.
+ */
+const MASTER_STATUSES = ['confirmed', 'completed', 'no_show'];
 
 const APPOINTMENT_COLUMNS = `
   a.id, a.client_user_id, a.master_id, a.starts_at_utc, a.ends_at_utc,
@@ -483,7 +503,7 @@ function cancelAppointment(user, id, body, { asStudio = false } = {}) {
 /* ----------------------------------------------------------- смена статуса */
 
 /**
- * Смена статуса визита администратором.
+ * Смена статуса визита — одна функция для администратора и для мастера.
  *
  * `cancelled_by_studio` своего UPDATE не имеет — он уходит в
  * cancelAppointment, тот же путь, которым отменяет клиент. Здесь остаются
@@ -491,11 +511,15 @@ function cancelAppointment(user, id, body, { asStudio = false } = {}) {
  * `no_show` увеличивает счётчик неявок и при достижении порога блокирует
  * клиенту онлайн-запись.
  *
+ * `masterId` — вызов из кабинета мастера (страница 38). Роль не открывает
+ * второго пути, она сужает первый: список статусов укорачивается до
+ * MASTER_STATUSES, и чужой визит отвечает 404, как и несуществующий.
+ *
  * @returns {{ status: string }}
  */
-function changeAppointmentStatus(user, id, body) {
+function changeAppointmentStatus(user, id, body, { masterId = null } = {}) {
   const input = new Validator(body)
-    .enum('status', STAFF_STATUSES)
+    .enum('status', masterId === null ? STAFF_STATUSES : MASTER_STATUSES)
     .string('cancel_reason', { required: false, max: 500 })
     .done();
 
@@ -513,9 +537,14 @@ function changeAppointmentStatus(user, id, body) {
 
   const apply = () => db.transaction(() => {
     const row = db.one(
-      'SELECT id, client_user_id, status FROM appointments WHERE id = ?', [id],
+      'SELECT id, client_user_id, master_id, status FROM appointments WHERE id = ?', [id],
     );
     if (!row) throw notFound('Запись не найдена');
+    // Чужой визит мастеру не раскрываем даже фактом существования — тот же
+    // 404, что и у несуществующего, как в assertMayModify.
+    if (masterId !== null && row.master_id !== masterId) {
+      throw notFound('Запись не найдена');
+    }
     if (row.status === input.status) {
       throw conflict('Запись уже в этом статусе');
     }
@@ -560,6 +589,7 @@ function changeAppointmentStatus(user, id, body) {
 module.exports = {
   APPOINTMENT_COLUMNS,
   STAFF_STATUSES,
+  MASTER_STATUSES,
   fetchAppointment,
   fetchServices,
   assertMayModify,

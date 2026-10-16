@@ -11,6 +11,7 @@ const {
   serviceAdminView, masterAdminView, appointmentAdminView, clientAdminView, STATUS_LABELS,
 } = require('../lib/presenters');
 const { changeAppointmentStatus } = require('../lib/booking');
+const { createTimeBlock, deleteTimeBlock } = require('../lib/blocks');
 
 const router = express.Router();
 
@@ -861,63 +862,21 @@ router.delete('/masters/:id/exceptions/:exceptionId', (req, res) => {
 /**
  * POST /api/admin/masters/:id/time-blocks — точечная блокировка времени.
  * Время принимается в UTC. Если на интервал есть запись — 409.
+ *
+ * Своего SQL здесь нет: блокировки ставит lib/blocks.js, та же функция, что и
+ * в кабинете мастера. Горизонт администратору не мешает — отпуск он заводит
+ * заранее, в отличие от мастера на странице 39.
  */
 router.post('/masters/:id/time-blocks', (req, res) => {
   const id = requireIdParam(req.params.id);
-  const input = new Validator(req.body)
-    .enum('type', ['break', 'time_off', 'vacation', 'sick_leave'])
-    .utcInstant('starts_at')
-    .utcInstant('ends_at')
-    .string('comment', { required: false, max: 500 })
-    .done();
-
-  if (input.ends_at <= input.starts_at) {
-    throw badRequest('Неверные входные данные', { ends_at: 'должен быть позже starts_at' });
-  }
-
-  const newId = db.transaction(() => {
-    const master = db.one('SELECT id FROM masters WHERE id = ? AND is_active = 1', [id]);
-    if (!master) throw notFound('Мастер не найден');
-
-    const clash = db.one(
-      `SELECT COUNT(*) AS n FROM appointments
-        WHERE master_id = ? AND status IN (${ACTIVE_STATUSES.map(() => '?').join(',')})
-          AND starts_at_utc < ? AND ends_at_utc > ?`,
-      [id, ...ACTIVE_STATUSES, input.ends_at, input.starts_at],
-    );
-    if (clash.n > 0) {
-      throw conflict('На это время уже есть запись — заблокировать нельзя',
-        { appointments: clash.n });
-    }
-
-    const info = db.run(
-      `INSERT INTO time_blocks
-         (master_id, type, starts_at_utc, ends_at_utc, comment, created_by_user_id, created_at_utc)
-       VALUES (?, ?, ?, ?, ?, ?, ?)`,
-      [id, input.type, input.starts_at, input.ends_at,
-        input.comment || null, req.user.id, nowUtc()],
-    );
-    return Number(info.lastInsertRowid);
-  });
-
-  res.status(201).json({
-    time_block: {
-      id: newId,
-      master_id: id,
-      type: input.type,
-      starts_at_utc: input.starts_at,
-      ends_at_utc: input.ends_at,
-      comment: input.comment || null,
-    },
-  });
+  res.status(201).json({ time_block: createTimeBlock(req.user, id, req.body) });
 });
 
 /** DELETE /api/admin/masters/:id/time-blocks/:blockId — снять блокировку. */
 router.delete('/masters/:id/time-blocks/:blockId', (req, res) => {
   const id = requireIdParam(req.params.id, 'master_id');
   const blockId = requireIdParam(req.params.blockId, 'block_id');
-  const info = db.run('DELETE FROM time_blocks WHERE id = ? AND master_id = ?', [blockId, id]);
-  if (info.changes === 0) throw notFound('Блокировка не найдена');
+  deleteTimeBlock(id, blockId);
   res.json({ ok: true });
 });
 
