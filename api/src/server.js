@@ -5,7 +5,7 @@ const db = require('./lib/db');
 const { purgeExpiredHolds } = require('./lib/availability');
 const { dropExpiredSessions } = require('./lib/auth');
 
-const PORT = Number(process.env.PORT || 3001);
+const PORT = require('./lib/config').port;
 
 const app = createApp();
 

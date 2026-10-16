@@ -2,7 +2,7 @@
 
 const express = require('express');
 const db = require('../lib/db');
-const { requireRole, noLoginHash, PASSWORD_SCHEME } = require('../lib/auth');
+const { requireRole, noLoginHash, grantRole, isOwner, PASSWORD_SCHEME } = require('../lib/auth');
 const { Validator, requireIdParam } = require('../lib/validate');
 const { badRequest, conflict, forbidden, notFound } = require('../lib/errors');
 const { ACTIVE_STATUSES } = require('../lib/availability');
@@ -189,7 +189,10 @@ router.get('/clients', (req, res) => {
   const settings = db.settings();
   // Персонал и мастера в списке клиентов не нужны: их нельзя записать
   // за клиента, и показывать их администратору тут нечего.
-  const where = ["u.role = 'client'"];
+  // Клиент — тот, у кого есть роль client. С ролями списком это уже не
+  // «единственная роль равна client»: администратор, который заодно клиент
+  // студии, в списке появится, и это правда.
+  const where = ["EXISTS (SELECT 1 FROM user_roles r WHERE r.user_id = u.id AND r.role = 'client')"];
   const params = [];
 
   if (input.q) {
@@ -243,7 +246,8 @@ function fetchClient(id, settings) {
   const row = db.one(
     `SELECT ${CLIENT_COLUMNS}
        FROM users u
-      WHERE u.id = ? AND u.role = 'client'`,
+      WHERE u.id = ?
+        AND EXISTS (SELECT 1 FROM user_roles r WHERE r.user_id = u.id AND r.role = 'client')`,
     [...ACTIVE_STATUSES, nowUtc(), id],
   );
   return row ? clientAdminView(row, { timezone: settings.timezone }) : null;
@@ -295,12 +299,15 @@ router.post('/clients', (req, res) => {
 
   const settings = db.settings();
   const info = db.run(
-    `INSERT INTO users (role, name, email, phone, password_hash, created_at_utc)
-     VALUES ('client', ?, ?, ?, ?, ?)`,
+    `INSERT INTO users (name, email, phone, password_hash, created_at_utc)
+     VALUES (?, ?, ?, ?, ?)`,
     [input.name, input.email, input.phone, noLoginHash(), nowUtc()],
   );
 
-  res.status(201).json({ client: fetchClient(Number(info.lastInsertRowid), settings) });
+  const newClientId = Number(info.lastInsertRowid);
+  grantRole(newClientId, 'client');
+
+  res.status(201).json({ client: fetchClient(newClientId, settings) });
 });
 
 /**
@@ -331,7 +338,12 @@ router.patch('/clients/:id', (req, res) => {
   // Менять можно только аккаунт с ролью `client`. Персонал и мастера правятся
   // своими эндпоинтами, и 404 здесь одинаков для неизвестного id и для чужой
   // роли — существование чужого аккаунта API не подтверждает.
-  const client = db.one("SELECT id FROM users WHERE id = ? AND role = 'client'", [id]);
+  const client = db.one(
+    `SELECT u.id FROM users u
+      WHERE u.id = ? AND EXISTS (
+        SELECT 1 FROM user_roles r WHERE r.user_id = u.id AND r.role = 'client')`,
+    [id],
+  );
   if (!client) throw notFound('Клиент не найден');
 
   if (input.email !== undefined) {
@@ -396,7 +408,7 @@ router.post('/services', (req, res) => {
   if (input.duration_min % 5 !== 0) {
     throw badRequest('Неверные входные данные', { duration_min: 'кратно 5 минутам' });
   }
-  if (req.user.role !== 'owner' && input.price_kopecks > 0) {
+  if (!isOwner(req.user) && input.price_kopecks > 0) {
     throw forbidden('Цену услуги задаёт владелец: создайте услугу с price_kopecks = 0');
   }
 
@@ -442,7 +454,7 @@ router.patch('/services/:id', (req, res) => {
   if (input.duration_min !== undefined && input.duration_min % 5 !== 0) {
     throw badRequest('Неверные входные данные', { duration_min: 'кратно 5 минутам' });
   }
-  if (input.price_kopecks !== undefined && req.user.role !== 'owner') {
+  if (input.price_kopecks !== undefined && !isOwner(req.user)) {
     throw forbidden('Цену услуги может менять только владелец');
   }
 

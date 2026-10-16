@@ -230,7 +230,12 @@ function createAppointment(user, body) {
   // другой ролью дают одинаковый 404 — существование чужого аккаунта API не
   // подтверждает.
   const client = forClient
-    ? db.one("SELECT id, is_blocked FROM users WHERE id = ? AND role = 'client'", [clientUserId])
+    ? db.one(
+      `SELECT u.id, u.is_blocked FROM users u
+        WHERE u.id = ? AND EXISTS (
+          SELECT 1 FROM user_roles r WHERE r.user_id = u.id AND r.role = 'client')`,
+      [clientUserId],
+    )
     : { id: user.id, is_blocked: user.isBlocked ? 1 : 0 };
   if (!client) throw notFound('Клиент не найден');
 
@@ -565,7 +570,9 @@ function changeAppointmentStatus(user, id, body, { masterId = null } = {}) {
         [row.client_user_id]);
       db.run(
         `UPDATE users SET is_blocked = 1
-          WHERE id = ? AND no_show_count >= ? AND role = 'client'`,
+          WHERE id = ? AND no_show_count >= ?
+            AND EXISTS (SELECT 1 FROM user_roles r
+                         WHERE r.user_id = users.id AND r.role = 'client')`,
         [row.client_user_id, settings.no_show_block_threshold],
       );
     }

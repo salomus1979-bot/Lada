@@ -5,7 +5,6 @@ PRAGMA journal_mode = WAL;
 
 CREATE TABLE IF NOT EXISTS users (
   id                INTEGER PRIMARY KEY AUTOINCREMENT,
-  role              TEXT    NOT NULL CHECK (role IN ('client','master','admin','owner')),
   name              TEXT    NOT NULL,
   email             TEXT    NOT NULL COLLATE NOCASE,
   phone             TEXT    NOT NULL,
@@ -16,7 +15,15 @@ CREATE TABLE IF NOT EXISTS users (
   last_login_at_utc TEXT
 );
 CREATE UNIQUE INDEX IF NOT EXISTS idx_users_email ON users (email COLLATE NOCASE);
-CREATE INDEX IF NOT EXISTS idx_users_role ON users (role);
+-- Роли списком: у одного человека их может быть несколько — например мастер,
+-- который заодно ведёт администрирование. Проверка прав спрашивает «есть ли
+-- такая роль в списке», а не «совпадает ли единственное значение».
+CREATE TABLE IF NOT EXISTS user_roles (
+  user_id INTEGER NOT NULL REFERENCES users (id) ON DELETE CASCADE,
+  role    TEXT    NOT NULL CHECK (role IN ('client','master','admin','owner')),
+  PRIMARY KEY (user_id, role)
+);
+CREATE INDEX IF NOT EXISTS idx_user_roles_role ON user_roles (role);
 
 CREATE TABLE IF NOT EXISTS sessions (
   -- SHA-256 от токена, hex. Сам токен не хранится нигде: он существует только

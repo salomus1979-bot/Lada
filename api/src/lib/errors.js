@@ -29,5 +29,9 @@ const forbidden = (message = 'Недостаточно прав') => new ApiErro
 const notFound = (message = 'Не найдено') => new ApiError(404, 'not_found', message);
 /** 409 — конфликт состояния: слот занят, e-mail занят, лимит исчерпан. */
 const conflict = (message, details) => new ApiError(409, 'conflict', message, details);
+/** 429 — слишком часто: сработало ограничение частоты запросов. */
+const tooManyRequests = (message, details) => new ApiError(429, 'too_many_requests', message, details);
 
-module.exports = { ApiError, badRequest, unauthorized, forbidden, notFound, conflict };
+module.exports = {
+  ApiError, badRequest, unauthorized, forbidden, notFound, conflict, tooManyRequests,
+};

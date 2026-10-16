@@ -6,7 +6,7 @@ const { nowUtc, toUtcIso } = require('./time');
 const { unauthorized, forbidden } = require('./errors');
 
 const SESSION_COOKIE = 'lada_session';
-const SESSION_TTL_DAYS = 30;
+const SESSION_TTL_DAYS = require('./config').sessionTtlDays;
 const SCRYPT = { N: 16384, r: 8, p: 1, keylen: 64 };
 
 /**
@@ -31,6 +31,25 @@ const PASSWORD_SCHEME = 'scrypt';
  */
 function hashToken(token) {
   return crypto.createHash('sha256').update(String(token)).digest('hex');
+}
+
+const ROLES = ['client', 'master', 'admin', 'owner'];
+
+/** Роли пользователя из базы, списком. Запрос на них не влияет никак. */
+function rolesOf(userId) {
+  return db.all('SELECT role FROM user_roles WHERE user_id = ? ORDER BY role', [userId])
+    .map((r) => r.role);
+}
+
+/** Выдать роль. Повторная выдача ничего не ломает. */
+function grantRole(userId, role) {
+  if (!ROLES.includes(role)) throw new Error(`неизвестная роль: ${role}`);
+  db.run('INSERT OR IGNORE INTO user_roles (user_id, role) VALUES (?, ?)', [userId, role]);
+}
+
+/** Есть ли у пользователя хотя бы одна из перечисленных ролей. */
+function hasRole(user, ...roles) {
+  return !!user && Array.isArray(user.roles) && roles.some((r) => user.roles.includes(r));
 }
 
 /** Хеш пароля: `scrypt$N$r$p$salt$hash`. Наружу не отдаётся никогда. */
@@ -194,7 +213,7 @@ function tokenFromRequest(req) {
 }
 
 function setSessionCookie(res, token, expiresAtUtc) {
-  const secure = process.env.NODE_ENV === 'production' ? '; Secure' : '';
+  const secure = require('./config').isProduction ? '; Secure' : '';
   res.setHeader('Set-Cookie',
     `${SESSION_COOKIE}=${encodeURIComponent(token)}; Path=/; HttpOnly; SameSite=Lax`
     + `; Expires=${new Date(expiresAtUtc).toUTCString()}${secure}`);
@@ -214,7 +233,7 @@ function attachUser(req, _res, next) {
   req.user = null;
   if (req.sessionToken) {
     const row = db.one(
-      `SELECT u.id, u.role, u.name, u.email, u.phone, u.is_blocked, s.expires_at_utc
+      `SELECT u.id, u.name, u.email, u.phone, u.is_blocked, s.expires_at_utc
          FROM sessions s JOIN users u ON u.id = s.user_id
         WHERE s.token_hash = ?`,
       [hashToken(req.sessionToken)],
@@ -225,7 +244,9 @@ function attachUser(req, _res, next) {
       } else {
         req.user = {
           id: row.id,
-          role: row.role,
+          // Роли берутся из базы по user_id — ни одно поле запроса на них не
+          // влияет. Присланная клиентом роль просто некуда подставить.
+          roles: rolesOf(row.id),
           name: row.name,
           email: row.email,
           phone: row.phone,
@@ -243,20 +264,30 @@ function requireAuth(req, _res, next) {
   next();
 }
 
-/** 401 без сессии, 403 при недостаточной роли. */
+/**
+ * 401 без сессии, 403 при недостаточной роли.
+ * Проверка — вхождение в список ролей, а не равенство: у человека их может
+ * быть несколько, и достаточно любой подходящей.
+ */
 function requireRole(...roles) {
   return (req, _res, next) => {
     if (!req.user) return next(unauthorized());
-    if (!roles.includes(req.user.role)) return next(forbidden());
+    if (!hasRole(req.user, ...roles)) return next(forbidden());
     next();
   };
 }
 
-const isStaff = (user) => !!user && (user.role === 'admin' || user.role === 'owner');
+const isStaff = (user) => hasRole(user, 'admin', 'owner');
+const isOwner = (user) => hasRole(user, 'owner');
 
 module.exports = {
   SESSION_COOKIE,
   PASSWORD_SCHEME,
+  ROLES,
+  rolesOf,
+  grantRole,
+  hasRole,
+  isOwner,
   hashPassword,
   noLoginHash,
   verifyPassword,

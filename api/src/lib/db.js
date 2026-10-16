@@ -4,8 +4,9 @@ const { DatabaseSync } = require('node:sqlite');
 const fs = require('node:fs');
 const path = require('node:path');
 
-const DB_PATH = process.env.LADA_DB_PATH
-  || path.join(__dirname, '..', '..', 'db', 'lada.sqlite');
+const config = require('./config');
+
+const DB_PATH = config.dbPath;
 const SCHEMA_PATH = path.join(__dirname, '..', '..', 'db', 'schema.sql');
 
 let db = null;
@@ -75,8 +76,40 @@ function migrateSessionTokens() {
   console.log('[db] сессии переведены на хранение хеша токена; прежние входы сброшены');
 }
 
+/**
+ * Единственная роль в `users.role` -> список в `user_roles`.
+ *
+ * Роли переносятся, а не сбрасываются: в отличие от токенов это не секрет,
+ * а данные — потеряв их, мы отобрали бы у людей доступ. Колонка затем
+ * удаляется, чтобы не осталось второго источника правды: пока она есть,
+ * любой новый запрос может случайно спросить роль у неё.
+ */
+function migrateUserRoles() {
+  const exists = db.prepare(
+    "SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'users'",
+  ).get();
+  if (!exists) return;
+
+  const columns = db.prepare('PRAGMA table_info(users)').all().map((c) => c.name);
+  if (!columns.includes('role')) return;
+
+  db.exec(`CREATE TABLE IF NOT EXISTS user_roles (
+             user_id INTEGER NOT NULL REFERENCES users (id) ON DELETE CASCADE,
+             role    TEXT    NOT NULL CHECK (role IN ('client','master','admin','owner')),
+             PRIMARY KEY (user_id, role)
+           )`);
+  db.exec(`INSERT OR IGNORE INTO user_roles (user_id, role)
+             SELECT id, role FROM users WHERE role IS NOT NULL`);
+
+  // Индекс по старой колонке держал бы её от удаления.
+  db.exec('DROP INDEX IF EXISTS idx_users_role');
+  db.exec('ALTER TABLE users DROP COLUMN role');
+  console.log('[db] роли перенесены в user_roles; колонка users.role удалена');
+}
+
 function migrate() {
   migrateSessionTokens();
+  migrateUserRoles();
 
   for (const { table, column, ddl } of ADDED_COLUMNS) {
     const exists = db.prepare(

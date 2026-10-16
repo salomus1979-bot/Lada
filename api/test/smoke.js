@@ -10,6 +10,10 @@ const { execFileSync } = require('node:child_process');
 
 const DB_PATH = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'lada-smoke-')), 'test.sqlite');
 process.env.LADA_DB_PATH = DB_PATH;
+// Сквозной прогон входит и регистрируется десятки раз с одного адреса.
+// Потолок поднят, чтобы лимит не ломал остальные проверки; сам лимит
+// проверяется отдельно, в разделе «Ограничение частоты».
+process.env.AUTH_RATE_MAX_ATTEMPTS = '100';
 
 // Заполняем временную базу тем же сидом, что и рабочую.
 execFileSync(process.execPath, [path.join(__dirname, '..', 'src', 'seed.js')], {
@@ -1236,7 +1240,8 @@ async function main() {
   });
   check('посторонние поля в PATCH игнорируются: роль и счётчик неявок на месте',
     forgedPatch.status === 200 && forgedPatch.json.client.no_show_count === 3
-    && db.one('SELECT role FROM users WHERE id = ?', [createdId]).role === 'client'
+    && db.all('SELECT role FROM user_roles WHERE user_id = ? ORDER BY role',
+      [createdId]).map((r) => r.role).join(',') === 'client'
     && forgedPatch.json.client.has_login === false, forgedPatch.json);
 
   const blockPatch = await call('PATCH', `/api/admin/clients/${createdId}`,
@@ -1593,6 +1598,126 @@ async function main() {
   check('создать запись через кабинет мастера нельзя: эндпоинта нет',
     (await call('POST', '/api/master/appointments',
       { token: annaToken, body: { master_id: annaCard.id } })).status === 404);
+
+  console.log('\n— Роли списком и проверка прав —');
+  // Марина — мастер И администратор одновременно: ради такого случая роли и
+  // хранятся списком, а проверка спрашивает «есть ли роль», а не «равна ли».
+  const marinaRoles = db.all(
+    `SELECT r.role FROM user_roles r JOIN users u ON u.id = r.user_id
+      WHERE u.email = 'marina.master@lada.local' ORDER BY r.role`,
+  ).map((r) => r.role);
+  check('у одного человека несколько ролей',
+    marinaRoles.join(',') === 'admin,master', marinaRoles);
+  check('колонки users.role больше нет — второго источника правды не осталось',
+    db.all('PRAGMA table_info(users)').every((c) => c.name !== 'role'));
+
+  const dualLogin = await call('POST', '/api/auth/login',
+    { body: { email: 'marina.master@lada.local', password: 'Lada12345' } });
+  const dualToken = dualLogin.json.session_token;
+  check('/api/auth/me отдаёт роли списком',
+    Array.isArray(dualLogin.json.user.roles)
+    && dualLogin.json.user.roles.join(',') === 'admin,master', dualLogin.json.user);
+  check('обе роли работают: и кабинет мастера, и админский раздел',
+    (await call('GET', '/api/master/day', { token: dualToken })).status === 200
+    && (await call('GET', '/api/admin/clients', { token: dualToken })).status === 200);
+  check('роли владельца у неё нет: цену назначить нельзя -> 403',
+    (await call('POST', '/api/admin/services', {
+      token: dualToken,
+      body: {
+        category_id: 1, name: 'Проба', duration_min: 30,
+        buffer_after_min: 0, price_kopecks: 100000,
+      },
+    })).status === 403);
+
+  // Роль берётся из базы по user_id — подставить её запросом некуда.
+  check('клиент админским разделом не становится -> 403',
+    (await call('GET', '/api/admin/clients', { token: clientToken })).status === 403);
+  const forgedRegister = await call('POST', '/api/auth/register', {
+    body: {
+      name: 'Самозванец', email: 'impostor@example.com', phone: '+79990000777',
+      password: 'Lada12345', password_confirm: 'Lada12345', consent: true,
+      role: 'admin', roles: ['admin', 'owner'], is_blocked: true, no_show_count: 99,
+    },
+  });
+  check('регистрация с присланной ролью -> 201, но роль только client',
+    forgedRegister.status === 201
+    && forgedRegister.json.user.roles.join(',') === 'client', forgedRegister.json.user);
+  const impostor = db.one(
+    'SELECT id, no_show_count, is_blocked FROM users WHERE email = ?', ['impostor@example.com']);
+  check('посторонние поля регистрации в базу не попали',
+    impostor.no_show_count === 0 && impostor.is_blocked === 0, impostor);
+  check('в user_roles у него только client',
+    db.all('SELECT role FROM user_roles WHERE user_id = ?', [impostor.id])
+      .map((r) => r.role).join(',') === 'client');
+
+  console.log('\n— Ограничение частоты входа —');
+  const { authLimit } = require('../src/routes/auth');
+  const maxAttempts = Number(process.env.AUTH_RATE_MAX_ATTEMPTS);
+
+  authLimit.reset();
+  let limited = null;
+  for (let i = 0; i <= maxAttempts && limited === null; i += 1) {
+    const r = await call('POST', '/api/auth/login',
+      { body: { email: 'nobody@example.com', password: 'WrongPass123' } });
+    if (r.status === 429) limited = { attempt: i + 1, json: r.json };
+  }
+  check(`перебор пароля упирается в лимит (${maxAttempts} попыток)`,
+    limited !== null && limited.attempt === maxAttempts + 1, limited);
+  check('429 говорит, сколько ждать, и больше ничего',
+    limited !== null && limited.json.error.code === 'too_many_requests'
+    && Number.isInteger(limited.json.error.details.retry_after_sec),
+    limited && limited.json);
+  check('под лимитом не проходит и верный пароль — счёт идёт по адресу',
+    (await call('POST', '/api/auth/login',
+      { body: { email: 'client@lada.local', password: 'Lada12345' } })).status === 429);
+  check('регистрация упирается в тот же лимит',
+    (await call('POST', '/api/auth/register', {
+      body: {
+        name: 'Поздний', email: 'late@example.com', phone: '+79990000888',
+        password: 'Lada12345', password_confirm: 'Lada12345', consent: true,
+      },
+    })).status === 429);
+
+  authLimit.reset();
+  check('после сброса окна вход снова работает',
+    (await call('POST', '/api/auth/login',
+      { body: { email: 'client@lada.local', password: 'Lada12345' } })).status === 200);
+
+  // Удачный вход лимит не расходует: перебор — это неудачные попытки.
+  authLimit.reset();
+  for (let i = 0; i < maxAttempts + 5; i += 1) {
+    await call('POST', '/api/auth/login',
+      { body: { email: 'client@lada.local', password: 'Lada12345' } });
+  }
+  check('удачные входы лимит не тратят',
+    (await call('POST', '/api/auth/login',
+      { body: { email: 'client@lada.local', password: 'Lada12345' } })).status === 200);
+  authLimit.reset();
+
+  console.log('\n— Ошибки без внутренних подробностей —');
+  const INTERNALS = /SQLITE|no such column|no such table|syntax error|ERR_SQLITE|[A-Za-z]:\\|\/home\/|node_modules|at Object\./i;
+  const leakProbes = [
+    ['GET', "/api/appointments/' OR 1=1--", clientToken],
+    ['GET', "/api/admin/clients?q=');DROP TABLE users;--", adminToken],
+    ['GET', '/api/masters/1/availability?date=not-a-date&service_ids=1', null],
+    ['GET', '/api/masters/abc/availability?date=2027-01-01&service_ids=1', null],
+    ['POST', '/api/appointments', clientToken],
+  ];
+  let leaked = null;
+  for (const [method, url, token] of leakProbes) {
+    const opts = {};
+    if (token) opts.token = token;
+    if (method !== 'GET') opts.body = {};
+    const r = await call(method, encodeURI(url), opts);
+    const text = JSON.stringify(r.json || {});
+    if (INTERNALS.test(text)) leaked = { url, text };
+  }
+  check('ни текста ошибок БД, ни путей к файлам в ответах', leaked === null, leaked);
+  check('таблица users цела после попытки инъекции',
+    db.one('SELECT COUNT(*) AS n FROM users').n > 0);
+  check('параметр запроса не исполняется как SQL: поиск просто ничего не нашёл',
+    (await call('GET', `/api/admin/clients?q=${encodeURIComponent("');DROP TABLE users;--")}`,
+      { token: adminToken })).json.total === 0);
 
   console.log('\n— Отмена и выход —');
   const foreignCancel = await call('POST', `/api/appointments/${appointmentId}/cancel`,

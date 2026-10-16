@@ -40,7 +40,7 @@ const rubles = (kopecks) => `${(kopecks / 100).toLocaleString('ru-RU')} ₽`;
 function selfUser(user) {
   return {
     id: user.id,
-    role: user.role,
+    roles: user.roles || [],
     name: user.name,
     email: user.email,
     phone: user.phone,

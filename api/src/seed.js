@@ -5,12 +5,14 @@
 // Тестовые пароли живут только здесь и годятся лишь для локальной разработки.
 
 const db = require('./lib/db');
-const { hashPassword } = require('./lib/auth');
+const { hashPassword, grantRole } = require('./lib/auth');
 const {
   nowUtc, toUtcIso, zonedToUtc, utcToZoned, weekdayOfDate, addDays, addMonths,
 } = require('./lib/time');
 
-const TEST_PASSWORD = 'Lada12345';
+// Пароль демо-аккаунтов не зашит в код: он приходит из окружения,
+// см. .env.example. Вне продакшена есть умолчание для разработки.
+const TEST_PASSWORD = require('./lib/config').seedPassword();
 
 // Часы работы студии: вт–сб, 10:00–20:00.
 const SALON_START_MIN = 600;
@@ -65,7 +67,9 @@ const MASTERS = [
   },
   {
     first_name: 'Марина', last_name: 'Орлова',
-    account: { email: 'marina.master@lada.local', phone: '+79991234511' },
+    // Две роли сразу — случай, ради которого роли и хранятся списком:
+    // мастер, который заодно администрирует студию.
+    account: { email: 'marina.master@lada.local', phone: '+79991234511', roles: ['master', 'admin'] },
     specialization: 'Брови', experience_years: 5,
     bio: 'Коррекция и окрашивание бровей, долговременная укладка.',
     sort_order: 2,
@@ -93,7 +97,7 @@ function reset() {
   const tables = [
     'appointment_services', 'appointments', 'slot_holds', 'time_blocks',
     'master_schedule_exceptions', 'master_work_schedule', 'master_services',
-    'masters', 'services', 'service_categories', 'sessions', 'users',
+    'masters', 'services', 'service_categories', 'sessions', 'user_roles', 'users',
     'salon_day_overrides', 'salon_hours', 'salon_settings',
   ];
   for (const table of tables) db.run(`DELETE FROM ${table}`);
@@ -186,18 +190,21 @@ function seed() {
   }
 
   const users = [
-    { role: 'owner', name: 'Лада Крылова', email: 'owner@lada.local', phone: '+79991234500' },
-    { role: 'admin', name: 'Елена Крылова', email: 'admin@lada.local', phone: '+79991234501' },
-    { role: 'client', name: 'Анна Соколова', email: 'client@lada.local', phone: '+79991112233' },
+    { roles: ['owner'], name: 'Лада Крылова', email: 'owner@lada.local', phone: '+79991234500' },
+    { roles: ['admin'], name: 'Елена Крылова', email: 'admin@lada.local', phone: '+79991234501' },
+    { roles: ['client'], name: 'Анна Соколова', email: 'client@lada.local', phone: '+79991112233' },
   ];
   let adminUserId = null;
   for (const user of users) {
     const info = db.run(
-      `INSERT INTO users (role, name, email, phone, password_hash, created_at_utc)
-       VALUES (?, ?, ?, ?, ?, ?)`,
-      [user.role, user.name, user.email, user.phone, hashPassword(TEST_PASSWORD), timestamp],
+      `INSERT INTO users (name, email, phone, password_hash, created_at_utc)
+       VALUES (?, ?, ?, ?, ?)`,
+      [user.name, user.email, user.phone, hashPassword(TEST_PASSWORD), timestamp],
     );
-    if (user.role === 'admin') adminUserId = Number(info.lastInsertRowid);
+    const newUserId = Number(info.lastInsertRowid);
+    // Роли списком: у Елены их две — она и администратор, и клиент студии.
+    for (const role of user.roles) grantRole(newUserId, role);
+    if (user.roles.includes('admin')) adminUserId = newUserId;
   }
 
   const masterIds = new Map();
@@ -210,12 +217,13 @@ function seed() {
     let masterUserId = null;
     if (master.account) {
       const accountInfo = db.run(
-        `INSERT INTO users (role, name, email, phone, password_hash, created_at_utc)
-         VALUES ('master', ?, ?, ?, ?, ?)`,
+        `INSERT INTO users (name, email, phone, password_hash, created_at_utc)
+         VALUES (?, ?, ?, ?, ?)`,
         [`${master.first_name} ${master.last_name}`, master.account.email,
           master.account.phone, hashPassword(TEST_PASSWORD), timestamp],
       );
       masterUserId = Number(accountInfo.lastInsertRowid);
+      for (const role of master.account.roles || ['master']) grantRole(masterUserId, role);
     }
 
     const info = db.run(
