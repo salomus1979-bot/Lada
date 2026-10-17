@@ -15,9 +15,24 @@ process.env.LADA_DB_PATH = DB_PATH;
 // проверяется отдельно, в разделе «Ограничение частоты».
 process.env.AUTH_RATE_MAX_ATTEMPTS = '100';
 
-// Заполняем временную базу тем же сидом, что и рабочую.
+// Пароль демо-аккаунтов прогона. Значение фиксированное, а не из .env
+// разработчика: прогон должен быть одинаковым и на чистом клоне, и в CI,
+// где .env нет, — а чужой пароль мог бы не пройти проверку «буквы и цифры»
+// и уронить проверки регистрации по постороннему поводу.
+// Умолчания у SEED_PASSWORD больше нет, поэтому без этой строки сид
+// откажется работать — и правильно сделает.
+const TEST_PASSWORD = 'SmokeOnly9f3a21';
+process.env.SEED_PASSWORD = TEST_PASSWORD;
+
+// Заполняем временную базу тем же сидом, что и рабочую. NODE_ENV нужен
+// сиду: без него он откажется заводить владельца и администратора.
 execFileSync(process.execPath, [path.join(__dirname, '..', 'src', 'seed.js')], {
-  env: { ...process.env, LADA_DB_PATH: DB_PATH },
+  env: {
+    ...process.env,
+    LADA_DB_PATH: DB_PATH,
+    SEED_PASSWORD: TEST_PASSWORD,
+    NODE_ENV: 'development',
+  },
   stdio: 'pipe',
 });
 
@@ -102,22 +117,22 @@ async function main() {
     && weakPassword.json.error.details.password, weakPassword.json);
 
   const mismatch = await call('POST', '/api/auth/register', {
-    body: { name: 'Тест', email: 'mm@example.com', phone: '+79990000001', password: 'Lada12345', password_confirm: 'Lada99999', consent: true },
+    body: { name: 'Тест', email: 'mm@example.com', phone: '+79990000001', password: TEST_PASSWORD, password_confirm: 'Lada99999', consent: true },
   });
   check('пароли не совпадают -> 400', mismatch.status === 400, mismatch.json);
 
   const noConsent = await call('POST', '/api/auth/register', {
-    body: { name: 'Тест', email: 'nc@example.com', phone: '+79990000001', password: 'Lada12345', password_confirm: 'Lada12345', consent: false },
+    body: { name: 'Тест', email: 'nc@example.com', phone: '+79990000001', password: TEST_PASSWORD, password_confirm: TEST_PASSWORD, consent: false },
   });
   check('без согласия на обработку -> 400', noConsent.status === 400, noConsent.json);
 
   const badPhone = await call('POST', '/api/auth/register', {
-    body: { name: 'Тест', email: 'bp@example.com', phone: '12345', password: 'Lada12345', password_confirm: 'Lada12345', consent: true },
+    body: { name: 'Тест', email: 'bp@example.com', phone: '12345', password: TEST_PASSWORD, password_confirm: TEST_PASSWORD, consent: true },
   });
   check('неверный телефон -> 400', badPhone.status === 400, badPhone.json);
 
   const register = await call('POST', '/api/auth/register', {
-    body: { name: 'Марина Тестова', email: 'Marina@Example.com', phone: '8 (999) 000-11-22', password: 'Lada12345', password_confirm: 'Lada12345', consent: true },
+    body: { name: 'Марина Тестова', email: 'Marina@Example.com', phone: '8 (999) 000-11-22', password: TEST_PASSWORD, password_confirm: TEST_PASSWORD, consent: true },
   });
   check('регистрация -> 201', register.status === 201, register.json);
   check('e-mail приведён к нижнему регистру', register.json.user.email === 'marina@example.com');
@@ -127,7 +142,7 @@ async function main() {
   const marinaToken = register.json.session_token;
 
   const duplicate = await call('POST', '/api/auth/register', {
-    body: { name: 'Другая', email: 'marina@example.com', phone: '+79990001133', password: 'Lada12345', password_confirm: 'Lada12345', consent: true },
+    body: { name: 'Другая', email: 'marina@example.com', phone: '+79990001133', password: TEST_PASSWORD, password_confirm: TEST_PASSWORD, consent: true },
   });
   check('повторный e-mail -> 409', duplicate.status === 409, duplicate.json);
 
@@ -136,21 +151,21 @@ async function main() {
   check('неверный пароль -> 401', wrongPassword.status === 401, wrongPassword.json);
 
   const unknownEmail = await call('POST', '/api/auth/login',
-    { body: { email: 'nobody@example.com', password: 'Lada12345' } });
+    { body: { email: 'nobody@example.com', password: TEST_PASSWORD } });
   check('неизвестный e-mail -> 401 с тем же текстом',
     unknownEmail.status === 401
     && unknownEmail.json.error.message === wrongPassword.json.error.message);
 
   const login = await call('POST', '/api/auth/login',
-    { body: { email: 'client@lada.local', password: 'Lada12345' } });
+    { body: { email: 'client@lada.local', password: TEST_PASSWORD } });
   check('вход клиента -> 200', login.status === 200, login.json);
   const clientToken = login.json.session_token;
 
   const adminLogin = await call('POST', '/api/auth/login',
-    { body: { email: 'admin@lada.local', password: 'Lada12345' } });
+    { body: { email: 'admin@lada.local', password: TEST_PASSWORD } });
   const adminToken = adminLogin.json.session_token;
   const ownerLogin = await call('POST', '/api/auth/login',
-    { body: { email: 'owner@lada.local', password: 'Lada12345' } });
+    { body: { email: 'owner@lada.local', password: TEST_PASSWORD } });
   const ownerToken = ownerLogin.json.session_token;
   check('вход админа и владельца -> 200',
     adminLogin.status === 200 && ownerLogin.status === 200);
@@ -1157,9 +1172,9 @@ async function main() {
       .password_hash.startsWith('nologin$'));
 
   const cantLogin = await call('POST', '/api/auth/login',
-    { body: { email: 'victoria.b@example.com', password: 'Lada12345' } });
+    { body: { email: 'victoria.b@example.com', password: TEST_PASSWORD } });
   const unknownLogin = await call('POST', '/api/auth/login',
-    { body: { email: 'nobody@example.com', password: 'Lada12345' } });
+    { body: { email: 'nobody@example.com', password: TEST_PASSWORD } });
   check('войти в созданный аккаунт нельзя -> 401', cantLogin.status === 401, cantLogin.json);
   check('ответ тот же, что для неизвестного e-mail: отсутствие пароля не выдаётся',
     cantLogin.json.error.message === unknownLogin.json.error.message, cantLogin.json);
@@ -1263,8 +1278,8 @@ async function main() {
       name: 'Ольга Источникова',
       email: 'olga.src@example.com',
       phone: '+7 999 555-01-01',
-      password: 'Lada12345',
-      password_confirm: 'Lada12345',
+      password: TEST_PASSWORD,
+      password_confirm: TEST_PASSWORD,
       consent: true,
     },
   });
@@ -1281,7 +1296,7 @@ async function main() {
   check('заблокированный вручную клиент сам записаться не может -> 403',
     olgaBlockedSelf.status === 403, olgaBlockedSelf.json);
   const olgaBlockedLogin = await call('POST', '/api/auth/login',
-    { body: { email: 'olga.src@example.com', password: 'Lada12345' } });
+    { body: { email: 'olga.src@example.com', password: TEST_PASSWORD } });
   check('вход заблокированному клиенту закрыт -> 403',
     olgaBlockedLogin.status === 403, olgaBlockedLogin.json);
 
@@ -1362,7 +1377,7 @@ async function main() {
   // Блок «Активные сессии» на странице 16. Основную сессию клиента не трогаем:
   // открываем вторую и завершаем из первой.
   const secondLogin = await call('POST', '/api/auth/login',
-    { body: { email: 'client@lada.local', password: 'Lada12345' } });
+    { body: { email: 'client@lada.local', password: TEST_PASSWORD } });
   check('второй вход тем же клиентом -> 200', secondLogin.status === 200);
   const secondToken = secondLogin.json.session_token;
 
@@ -1439,11 +1454,11 @@ async function main() {
     { anna: annaCard.access, elena: elenaCard.access });
 
   const annaLogin = await call('POST', '/api/auth/login',
-    { body: { email: 'anna@lada.local', password: 'Lada12345' } });
+    { body: { email: 'anna@lada.local', password: TEST_PASSWORD } });
   check('мастер входит по своему аккаунту -> 200', annaLogin.status === 200, annaLogin.json);
   const annaToken = annaLogin.json.session_token;
   const marinaMasterLogin = await call('POST', '/api/auth/login',
-    { body: { email: 'marina.master@lada.local', password: 'Lada12345' } });
+    { body: { email: 'marina.master@lada.local', password: TEST_PASSWORD } });
   const marinaMasterToken = marinaMasterLogin.json.session_token;
 
   check('клиенту кабинет мастера закрыт -> 403',
@@ -1612,7 +1627,7 @@ async function main() {
     db.all('PRAGMA table_info(users)').every((c) => c.name !== 'role'));
 
   const dualLogin = await call('POST', '/api/auth/login',
-    { body: { email: 'marina.master@lada.local', password: 'Lada12345' } });
+    { body: { email: 'marina.master@lada.local', password: TEST_PASSWORD } });
   const dualToken = dualLogin.json.session_token;
   check('/api/auth/me отдаёт роли списком',
     Array.isArray(dualLogin.json.user.roles)
@@ -1635,7 +1650,7 @@ async function main() {
   const forgedRegister = await call('POST', '/api/auth/register', {
     body: {
       name: 'Самозванец', email: 'impostor@example.com', phone: '+79990000777',
-      password: 'Lada12345', password_confirm: 'Lada12345', consent: true,
+      password: TEST_PASSWORD, password_confirm: TEST_PASSWORD, consent: true,
       role: 'admin', roles: ['admin', 'owner'], is_blocked: true, no_show_count: 99,
     },
   });
@@ -1669,29 +1684,29 @@ async function main() {
     limited && limited.json);
   check('под лимитом не проходит и верный пароль — счёт идёт по адресу',
     (await call('POST', '/api/auth/login',
-      { body: { email: 'client@lada.local', password: 'Lada12345' } })).status === 429);
+      { body: { email: 'client@lada.local', password: TEST_PASSWORD } })).status === 429);
   check('регистрация упирается в тот же лимит',
     (await call('POST', '/api/auth/register', {
       body: {
         name: 'Поздний', email: 'late@example.com', phone: '+79990000888',
-        password: 'Lada12345', password_confirm: 'Lada12345', consent: true,
+        password: TEST_PASSWORD, password_confirm: TEST_PASSWORD, consent: true,
       },
     })).status === 429);
 
   authLimit.reset();
   check('после сброса окна вход снова работает',
     (await call('POST', '/api/auth/login',
-      { body: { email: 'client@lada.local', password: 'Lada12345' } })).status === 200);
+      { body: { email: 'client@lada.local', password: TEST_PASSWORD } })).status === 200);
 
   // Удачный вход лимит не расходует: перебор — это неудачные попытки.
   authLimit.reset();
   for (let i = 0; i < maxAttempts + 5; i += 1) {
     await call('POST', '/api/auth/login',
-      { body: { email: 'client@lada.local', password: 'Lada12345' } });
+      { body: { email: 'client@lada.local', password: TEST_PASSWORD } });
   }
   check('удачные входы лимит не тратят',
     (await call('POST', '/api/auth/login',
-      { body: { email: 'client@lada.local', password: 'Lada12345' } })).status === 200);
+      { body: { email: 'client@lada.local', password: TEST_PASSWORD } })).status === 200);
   authLimit.reset();
 
   console.log('\n— Ошибки без внутренних подробностей —');

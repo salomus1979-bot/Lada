@@ -10,9 +10,13 @@ const {
   nowUtc, toUtcIso, zonedToUtc, utcToZoned, weekdayOfDate, addDays, addMonths,
 } = require('./lib/time');
 
-// Пароль демо-аккаунтов не зашит в код: он приходит из окружения,
-// см. .env.example. Вне продакшена есть умолчание для разработки.
-const TEST_PASSWORD = require('./lib/config').seedPassword();
+const config = require('./lib/config');
+
+// Пароль демо-аккаунтов не зашит в код и не имеет умолчания: он приходит из
+// SEED_PASSWORD, см. .env.example. Значение берётся не здесь, а в main(), —
+// иначе отсутствие переменной роняло бы файл ещё на require, стектрейсом
+// вместо внятного отказа.
+let TEST_PASSWORD = null;
 
 // Часы работы студии: вт–сб, 10:00–20:00.
 const SALON_START_MIN = 600;
@@ -263,10 +267,55 @@ function seed() {
   console.log(`  владелец: owner@lada.local, админ: admin@lada.local, клиент: client@lada.local`);
   const withAccess = MASTERS.filter((m) => m.account).map((m) => m.account.email);
   console.log(`  мастера с доступом: ${withAccess.join(', ')}`);
-  console.log(`  тестовый пароль для всех: ${TEST_PASSWORD}`);
+  // Сам пароль не печатаем: его задал тот, кто запускает сид, — он его и так
+  // знает, а в логах и в истории терминала ему делать нечего.
+  console.log('  пароль у всех — значение SEED_PASSWORD');
+}
+
+/** Отказ без стектрейса: сид — утилита, его ошибки читает человек. */
+function refuse(lines) {
+  for (const line of lines) console.error(line);
+  process.exitCode = 1;
+}
+
+/**
+ * Ворота: сид заводит владельца и администратора студии, то есть создаёт
+ * посторонним вход. На машине разработчика это демо-данные, на стенде —
+ * дыра, поэтому случайный запуск должен упираться в отказ, а не срабатывать
+ * молча.
+ *
+ * Проверяется именно `development`, а не «не production»: на стендах и в
+ * контейнерах NODE_ENV сплошь и рядом вообще не задан, и трактовать пустое
+ * значение как «наверное, разработка» — ровно та ошибка, из-за которой
+ * умолчание пароля и оказалось опасным.
+ */
+function seedAllowed() {
+  if (process.env.NODE_ENV === 'development') return true;
+  if (process.argv.includes('--allow-non-dev')) return true;
+
+  refuse([
+    `[seed] отказано: NODE_ENV = ${process.env.NODE_ENV || '(не задан)'}.`,
+    '  Сид заводит владельца и администратора студии — на рабочем стенде это',
+    '  означает посторонний вход в чужие данные.',
+    '',
+    '  Машина для разработки — поставьте NODE_ENV=development, удобнее всего',
+    '  в локальном .env (он не попадает в репозиторий).',
+    '  Точно знаете, что делаете — npm run seed -- --allow-non-dev',
+  ]);
+  return false;
 }
 
 function main() {
+  if (!seedAllowed()) return;
+
+  try {
+    TEST_PASSWORD = config.seedPassword();
+  } catch (err) {
+    // Сообщение из config.required уже объясняет, чего не хватает.
+    refuse([`[seed] отказано: ${err.message}`]);
+    return;
+  }
+
   db.open();
   const already = db.one('SELECT id FROM salon_settings WHERE id = 1');
   const wantsReset = process.argv.includes('--reset');
