@@ -9,7 +9,8 @@
   "scripts": {
     "start": "node api/src/server.js",
     "seed": "node api/src/seed.js",
-    "smoke": "node api/test/smoke.js"
+    "smoke": "node api/test/smoke.js",
+    "web": "node web/server.js"
   },
   "dependencies": {
     "express": "^4.21.2"

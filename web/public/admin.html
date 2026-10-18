@@ -1,0 +1,554 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Администрирование</title>
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+<h1>6. Административная страница</h1>
+<div id="msg" class="msg"></div>
+<p class="muted">
+  Весь раздел /api/admin доступен только ролям <code>admin</code> и <code>owner</code>.
+  Под клиентом страница ответит 403 — и покажет это текстом.
+  Цену услуги меняет только <code>owner</code>.
+</p>
+
+<fieldset>
+  <legend>Все записи — GET /api/admin/appointments</legend>
+  <form id="appointments-form">
+    <label class="inline">С даты <input type="date" name="date_from"></label>
+    <label class="inline">По дату <input type="date" name="date_to"></label>
+    <label class="inline">Мастер
+      <select name="master_id" id="filter-master"><option value="">любой</option></select>
+    </label>
+    <label class="inline">Статус
+      <select name="status" id="filter-status"><option value="">любой</option></select>
+    </label>
+    <label class="inline">Выборка
+      <select name="scope">
+        <option value="">все статусы</option>
+        <option value="active">только активные</option>
+      </select>
+    </label>
+    <label class="inline">Лимит <input type="number" name="limit" value="20" min="1" max="200"></label>
+    <label class="inline">Смещение <input type="number" name="offset" value="0" min="0"></label>
+    <button type="submit">Показать</button>
+    <button type="button" id="page-prev">← Назад</button>
+    <button type="button" id="page-next">Вперёд →</button>
+  </form>
+  <div id="appointments-summary" class="muted">—</div>
+  <div id="appointments"></div>
+</fieldset>
+
+<fieldset>
+  <legend>Смена статуса — POST /api/admin/appointments/:id/status</legend>
+  <form id="status-form">
+    <label class="inline">Запись <input type="number" name="id" min="1" required></label>
+    <label class="inline">Статус
+      <select name="status">
+        <option value="confirmed">confirmed — подтверждена</option>
+        <option value="completed">completed — завершена</option>
+        <option value="no_show">no_show — клиент не пришёл</option>
+        <option value="cancelled_by_studio">cancelled_by_studio — отменена студией</option>
+      </select>
+    </label>
+    <label class="inline">Причина отмены <input type="text" name="cancel_reason" maxlength="500"></label>
+    <button type="submit">Применить</button>
+  </form>
+  <p class="muted">
+    <code>no_show</code> увеличивает счётчик неявок и после порога блокирует клиенту онлайн-запись.
+  </p>
+</fieldset>
+
+<fieldset>
+  <legend>Услуги — GET/POST/PATCH/DELETE /api/admin/services</legend>
+  <label class="inline"><input type="checkbox" id="services-inactive"> показывать скрытые и удалённые</label>
+  <button id="services-reload">Обновить список</button>
+  <div id="services"></div>
+
+  <h3>Новая услуга — POST /api/admin/services</h3>
+  <form id="service-create">
+    <label class="inline">Категория <select name="category_id" id="service-category" required></select></label>
+    <label class="inline">Название <input type="text" name="name" minlength="2" maxlength="200" required></label>
+    <label class="inline">Описание <input type="text" name="description" maxlength="160"></label>
+    <label class="inline">Длительность, мин (кратно 5) <input type="number" name="duration_min" min="5" max="600" step="5" value="60" required></label>
+    <label class="inline">Буфер уборки, мин <input type="number" name="buffer_after_min" min="0" max="120" value="0"></label>
+    <label class="inline">Цена, копейки <input type="number" name="price_kopecks" min="0" value="0" required></label>
+    <label class="inline"><input type="checkbox" name="is_visible" checked> видна в каталоге</label>
+    <button type="submit">Создать услугу</button>
+  </form>
+
+  <h3 id="service-edit-title">Правка услуги — PATCH /api/admin/services/:id</h3>
+  <form id="service-edit" hidden>
+    <input type="hidden" name="id">
+    <label class="inline">Категория <select name="category_id" id="service-edit-category"></select></label>
+    <label class="inline">Название <input type="text" name="name" minlength="2" maxlength="200"></label>
+    <label class="inline">Описание <input type="text" name="description" maxlength="160"></label>
+    <label class="inline">Длительность, мин <input type="number" name="duration_min" min="5" max="600" step="5"></label>
+    <label class="inline">Буфер уборки, мин <input type="number" name="buffer_after_min" min="0" max="120"></label>
+    <label class="inline">Цена, копейки <input type="number" name="price_kopecks" min="0"></label>
+    <label class="inline"><input type="checkbox" name="is_visible"> видна в каталоге</label>
+    <label class="inline"><input type="checkbox" name="send_price"> отправить цену (только owner)</label>
+    <button type="submit">Сохранить</button>
+    <button type="button" id="service-edit-cancel">Закрыть форму</button>
+  </form>
+  <p class="muted">
+    Цена уходит в запрос только с отметкой «отправить цену»: администратору
+    API ответит 403, владельцу — сохранит.
+  </p>
+</fieldset>
+
+<fieldset>
+  <legend>Мастера — GET/POST/PATCH/DELETE /api/admin/masters</legend>
+  <label class="inline"><input type="checkbox" id="masters-inactive"> показывать скрытых и удалённых</label>
+  <button id="masters-reload">Обновить список</button>
+  <div id="masters"></div>
+
+  <h3>Новый мастер — POST /api/admin/masters</h3>
+  <form id="master-create">
+    <label class="inline">Имя <input type="text" name="first_name" minlength="2" maxlength="100" required></label>
+    <label class="inline">Фамилия <input type="text" name="last_name" minlength="2" maxlength="100" required></label>
+    <label class="inline">Специализация <input type="text" name="specialization" maxlength="200"></label>
+    <label class="inline">Опыт, лет <input type="number" name="experience_years" min="0" max="80"></label>
+    <label class="inline">Порядок <input type="number" name="sort_order" min="0" max="9999"></label>
+    <label>О мастере <textarea name="bio" maxlength="300"></textarea></label>
+    <label class="inline"><input type="checkbox" name="is_visible" checked> виден в каталоге</label>
+    <div>Услуги мастера:</div>
+    <div id="master-services" class="muted">загрузка…</div>
+    <button type="submit">Создать мастера</button>
+  </form>
+
+  <h3 id="master-edit-title">Правка мастера — PATCH /api/admin/masters/:id</h3>
+  <form id="master-edit" hidden>
+    <input type="hidden" name="id">
+    <label class="inline">Имя <input type="text" name="first_name" minlength="2" maxlength="100"></label>
+    <label class="inline">Фамилия <input type="text" name="last_name" minlength="2" maxlength="100"></label>
+    <label class="inline">Специализация <input type="text" name="specialization" maxlength="200"></label>
+    <label class="inline">Опыт, лет <input type="number" name="experience_years" min="0" max="80"></label>
+    <label class="inline">Порядок <input type="number" name="sort_order" min="0" max="9999"></label>
+    <label>О мастере <textarea name="bio" maxlength="300"></textarea></label>
+    <label class="inline"><input type="checkbox" name="is_visible"> виден в каталоге</label>
+    <div>Услуги мастера (отправляются списком целиком):</div>
+    <div id="master-edit-services" class="muted">загрузка…</div>
+    <button type="submit">Сохранить</button>
+    <button type="button" id="master-edit-cancel">Закрыть форму</button>
+  </form>
+</fieldset>
+
+<script src="app.js"></script>
+<script>
+'use strict';
+
+const box = msgBox('msg');
+const STATUS_LABELS = {
+  pending: 'Ожидает',
+  confirmed: 'Подтверждена',
+  completed: 'Завершена',
+  no_show: 'Клиент не пришёл',
+  cancelled_by_client: 'Отменена клиентом',
+  cancelled_by_studio: 'Отменена студией',
+};
+let user = null;
+
+/* ------------------------------------------------------------- записи */
+
+async function loadAppointments() {
+  const form = document.getElementById('appointments-form');
+  const values = formValues(form);
+  const data = await api('GET', `/admin/appointments${qs({
+    date_from: values.date_from,
+    date_to: values.date_to,
+    master_id: values.master_id,
+    status: values.status,
+    scope: values.scope,
+    limit: values.limit,
+    offset: values.offset,
+  })}`);
+
+  const summary = document.getElementById('appointments-summary');
+  summary.textContent = `Всего по фильтру: ${data.total}. `
+    + `Показаны ${data.appointments.length} начиная с ${data.offset} (лимит ${data.limit}).`;
+
+  const block = document.getElementById('appointments');
+  block.textContent = '';
+  if (data.appointments.length === 0) {
+    block.append(el('p', { className: 'msg info', textContent: 'Под фильтр записей не нашлось.' }));
+    return;
+  }
+  block.append(table([
+    ['№', (a) => a.id],
+    ['Когда', (a) => whenText(a.starts_at)],
+    ['Мастер', (a) => a.master.display_name],
+    ['Клиент', (a) => `${a.client.name}\n${a.client.phone}\n${a.client.email || ''}`],
+    ['Услуги', (a) => a.services.map((s) => s.name).join(', ')],
+    ['Сумма', (a) => a.total_price_display],
+    ['Статус', (a) => `${a.status} — ${a.status_label}`],
+    ['Источник', (a) => a.source_label || '—'],
+    ['Наложение', (a) => (a.is_override ? 'да' : 'нет')],
+    ['', (a) => {
+      const pick = el('button', { textContent: 'В форму статуса' });
+      pick.onclick = () => {
+        document.querySelector('#status-form input[name=id]').value = a.id;
+        box.info(`Запись №${a.id} подставлена в форму смены статуса.`);
+      };
+      return pick;
+    }],
+  ], data.appointments));
+}
+
+function shiftPage(direction) {
+  const offsetInput = document.querySelector('#appointments-form input[name=offset]');
+  const limit = Number(document.querySelector('#appointments-form input[name=limit]').value) || 20;
+  const next = Number(offsetInput.value || 0) + direction * limit;
+  offsetInput.value = String(Math.max(0, next));
+  document.getElementById('appointments-form').requestSubmit();
+}
+
+/* ------------------------------------------------------------- услуги */
+
+async function loadServices() {
+  const includeInactive = document.getElementById('services-inactive').checked;
+  const { services } = await api('GET', `/admin/services${qs({
+    include_inactive: includeInactive ? 'true' : '',
+  })}`);
+
+  const block = document.getElementById('services');
+  block.textContent = '';
+  block.append(table([
+    ['id', (s) => s.id],
+    ['Категория', (s) => s.category.title],
+    ['Название', (s) => s.name],
+    ['Длительность', (s) => `${s.duration_min} мин`],
+    ['Буфер', (s) => `${s.buffer_after_min} мин`],
+    ['Цена', (s) => s.price_display],
+    ['В каталоге', (s) => (s.is_visible ? 'да' : 'нет')],
+    ['Активна', (s) => (s.is_active ? 'да' : 'нет')],
+    ['Действия', (s) => serviceActions(s)],
+  ], services));
+}
+
+/** Действия в строке услуги: правка идёт в форму ниже, без диалогов браузера. */
+function serviceActions(service) {
+  const wrap = el('span', { className: 'row-actions' });
+
+  const edit = el('button', { textContent: 'Изменить' });
+  edit.onclick = () => {
+    fillServiceForm(service);
+    box.info(`Услуга №${service.id} открыта в форме правки ниже.`);
+  };
+
+  const visible = el('button', { textContent: service.is_visible ? 'Скрыть' : 'Показать' });
+  visible.onclick = guard(box, async () => {
+    box.clear();
+    await api('PATCH', `/admin/services/${service.id}`, { is_visible: !service.is_visible });
+    box.ok(`Услуга №${service.id}: видимость в каталоге переключена.`);
+    await loadServices();
+  });
+
+  const remove = el('button', { textContent: 'Удалить' });
+  remove.onclick = guard(box, async () => {
+    box.clear();
+    await api('DELETE', `/admin/services/${service.id}`);
+    box.ok(`Услуга №${service.id} удалена (мягко): из каталога убрана, записи сохранены.`);
+    await Promise.all([loadServices(), loadServicePicker()]);
+  });
+
+  wrap.append(edit, visible, remove);
+  return wrap;
+}
+
+/** Переносит строку услуги в форму правки. */
+function fillServiceForm(service) {
+  const form = document.getElementById('service-edit');
+  form.hidden = false;
+  form.elements.id.value = String(service.id);
+  form.elements.category_id.value = String(service.category.id);
+  form.elements.name.value = service.name;
+  form.elements.description.value = service.description || '';
+  form.elements.duration_min.value = String(service.duration_min);
+  form.elements.buffer_after_min.value = String(service.buffer_after_min);
+  form.elements.price_kopecks.value = String(service.price_kopecks);
+  form.elements.is_visible.checked = service.is_visible;
+  document.getElementById('service-edit-title').textContent =
+    `Правка услуги №${service.id} — PATCH /api/admin/services/${service.id}`;
+}
+
+async function loadCategories() {
+  const { categories } = await api('GET', '/service-categories');
+  for (const id of ['service-category', 'service-edit-category']) {
+    const select = document.getElementById(id);
+    select.textContent = '';
+    for (const category of categories) {
+      select.append(el('option', { value: String(category.id), textContent: category.title }));
+    }
+  }
+}
+
+/* ------------------------------------------------------------ мастера */
+
+async function loadMasters() {
+  const includeInactive = document.getElementById('masters-inactive').checked;
+  const { masters } = await api('GET', `/admin/masters${qs({
+    include_inactive: includeInactive ? 'true' : '',
+  })}`);
+
+  const block = document.getElementById('masters');
+  block.textContent = '';
+  block.append(table([
+    ['id', (m) => m.id],
+    ['Мастер', (m) => m.display_name],
+    ['Специализация', (m) => m.specialization],
+    ['Опыт', (m) => (m.experience_years === null ? '—' : `${m.experience_years} г.`)],
+    ['Услуги (id)', (m) => m.service_ids.join(', ')],
+    ['В каталоге', (m) => (m.is_visible ? 'да' : 'нет')],
+    ['Активен', (m) => (m.is_active ? 'да' : 'нет')],
+    ['Доступ в систему', (m) => (m.access.granted ? `есть: ${m.access.email}` : 'нет')],
+    ['Действия', (m) => masterActions(m)],
+  ], masters));
+
+  const filter = document.getElementById('filter-master');
+  filter.textContent = '';
+  filter.append(el('option', { value: '', textContent: 'любой' }));
+  for (const master of masters) {
+    filter.append(el('option', { value: String(master.id), textContent: master.display_name }));
+  }
+}
+
+function masterActions(master) {
+  const wrap = el('span', { className: 'row-actions' });
+
+  const edit = el('button', { textContent: 'Изменить' });
+  edit.onclick = () => {
+    fillMasterForm(master);
+    box.info(`Мастер №${master.id} открыт в форме правки ниже.`);
+  };
+
+  const visible = el('button', { textContent: master.is_visible ? 'Скрыть' : 'Показать' });
+  visible.onclick = guard(box, async () => {
+    box.clear();
+    await api('PATCH', `/admin/masters/${master.id}`, { is_visible: !master.is_visible });
+    box.ok(`Мастер №${master.id}: видимость переключена.`);
+    await loadMasters();
+  });
+
+  const schedule = el('button', { textContent: 'График' });
+  schedule.onclick = guard(box, async () => {
+    box.clear();
+    const data = await api('GET', `/admin/masters/${master.id}/schedule`);
+    box.info(`График мастера ${master.display_name}:\n${JSON.stringify(data, null, 2)}`);
+  });
+
+  const remove = el('button', { textContent: 'Удалить' });
+  remove.onclick = guard(box, async () => {
+    box.clear();
+    await api('DELETE', `/admin/masters/${master.id}`);
+    box.ok(`Мастер №${master.id} удалён (мягко): из каталога убран, записи сохранены.`);
+    await loadMasters();
+  });
+
+  wrap.append(edit, visible, schedule, remove);
+  return wrap;
+}
+
+/** Переносит строку мастера в форму правки. */
+function fillMasterForm(master) {
+  const form = document.getElementById('master-edit');
+  form.hidden = false;
+  form.elements.id.value = String(master.id);
+  form.elements.first_name.value = master.first_name;
+  form.elements.last_name.value = master.last_name;
+  form.elements.specialization.value = master.specialization || '';
+  form.elements.experience_years.value = master.experience_years === null ? '' : String(master.experience_years);
+  form.elements.sort_order.value = String(master.sort_order);
+  form.elements.bio.value = master.bio || '';
+  form.elements.is_visible.checked = master.is_visible;
+  for (const input of form.querySelectorAll('input[name=service_ids]')) {
+    input.checked = master.service_ids.includes(Number(input.value));
+  }
+  document.getElementById('master-edit-title').textContent =
+    `Правка мастера №${master.id} — PATCH /api/admin/masters/${master.id}`;
+}
+
+/**
+ * Чекбоксы услуг — и для новой карточки мастера, и для правки.
+ * Список берётся из админского каталога: скрытую услугу мастеру
+ * назначить можно, в публичном /api/services её нет.
+ */
+async function loadServicePicker() {
+  const { services } = await api('GET', '/admin/services');
+  for (const id of ['master-services', 'master-edit-services']) {
+    const block = document.getElementById(id);
+    const checked = new Set(Array.from(
+      block.querySelectorAll('input:checked'), (input) => input.value,
+    ));
+    block.textContent = '';
+    block.className = '';
+    for (const service of services) {
+      const input = el('input', {
+        type: 'checkbox', value: String(service.id), name: 'service_ids', dataset: { multi: '' },
+      });
+      input.checked = checked.has(String(service.id));
+      block.append(el('label', { className: 'inline' }, input, ` ${service.name}`));
+    }
+  }
+}
+
+/* ---------------------------------------------------------- обработчики */
+
+document.getElementById('appointments-form').onsubmit = guard(box, async (event) => {
+  event.preventDefault();
+  box.clear();
+  await loadAppointments();
+});
+
+document.getElementById('page-prev').onclick = () => shiftPage(-1);
+document.getElementById('page-next').onclick = () => shiftPage(1);
+
+document.getElementById('status-form').onsubmit = guard(box, async (event) => {
+  event.preventDefault();
+  box.clear();
+  const values = formValues(event.target);
+  const result = await api('POST', `/admin/appointments/${Number(values.id)}/status`, {
+    status: values.status,
+    cancel_reason: optional(values.cancel_reason),
+  });
+  box.ok(`Запись №${result.id}: статус — ${result.status} (${STATUS_LABELS[result.status] || ''}).`);
+  await loadAppointments();
+});
+
+document.getElementById('services-reload').onclick = guard(box, async () => {
+  box.clear();
+  await loadServices();
+});
+document.getElementById('services-inactive').onchange = guard(box, async () => {
+  box.clear();
+  await loadServices();
+});
+
+document.getElementById('service-create').onsubmit = guard(box, async (event) => {
+  event.preventDefault();
+  box.clear();
+  const values = formValues(event.target);
+  const { service } = await api('POST', '/admin/services', {
+    category_id: Number(values.category_id),
+    name: values.name,
+    description: optional(values.description),
+    duration_min: Number(values.duration_min),
+    buffer_after_min: intOrUndef(values.buffer_after_min),
+    price_kopecks: Number(values.price_kopecks),
+    is_visible: values.is_visible,
+  });
+  box.ok(`Услуга создана: №${service.id} «${service.name}», ${service.price_display}.`);
+  event.target.reset();
+  await Promise.all([loadServices(), loadServicePicker()]);
+});
+
+document.getElementById('service-edit').onsubmit = guard(box, async (event) => {
+  event.preventDefault();
+  box.clear();
+  const values = formValues(event.target);
+  const { service } = await api('PATCH', `/admin/services/${Number(values.id)}`, {
+    category_id: intOrUndef(values.category_id),
+    name: optional(values.name),
+    description: optional(values.description),
+    duration_min: intOrUndef(values.duration_min),
+    buffer_after_min: intOrUndef(values.buffer_after_min),
+    // Цена уходит только по явной отметке: иначе администратор получал бы
+    // 403 на каждое сохранение, даже не трогая цену.
+    price_kopecks: values.send_price ? Number(values.price_kopecks) : undefined,
+    is_visible: values.is_visible,
+  });
+  box.ok(`Услуга №${service.id} сохранена: «${service.name}», ${service.duration_min} мин, ${service.price_display}.`);
+  await Promise.all([loadServices(), loadServicePicker()]);
+});
+
+document.getElementById('service-edit-cancel').onclick = () => {
+  document.getElementById('service-edit').hidden = true;
+};
+
+document.getElementById('masters-reload').onclick = guard(box, async () => {
+  box.clear();
+  await loadMasters();
+});
+document.getElementById('masters-inactive').onchange = guard(box, async () => {
+  box.clear();
+  await loadMasters();
+});
+
+document.getElementById('master-create').onsubmit = guard(box, async (event) => {
+  event.preventDefault();
+  box.clear();
+  const values = formValues(event.target);
+  const serviceIds = (values.service_ids || []).map(Number);
+  const { master } = await api('POST', '/admin/masters', {
+    first_name: values.first_name,
+    last_name: values.last_name,
+    specialization: optional(values.specialization),
+    experience_years: intOrUndef(values.experience_years),
+    bio: optional(values.bio),
+    sort_order: intOrUndef(values.sort_order),
+    is_visible: values.is_visible,
+    service_ids: serviceIds.length > 0 ? serviceIds : undefined,
+  });
+  box.ok(`Мастер создан: №${master.id} ${master.display_name}.`);
+  event.target.reset();
+  await loadMasters();
+});
+
+document.getElementById('master-edit').onsubmit = guard(box, async (event) => {
+  event.preventDefault();
+  box.clear();
+  const values = formValues(event.target);
+  // service_ids уходят списком целиком — API заменяет связи, а не добавляет.
+  const serviceIds = (values.service_ids || []).map(Number);
+  const { master } = await api('PATCH', `/admin/masters/${Number(values.id)}`, {
+    first_name: optional(values.first_name),
+    last_name: optional(values.last_name),
+    specialization: optional(values.specialization),
+    experience_years: intOrUndef(values.experience_years),
+    sort_order: intOrUndef(values.sort_order),
+    bio: optional(values.bio),
+    is_visible: values.is_visible,
+    service_ids: serviceIds,
+  });
+  box.ok(`Мастер №${master.id} сохранён: ${master.display_name}, услуги ${master.service_ids.join(', ') || '—'}.`);
+  await loadMasters();
+});
+
+document.getElementById('master-edit-cancel').onclick = () => {
+  document.getElementById('master-edit').hidden = true;
+};
+
+/* ------------------------------------------------------------- старт */
+
+guard(box, async () => {
+  user = await renderNav();
+
+  const status = document.getElementById('filter-status');
+  for (const [value, label] of Object.entries(STATUS_LABELS)) {
+    status.append(el('option', { value, textContent: `${value} — ${label}` }));
+  }
+
+  if (!user) {
+    box.error('Не вошли. Раздел администрирования требует роль admin или owner — войдите на странице 1.');
+    return;
+  }
+  const isStaff = user.roles.includes('admin') || user.roles.includes('owner');
+  if (!isStaff) {
+    box.error(`Роли ${user.roles.join(', ') || '—'} недостаточно: раздел /api/admin открыт только admin и owner. `
+      + 'Запросы ниже вернут 403 — это и проверяется.');
+  }
+
+  // Списки грузим по очереди: под клиентом первый же 403 должен попасть
+  // в блок сообщений один раз, а не пятью наложенными ошибками.
+  await loadMasters();
+  await loadCategories();
+  await loadServices();
+  await loadServicePicker();
+  await loadAppointments();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,30 @@
+/* Минимум стилей: тестовый фронтенд, дизайн не ставится задачей. */
+body { font: 14px/1.45 system-ui, sans-serif; margin: 0; padding: 0 16px 48px; max-width: 1100px; }
+h1 { font-size: 20px; }
+h2 { font-size: 16px; margin-top: 24px; }
+h3 { font-size: 14px; margin-bottom: 4px; }
+nav { border-bottom: 1px solid #ccc; padding: 8px 0; margin-bottom: 16px; display: flex; gap: 12px; flex-wrap: wrap; align-items: baseline; }
+nav a { color: #0645ad; }
+nav .who { margin-left: auto; color: #555; }
+fieldset { border: 1px solid #ccc; margin: 0 0 16px; padding: 8px 12px 12px; }
+legend { font-weight: bold; }
+label { display: block; margin: 6px 0; }
+label.inline { display: inline-block; margin-right: 12px; }
+input[type=text], input[type=email], input[type=password], input[type=date], input[type=number], select, textarea { width: 260px; padding: 3px; }
+textarea { width: 400px; height: 48px; }
+button { padding: 4px 10px; margin: 2px 4px 2px 0; }
+table { border-collapse: collapse; margin: 8px 0; width: 100%; }
+th, td { border: 1px solid #ccc; padding: 4px 6px; text-align: left; vertical-align: top; font-size: 13px; }
+th { background: #f0f0f0; }
+ul { padding-left: 20px; }
+.msg { padding: 8px 10px; margin: 8px 0; border: 1px solid; white-space: pre-wrap; }
+.msg.error { border-color: #a00; background: #fdeaea; color: #700; }
+.msg.ok { border-color: #0a0; background: #eafdea; color: #060; }
+.msg.info { border-color: #888; background: #f4f4f4; color: #333; }
+.msg:empty { display: none; }
+.muted { color: #666; }
+.cols { display: flex; gap: 24px; flex-wrap: wrap; align-items: flex-start; }
+.cols > * { flex: 1 1 320px; }
+.slot { min-width: 68px; }
+.row-actions button { font-size: 12px; }
+pre { background: #f4f4f4; padding: 8px; overflow-x: auto; font-size: 12px; }

@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Свободное время мастера</title>
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+<h1>3. Свободное время выбранного мастера на дату</h1>
+<div id="msg" class="msg"></div>
+
+<fieldset>
+  <legend>GET /api/masters/:id/availability?date=&amp;service_ids=</legend>
+  <form id="form">
+    <label>Мастер
+      <select name="master_id" id="master" required></select>
+    </label>
+    <label>Дата
+      <input type="date" name="date" id="date" required>
+    </label>
+    <div>Услуги (одна или несколько — визит делает один мастер целиком):</div>
+    <div id="services" class="muted">загрузка…</div>
+    <button type="submit">Показать свободное время</button>
+  </form>
+</fieldset>
+
+<fieldset>
+  <legend>Слоты</legend>
+  <div id="summary" class="muted">Выберите мастера, услуги и дату.</div>
+  <div id="slots"></div>
+</fieldset>
+
+<script src="app.js"></script>
+<script>
+'use strict';
+
+const box = msgBox('msg');
+const params = new URLSearchParams(location.search);
+
+renderNav();
+
+const pickedServiceIds = () => Array.from(
+  document.querySelectorAll('#services input[type=checkbox]:checked'),
+).map((input) => Number(input.value));
+
+async function loadMasters() {
+  const { masters } = await api('GET', '/masters');
+  const select = document.getElementById('master');
+  select.textContent = '';
+  for (const master of masters) {
+    select.append(el('option', { value: String(master.id), textContent: master.display_name }));
+  }
+  const wanted = params.get('master_id');
+  if (wanted) select.value = wanted;
+}
+
+async function loadServices() {
+  const { services } = await api('GET', '/services');
+  const block = document.getElementById('services');
+  block.textContent = '';
+  block.className = '';
+  const preset = (params.get('service_ids') || '').split(',').filter(Boolean);
+  for (const service of services) {
+    const input = el('input', { type: 'checkbox', value: String(service.id) });
+    input.checked = preset.includes(String(service.id));
+    block.append(el('label', { className: 'inline' }, input,
+      ` ${service.name} (${service.duration_min} мин)`));
+  }
+}
+
+/**
+ * Слоты. Кнопка слота ведёт на страницу создания записи с уже
+ * подставленными мастером, услугами и моментом начала в UTC.
+ */
+async function loadSlots(masterId, date, serviceIds) {
+  const data = await api('GET', `/masters/${masterId}/availability${qs({
+    date, service_ids: serviceIds.join(','),
+  })}`);
+
+  const summary = document.getElementById('summary');
+  summary.className = '';
+  summary.textContent = '';
+  summary.append(table([
+    ['Параметр', (r) => r[0]],
+    ['Значение', (r) => r[1]],
+  ], [
+    ['Мастер', data.master_id],
+    ['Дата', `${data.date} (${data.timezone})`],
+    ['Шаг сетки', `${data.slot_step_min} мин`],
+    ['Длительность визита', `${data.service_duration_min} мин`],
+    ['Стоимость', data.total_price_display],
+    ['Свободных начал', data.slots.length],
+  ]));
+
+  const block = document.getElementById('slots');
+  block.textContent = '';
+  if (data.slots.length === 0) {
+    block.append(el('p', {
+      className: 'msg info',
+      textContent: 'На эту дату свободного времени нет: мастер не работает, '
+        + 'день занят или выбранная длительность не укладывается в окна. Попробуйте другую дату.',
+    }));
+    return;
+  }
+  for (const slot of data.slots) {
+    const button = el('button', {
+      className: 'slot',
+      type: 'button',
+      textContent: slot.local_time,
+      title: `UTC: ${slot.at_utc}`,
+    });
+    button.onclick = () => {
+      location.href = `book.html${qs({
+        master_id: masterId,
+        service_ids: serviceIds.join(','),
+        starts_at: slot.at_utc,
+      })}`;
+    };
+    block.append(button);
+  }
+  block.append(el('p', {
+    className: 'muted',
+    textContent: 'Нажмите на время — откроется страница создания записи с этими параметрами.',
+  }));
+}
+
+document.getElementById('form').onsubmit = guard(box, async (event) => {
+  event.preventDefault();
+  box.clear();
+  const values = formValues(event.target);
+  const serviceIds = pickedServiceIds();
+  if (serviceIds.length === 0) {
+    box.error('Отметьте хотя бы одну услугу: без них API не знает длительность визита.');
+    return;
+  }
+  await loadSlots(Number(values.master_id), values.date, serviceIds);
+});
+
+guard(box, async () => {
+  document.getElementById('date').value = params.get('date') || todayInputValue();
+  await Promise.all([loadMasters(), loadServices()]);
+  // Пришли со ссылки с готовыми параметрами — сразу показываем слоты.
+  if (params.get('master_id') && (params.get('service_ids') || '').length > 0) {
+    document.getElementById('form').requestSubmit();
+  }
+})();
+</script>
+</body>
+</html>

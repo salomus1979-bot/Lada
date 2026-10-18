@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Тестовый фронтенд «Лада»</title>
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+<h1>Тестовый фронтенд API «Лада»</h1>
+<div id="msg" class="msg"></div>
+
+<p class="muted">
+  Черновой интерфейс для проверки API: обычные формы, списки и кнопки.
+  Ошибки API выводятся текстом на странице.
+</p>
+
+<fieldset>
+  <legend>Страницы</legend>
+  <ul>
+    <li><a href="login.html">1. Регистрация и вход</a></li>
+    <li><a href="catalog.html">2. Список услуг и мастеров</a></li>
+    <li><a href="availability.html">3. Свободное время мастера на дату</a></li>
+    <li><a href="book.html">4. Создание записи</a></li>
+    <li><a href="account.html">5. Личный кабинет: мои записи, детали, перенос, отмена</a></li>
+    <li><a href="admin.html">6. Администрирование: записи, услуги, мастера</a></li>
+  </ul>
+</fieldset>
+
+<fieldset>
+  <legend>Состояние API</legend>
+  <button id="health">GET /api/health</button>
+  <button id="settings">GET /api/settings</button>
+  <pre id="out" class="muted">—</pre>
+</fieldset>
+
+<fieldset>
+  <legend>Правила записи (из настроек студии)</legend>
+  <div id="rules" class="muted">Нажмите «GET /api/settings».</div>
+</fieldset>
+
+<script src="app.js"></script>
+<script>
+'use strict';
+
+const box = msgBox('msg');
+const out = document.getElementById('out');
+
+renderNav();
+
+document.getElementById('health').onclick = guard(box, async () => {
+  box.clear();
+  out.textContent = JSON.stringify(await api('GET', '/health'), null, 2);
+});
+
+document.getElementById('settings').onclick = guard(box, async () => {
+  box.clear();
+  const { settings } = await api('GET', '/settings');
+  out.textContent = JSON.stringify(settings, null, 2);
+
+  const rules = document.getElementById('rules');
+  rules.textContent = '';
+  rules.className = '';
+  rules.append(table([
+    ['Параметр', (r) => r[0]],
+    ['Значение', (r) => r[1]],
+  ], [
+    ['Студия', `${settings.name}, ${settings.address}, ${settings.phone}`],
+    ['Часовой пояс', settings.timezone],
+    ['Шаг сетки слотов', `${settings.slot_step_min} мин`],
+    ['Отмена и перенос', `не позднее чем за ${settings.cancel_window_hours} ч`],
+    ['Лимит переносов', settings.max_reschedules],
+    ['Горизонт записи', `${settings.booking_horizon_months} мес.`],
+    ['Удержание слота', `${settings.hold_ttl_min} мин`],
+  ]));
+});
+</script>
+</body>
+</html>
