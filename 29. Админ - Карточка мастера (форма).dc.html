@@ -165,7 +165,6 @@ class Component extends DCLogic {
     const goToServices = () => { window.location.href = '31. Админ - Услуги.dc.html'; };
     const goToSettings = () => { window.location.href = '33. Админ - Настройки студии.dc.html'; };
     const goToRequests = () => { window.location.href = '34. Админ - Запросы мастеров.dc.html'; };
-    const goToMasters = () => { window.location.href = '28. Админ - Мастера.dc.html'; };
     const sidebarItems = [
       {icon:'layout-dashboard', label:'Дашборд', bg:'transparent', fg:'#C4ADA8', badge:null, onClick:goToDashboard},
       {icon:'calendar', label:'Расписание', bg:'transparent', fg:'#C4ADA8', badge:null, onClick:goToSchedule},
@@ -194,7 +193,7 @@ class Component extends DCLogic {
       {label:'Доля отмен', value:'4%', color:'#4F7A3D'},
     ];
 
-    return { sidebarItems, serviceGroups, stats };
+    return { sidebarItems, serviceGroups, stats, goToDashboard, goToMasters, goToRequests };
   }
 }
 

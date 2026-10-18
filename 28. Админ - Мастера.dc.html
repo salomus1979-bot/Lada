@@ -96,7 +96,7 @@
           <div style="font-size:14.5px; font-weight:700; margin-bottom:8px;">Нельзя архивировать мастера</div>
           <div style="font-size:12.5px; color:#5C4440; line-height:1.5; margin-bottom:14px;">У Ольги Беловой 6 будущих записей. Перенесите или отмените их перед архивацией:</div>
           <div style="display:flex; flex-direction:column; gap:6px; margin-bottom:18px;">
-            <sc-for list="{{ warningBookings }}" as="wb" hint-placeholder-count="3"><a href="#" style="font-size:12.5px; font-weight:600;">{{ wb }}</a></sc-for>
+            <sc-for list="{{ warningBookings }}" as="wb" hint-placeholder-count="3"><a href="25. Админ - Детали записи.dc.html" style="font-size:12.5px; font-weight:600;">{{ wb }}</a></sc-for>
           </div>
           <div style="display:flex; gap:10px;">
             <button style="flex:1; background:transparent; color:#5C4440; border:1.5px solid #E8DAD6; border-radius:14px; padding:10px; font-size:12.5px; font-weight:700; font-family:'Manrope',sans-serif;">Отмена</button>
@@ -145,7 +145,8 @@ class Component extends DCLogic {
       { name:'Татьяна Нечаева', spec:'Маникюр', years:'2 года', stars:starsRow(4), rating:'4,6', chips:['Маникюр'], weekBookings:0, badge:'В архиве', badgeBg:'#F3E9E6', badgeColor:'#8A726D', actionLabel:null, opacity:.55, archiveNote:'Не отображается на сайте' },
     ];
     const warningBookings = ['23 окт, 14:00 — Анна Соколова', '24 окт, 11:00 — Дарья Миронова', '25 окт, 16:30 — Ксения Орлова'];
-    return { sidebarItems, tabs, masters, warningBookings };
+    return { sidebarItems, tabs, masters, warningBookings,
+      goToDashboard, goToBookings, goToMasterForm };
   }
 }
 

@@ -79,8 +79,8 @@
             <span style="font-size:12px; color:#6B4A10; line-height:1.4;">Клиент получит уведомление об отмене студией.</span>
           </div>
           <div style="display:flex; gap:8px; flex-wrap:wrap;">
-            <button onClick="{{ goToDashboard }}" style="background:#B23A32; color:#FFFFFF; border:none; border-radius:14px; padding:10px 16px; font-size:12.5px; font-weight:700; font-family:'Manrope',sans-serif; white-space:nowrap; cursor:pointer;">Подтвердить отмену</button>
-            <button onClick="{{ goToDashboard }}" style="background:transparent; color:#5C4440; border:1.5px solid #E8DAD6; border-radius:14px; padding:10px 16px; font-size:12.5px; font-weight:700; font-family:'Manrope',sans-serif; white-space:nowrap; cursor:pointer;">Отклонить запрос</button>
+            <button onClick="{{ goToRequests }}" style="background:#B23A32; color:#FFFFFF; border:none; border-radius:14px; padding:10px 16px; font-size:12.5px; font-weight:700; font-family:'Manrope',sans-serif; white-space:nowrap; cursor:pointer;">Подтвердить отмену</button>
+            <button onClick="{{ goToRequests }}" style="background:transparent; color:#5C4440; border:1.5px solid #E8DAD6; border-radius:14px; padding:10px 16px; font-size:12.5px; font-weight:700; font-family:'Manrope',sans-serif; white-space:nowrap; cursor:pointer;">Отклонить запрос</button>
             <button onClick="{{ goToBookingDetails }}" style="background:transparent; color:#5C4440; border:1.5px solid #E8DAD6; border-radius:14px; padding:10px 16px; font-size:12.5px; font-weight:700; font-family:'Manrope',sans-serif; white-space:nowrap; cursor:pointer;">Перенести вместо отмены</button>
           </div>
         </div>
@@ -106,7 +106,7 @@
           </div>
           <div style="display:flex; gap:8px;">
             <button onClick="{{ goToMasterForm }}" style="background:#2A1C1A; color:#F2C2C0; border:none; border-radius:14px; padding:10px 16px; font-size:12.5px; font-weight:700; font-family:'Manrope',sans-serif; white-space:nowrap; cursor:pointer;">Принять</button>
-            <button onClick="{{ goToMasterForm }}" style="background:transparent; color:#5C4440; border:1.5px solid #E8DAD6; border-radius:14px; padding:10px 16px; font-size:12.5px; font-weight:700; font-family:'Manrope',sans-serif; white-space:nowrap; cursor:pointer;">Отклонить</button>
+            <button onClick="{{ goToRequests }}" style="background:transparent; color:#5C4440; border:1.5px solid #E8DAD6; border-radius:14px; padding:10px 16px; font-size:12.5px; font-weight:700; font-family:'Manrope',sans-serif; white-space:nowrap; cursor:pointer;">Отклонить</button>
           </div>
         </div>
 
@@ -162,7 +162,8 @@ class Component extends DCLogic {
       {initials:'МЗ', name:'Мария Зайцева', type:'Запрос на отмену', badge:'Подтверждён', badgeBg:'#EEF6EA', badgeColor:'#4F7A3D', resolvedBy:'Решено Еленой Крыловой · 10 окт, 16:40'},
       {initials:'СТ', name:'Светлана Титова', type:'Запрос на изменение карточки', badge:'Отклонён', badgeBg:'#F3E9E6', badgeColor:'#8A726D', resolvedBy:'Решено Еленой Крыловой · 8 окт, 11:15'},
     ];
-    return { sidebarItems, tabs, resolvedRequests };
+    return { sidebarItems, tabs, resolvedRequests,
+      goToDashboard, goToBookingDetails, goToMasterForm, goToRequests };
   }
 }
 

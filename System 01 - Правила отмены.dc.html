@@ -29,7 +29,7 @@
   <header style="position:sticky; top:0; z-index:40; background:rgba(36,26,24,0.92); backdrop-filter:blur(8px); border-bottom:1px solid #4A3733;">
     <div style="max-width:1200px; margin:0 auto; padding:16px 48px; display:flex; align-items:center; justify-content:space-between;">
       <span style="font-family:'Oswald',sans-serif; font-weight:800; font-size:22px; color:#F2C2C0;">ЛАДА</span>
-      <a href="#" style="font-size:13px; font-weight:600; color:#C4ADA8;">← На сайт</a>
+      <a href="Лада - Лендинг.dc.html" style="font-size:13px; font-weight:600; color:#C4ADA8;">← На сайт</a>
     </div>
   </header>
 
@@ -44,7 +44,7 @@
     </sc-for>
 
     <div style="margin-top:40px; text-align:center;">
-      <button style="background:#F2C2C0; color:#2A1C1A; border:none; border-radius:16px; padding:14px 28px; font-size:14px; font-weight:700; font-family:'Manrope',sans-serif;">Вернуться к записи</button>
+      <button onClick="{{ goToBooking }}" style="background:#F2C2C0; color:#2A1C1A; border:none; border-radius:16px; padding:14px 28px; font-size:14px; font-weight:700; font-family:'Manrope',sans-serif;">Вернуться к записи</button>
     </div>
   </main>
 </div>
@@ -53,6 +53,7 @@
 <script type="text/x-dc" data-dc-script>
 class Component extends DCLogic {
   renderVals(){
+    const goToBooking = () => { window.location.href = '1. Запись - Шаг 1. Услуги.dc.html'; };
     const sections = [
       {title:'Сроки бесплатной отмены', text:'Отменить запись без каких-либо последствий можно не позднее чем за 4 часа до начала визита — прямо в личном кабинете.'},
       {title:'Поздняя отмена', text:'Отмена позднее чем за 4 часа до визита недоступна в кабинете. Свяжитесь со студией по телефону — мы постараемся найти решение.'},
@@ -60,7 +61,7 @@ class Component extends DCLogic {
       {title:'Опоздание', text:'Если вы опаздываете более чем на 15 минут, мастер вправе сократить длительность услуги или перенести визит на другое время по согласованию.'},
       {title:'Неявка', text:'Неявка без предупреждения фиксируется в истории записей. После нескольких неявок студия может ограничить онлайн-запись для аккаунта.'},
     ];
-    return { sections };
+    return { sections, goToBooking };
   }
 }
 

@@ -108,7 +108,7 @@
               <div style="font-size:12px; color:#5C4440; font-variant-numeric:tabular-nums; white-space:nowrap;">{{ r.duration }}</div>
               <div style="font-size:12.5px; font-weight:700; color:#2A1C1A; font-variant-numeric:tabular-nums; text-align:right; white-space:nowrap;">{{ r.price }}</div>
               <div style="min-width:0;"><span style="font-size:10.5px; font-weight:700; padding:3px 8px; border-radius:999px; background:{{ r.badgeBg }}; color:{{ r.badgeColor }}; white-space:nowrap; display:inline-block; max-width:100%; overflow:hidden; text-overflow:ellipsis;">{{ r.status }}</span></div>
-              <i data-lucide="more-horizontal" width="15" height="15" stroke-width="1.5" onClick="{{ goToBookingDetailsStop }}" style="color:#8A726D; cursor:pointer;"></i>
+              <span onClick="{{ goToBookingDetailsStop }}" style="display:inline-flex; cursor:pointer;"><i data-lucide="more-horizontal" width="15" height="15" stroke-width="1.5" style="color:#8A726D;"></i></span>
             </div>
           </sc-for>
         </div>
@@ -180,7 +180,8 @@ class Component extends DCLogic {
     }));
 
     const pages = [1,2,3,4].map(n=>({n, bg: n===1?'#2A1C1A':'transparent', fg: n===1?'#FFFFFF':'#5C4440'}));
-    return { sidebarItems, filterControls, activeFilters, rows, pages };
+    return { sidebarItems, filterControls, activeFilters, rows, pages,
+      goToDashboard, goToNewBooking, goToBookingDetails, goToBookingDetailsStop, goToClientCard };
   }
 }
 

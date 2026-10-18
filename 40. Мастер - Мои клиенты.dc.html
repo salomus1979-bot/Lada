@@ -46,14 +46,14 @@
 
     <div style="flex:1; overflow-y:auto; padding:0 18px 90px; display:flex; flex-direction:column; gap:1px; background:#332522; border-radius:16px; margin:0 18px 90px;">
       <sc-for list="{{ clients }}" as="c" hint-placeholder-count="7">
-        <div style="display:flex; align-items:center; gap:10px; padding:13px 14px; background:#241A18;">
+        <div onClick="{{ goToClient }}" style="display:flex; align-items:center; gap:10px; padding:13px 14px; background:#241A18; cursor:pointer;">
           <div style="width:36px; height:36px; border-radius:999px; background:#3D2B28; color:#F2C2C0; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:12.5px; flex:none;">{{ c.initials }}</div>
           <div style="flex:1; min-width:0;">
             <div style="font-size:13.5px; font-weight:700; color:#F5EBE8; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ c.name }}</div>
             <div style="font-size:11.5px; color:#9A807A; font-variant-numeric:tabular-nums;">{{ c.visits }} визитов · {{ c.lastVisit }}</div>
           </div>
           <sc-if value="{{ c.badge }}"><span style="font-size:10px; font-weight:700; padding:3px 8px; border-radius:999px; background:{{ c.badgeBg }}; color:{{ c.badgeColor }}; white-space:nowrap; flex:none;">{{ c.badge }}</span></sc-if>
-          <button style="width:34px; height:34px; border-radius:999px; background:#3D2B28; display:flex; align-items:center; justify-content:center; flex:none;"><i data-lucide="phone" width="15" height="15" stroke-width="1.5" style="color:#F2C2C0;"></i></button>
+          <button onClick="{{ noop }}" style="width:34px; height:34px; border-radius:999px; background:#3D2B28; display:flex; align-items:center; justify-content:center; flex:none;"><i data-lucide="phone" width="15" height="15" stroke-width="1.5" style="color:#F2C2C0;"></i></button>
         </div>
       </sc-for>
     </div>
@@ -110,13 +110,15 @@ class Component extends DCLogic {
     const goToMyDay = () => { window.location.href = '36. Мастер - Мой день.dc.html'; };
     const goToWeek = () => { window.location.href = '37. Мастер - Неделя.dc.html'; };
     const goToProfile = () => { window.location.href = '42. Мастер - Профиль.dc.html'; };
+    const goToClient = () => { window.location.href = '41. Мастер - Карточка клиента.dc.html'; };
+    const noop = (e) => { if(e && e.stopPropagation) e.stopPropagation(); };
     const navItems = [
       {icon:'sun', label:'Мой день', color:'#9A807A', onClick:goToMyDay},
       {icon:'calendar-days', label:'Неделя', color:'#9A807A', onClick:goToWeek},
       {icon:'users', label:'Клиенты', color:'#F2C2C0', onClick:null},
       {icon:'user', label:'Профиль', color:'#9A807A', onClick:goToProfile},
     ];
-    return { filterChips, clients, navItems };
+    return { filterChips, clients, navItems, goToClient, noop };
   }
 }
 

@@ -87,7 +87,7 @@
     </div>
 
     <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap; padding-top:20px; border-top:1px solid #4A3733;">
-      <button disabled="{{ true }}" onClick="{{ goToConfirm }}" style="background:#4A3733; color:#9A807A; border:none; border-radius:16px; padding:13px 24px; font-size:14px; font-weight:700; font-family:'Manrope',sans-serif; opacity:.6; cursor:not-allowed;">Подтвердить новое время</button>
+      <button disabled="{{ true }}" onClick="{{ goToCreated }}" style="background:#4A3733; color:#9A807A; border:none; border-radius:16px; padding:13px 24px; font-size:14px; font-weight:700; font-family:'Manrope',sans-serif; opacity:.6; cursor:not-allowed;">Подтвердить новое время</button>
       <button onClick="{{ goToMaster }}" style="background:transparent; color:#F5EBE8; border:1.5px solid #4A3733; border-radius:16px; padding:13px 20px; font-size:14px; font-weight:700; font-family:'Manrope',sans-serif; cursor:pointer;">Выбрать другого мастера</button>
       <a href="#" style="font-size:13px; font-weight:700; margin-left:4px;">Ближайшая свободная дата</a>
     </div>
@@ -128,10 +128,10 @@ class Component extends DCLogic {
     }
     while(cells.length % 7 !== 0) cells.push({num:null});
 
-    const goToConfirm = () => { window.location.href = '4. Запись - Шаг 4. Подтверждение.dc.html'; };
+    const goToCreated = () => { window.location.href = '5. Запись создана.dc.html'; };
     const goToMaster = () => { window.location.href = '2. Запись - Шаг 2. Мастер.dc.html'; };
 
-    return { slots, weekdayLabels, calendarCells: cells, goToConfirm, goToMaster };
+    return { slots, weekdayLabels, calendarCells: cells, goToCreated, goToMaster };
   }
 }
 

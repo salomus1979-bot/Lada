@@ -155,7 +155,7 @@ class Component extends DCLogic {
       {initials:'МС', name:'Мария Седова', phone:'+7 999 888-99-00', email:'maria.s@mail.ru', visits:6, noShows:0, noShowColor:'#5C4440', lastVisit:'16 окт.', nextVisit:'16 окт.', status:'Активен', badgeBg:'#EEF6EA', badgeColor:'#4F7A3D'},
     ];
     const clients = clientsRaw.map(c=>({ ...c, opacity: c.muted ? .55 : 1 }));
-    return { sidebarItems, filterControls, clients };
+    return { sidebarItems, filterControls, clients, goToDashboard, goToClientCard, goToNewBooking };
   }
 }
 

@@ -154,7 +154,8 @@ class Component extends DCLogic {
         {name:'Ламинирование ресниц', desc:'Изгиб и укладка без наращивания', duration:'60 мин', price:'1 600 ₽', masters:['МЗ','СТ'], switchBg:'#A65451', opacity:1, hidden:false},
       ]},
     ];
-    return { sidebarItems, tabs, categories };
+    return { sidebarItems, tabs, categories,
+      goToDashboard, goToServiceForm, goToMasterFormStop };
   }
 }
 

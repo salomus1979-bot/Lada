@@ -49,7 +49,7 @@
 
       <div style="padding:24px 30px; border-bottom:1px solid #E8DAD6; display:flex; align-items:center; justify-content:space-between;">
         <span style="font-family:'Oswald',sans-serif; font-weight:700; text-transform:uppercase; font-size:20px;">Редактирование услуги</span>
-        <i data-lucide="x" width="20" height="20" stroke-width="1.5" style="color:#8A726D; cursor:pointer;"></i>
+        <span onClick="{{ goToServices }}" style="display:inline-flex; cursor:pointer;"><i data-lucide="x" width="20" height="20" stroke-width="1.5" style="color:#8A726D;"></i></span>
       </div>
 
       <div style="padding:26px 30px; display:flex; flex-direction:column; gap:18px;">
@@ -180,7 +180,7 @@ class Component extends DCLogic {
       {initials:'ИВ', name:'Ирина Волкова', checked:true},
       {initials:'МЗ', name:'Мария Зайцева', checked:false},
     ].map(m=>({ ...m, checkShape: m.checked ? checkOn : checkOff }));
-    return { sidebarItems, mastersCheck };
+    return { sidebarItems, mastersCheck, goToDashboard, goToServices };
   }
 }
 

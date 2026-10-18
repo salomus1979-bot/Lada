@@ -56,7 +56,7 @@
       </div>
       <div style="font-size:11px; color:#6B5852; margin-top:-10px; text-align:center;">Показаны только визиты к вам</div>
 
-      <div style="background:#3D2B28; border:1.5px solid #F2C2C0; border-radius:16px; padding:14px 16px;">
+      <div onClick="{{ goToVisit }}" style="background:#3D2B28; border:1.5px solid #F2C2C0; border-radius:16px; padding:14px 16px; cursor:pointer;">
         <div style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:#F2C2C0; margin-bottom:6px;">Ближайшая запись</div>
         <div style="font-size:14px; font-weight:700; font-variant-numeric:tabular-nums; margin-bottom:2px;">23 октября, 14:00–16:00</div>
         <div style="font-size:12.5px; color:#C4ADA8;">Маникюр с покрытием, Коррекция бровей</div>
@@ -119,7 +119,8 @@ class Component extends DCLogic {
       {date:'2 мая', service:'Маникюр, дизайн', status:'Завершён', badgeBg:'#3D2B28', badgeColor:'#C4ADA8'},
     ];
     const goToClients = () => { window.location.href = '40. Мастер - Мои клиенты.dc.html'; };
-    return { metrics, notes, history, goToClients };
+    const goToVisit = () => { window.location.href = '38. Мастер - Детали визита.dc.html'; };
+    return { metrics, notes, history, goToClients, goToVisit };
   }
 }
 

@@ -52,7 +52,7 @@
           <div style="font-family:'Oswald',sans-serif; font-weight:700; text-transform:uppercase; font-size:22px; margin-bottom:4px;">Новая запись</div>
           <div style="font-size:13px; color:#8A726D;">Запись по телефону или на месте</div>
         </div>
-        <i data-lucide="x" width="20" height="20" stroke-width="1.5" style="color:#8A726D; cursor:pointer;"></i>
+        <span onClick="{{ goToBookings }}" style="display:inline-flex; cursor:pointer;"><i data-lucide="x" width="20" height="20" stroke-width="1.5" style="color:#8A726D;"></i></span>
       </div>
 
       <div style="padding:28px 32px; display:flex; flex-direction:column; gap:26px;">
@@ -164,7 +164,7 @@
 
       <div style="padding:20px 32px; border-top:1px solid #E8DAD6; display:flex; justify-content:flex-end; gap:10px;">
         <button onClick="{{ goToBookings }}" style="background:transparent; color:#5C4440; border:1.5px solid #E8DAD6; border-radius:16px; padding:11px 22px; font-size:13.5px; font-weight:700; font-family:'Manrope',sans-serif; cursor:pointer;">Отмена</button>
-        <button onClick="{{ goToSchedule }}" style="background:#2A1C1A; color:#F2C2C0; border:none; border-radius:16px; padding:11px 24px; font-size:13.5px; font-weight:700; font-family:'Manrope',sans-serif; cursor:pointer;">Создать запись</button>
+        <button onClick="{{ goToBookings }}" style="background:#2A1C1A; color:#F2C2C0; border:none; border-radius:16px; padding:11px 24px; font-size:13.5px; font-weight:700; font-family:'Manrope',sans-serif; cursor:pointer;">Создать запись</button>
       </div>
 
     </div>
@@ -230,7 +230,8 @@ class Component extends DCLogic {
     };
     const slots = [slot('10:00','free'), slot('11:00','booked'), slot('12:00','free'), slot('14:00','selected'), slot('16:00','free'), slot('17:00','booked'), slot('18:00','free'), slot('19:00','free')];
 
-    return { sidebarItems, serviceChips, mastersSelect, calCells, slots };
+    return { sidebarItems, serviceChips, mastersSelect, calCells, slots,
+      goToDashboard, goToSchedule, goToBookings, goToClientCard };
   }
 }
 
