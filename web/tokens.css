@@ -1,0 +1,224 @@
+/*
+ * Токены дизайн-системы «Лада».
+ *
+ * Собрано из «Лада - Дизайн-система.dc.html»: раздел «Токены» (таблица
+ * tokenTable) — основной источник, плюс разделы «Цвет», «Типографика»,
+ * «Пространство» и «Скругления» там, где в таблице токенов значения нет.
+ *
+ * Все значения взяты из дизайн-системы как есть. Ничего не подобрано и не
+ * выведено по аналогии: чего в ней нет, того нет и здесь.
+ *
+ * Комментарии к цветам — назначение из раздела «Цвет» дизайн-системы.
+ */
+
+:root {
+  /* ─── Шрифты ─────────────────────────────────────────────────────────── */
+  /* Раздел «Типографика». Oswald — заголовочный, Manrope — текстовый. */
+  --font-display: 'Oswald', sans-serif;      /* display-xl, display-l, h1, h2 */
+  --font-text: 'Manrope', sans-serif;        /* h3, h4, текст, подписи, кнопки */
+
+  /* ─── Шкала текста ───────────────────────────────────────────────────── */
+  /* Двенадцать ступеней из раздела «Типографика», по шесть свойств на каждую:
+     -font (гарнитура), без суффикса (размер на десктопе), -mobile (размер на
+     мобильных), -lh (межстрочный), -weight (начертание), -tracking (трекинг),
+     -case (регистр). */
+
+  --text-display-xl-font: var(--font-display);
+  --text-display-xl: 88px;
+  --text-display-xl-mobile: 44px;
+  --text-display-xl-lh: 0.98;
+  --text-display-xl-weight: 800;
+  --text-display-xl-tracking: -0.01em;
+  --text-display-xl-case: uppercase;
+
+  --text-display-l-font: var(--font-display);
+  --text-display-l: 64px;
+  --text-display-l-mobile: 40px;
+  --text-display-l-lh: 1.0;
+  --text-display-l-weight: 700;
+  --text-display-l-tracking: -0.005em;
+  --text-display-l-case: uppercase;
+
+  --text-h1-font: var(--font-display);
+  --text-h1: 40px;
+  --text-h1-mobile: 28px;
+  --text-h1-lh: 1.1;
+  --text-h1-weight: 700;
+  --text-h1-tracking: 0;
+  --text-h1-case: none;
+
+  --text-h2-font: var(--font-display);
+  --text-h2: 32px;
+  --text-h2-mobile: 24px;
+  --text-h2-lh: 1.15;
+  --text-h2-weight: 700;
+  --text-h2-tracking: 0;
+  --text-h2-case: none;
+
+  --text-h3-font: var(--font-text);
+  --text-h3: 24px;
+  --text-h3-mobile: 20px;
+  --text-h3-lh: 1.2;
+  --text-h3-weight: 700;
+  --text-h3-tracking: 0;
+  --text-h3-case: none;
+
+  --text-h4-font: var(--font-text);
+  --text-h4: 20px;
+  --text-h4-mobile: 18px;
+  --text-h4-lh: 1.25;
+  --text-h4-weight: 600;
+  --text-h4-tracking: 0;
+  --text-h4-case: none;
+
+  --text-body-l-font: var(--font-text);
+  --text-body-l: 18px;
+  --text-body-l-mobile: 16px;
+  --text-body-l-lh: 1.6;
+  --text-body-l-weight: 400;
+  --text-body-l-tracking: 0;
+  --text-body-l-case: none;
+
+  --text-body-m-font: var(--font-text);
+  --text-body-m: 15px;
+  --text-body-m-mobile: 14px;
+  --text-body-m-lh: 1.6;
+  --text-body-m-weight: 400;
+  --text-body-m-tracking: 0;
+  --text-body-m-case: none;
+
+  --text-body-s-font: var(--font-text);
+  --text-body-s: 13px;
+  --text-body-s-mobile: 13px;
+  --text-body-s-lh: 1.5;
+  --text-body-s-weight: 400;
+  --text-body-s-tracking: 0;
+  --text-body-s-case: none;
+
+  --text-caption-font: var(--font-text);
+  --text-caption: 12px;
+  --text-caption-mobile: 11px;
+  --text-caption-lh: 1.4;
+  --text-caption-weight: 500;
+  --text-caption-tracking: 0;
+  --text-caption-case: none;
+
+  --text-label-font: var(--font-text);
+  --text-label: 12px;
+  --text-label-mobile: 12px;
+  --text-label-lh: 1.3;
+  --text-label-weight: 700;
+  --text-label-tracking: .04em;
+  --text-label-case: uppercase;
+
+  --text-button-font: var(--font-text);
+  --text-button: 14px;
+  --text-button-mobile: 14px;
+  --text-button-lh: 1;
+  --text-button-weight: 700;
+  --text-button-tracking: .01em;
+  --text-button-case: none;
+
+  /* ─── Фон ────────────────────────────────────────────────────────────── */
+  --bg-base: #241A18;                        /* фон приложения и лендинга */
+  --bg-surface: #332522;                     /* карточки, панели на тёмном фоне */
+  --bg-elevated: #3D2B28;                    /* модалки, дропдауны, тултипы */
+
+  /* ─── Текст ──────────────────────────────────────────────────────────── */
+  --text-primary: #F5EBE8;                   /* основной текст, заголовки */
+  --text-secondary: #C4ADA8;                 /* подписи, вторичный текст */
+  --text-muted: #9A807A;                     /* плейсхолдеры, неактивный текст */
+  --text-on-accent: #2A1C1A;                 /* текст на розовых поверхностях */
+
+  /* ─── Акцент (основная кнопка, активные элементы) ────────────────────── */
+  --accent-primary: #F2C2C0;                 /* основной CTA, активные элементы */
+  --accent-hover: #E8AEAC;                   /* hover-состояние акцента */
+  --accent-subtle: rgba(242, 194, 192, .14); /* заливка бейджей, фоновый акцент */
+
+  /* ─── Границы ────────────────────────────────────────────────────────── */
+  --border-default: #4A3733;                 /* разделители, обводки полей */
+  --border-focus: #F2C2C0;                   /* обводка в фокусе */
+
+  /* ─── Статусы ────────────────────────────────────────────────────────── */
+  --feedback-success: #8FBF78;
+  --feedback-warning: #E3A548;
+  --feedback-error: #E58078;
+  --feedback-info: #8CA9BE;
+
+  /* Подложки статусов — раздел «Паттерны ошибок». */
+  --feedback-success-subtle: rgba(143, 191, 120, .14);
+  --feedback-warning-subtle: rgba(227, 165, 72, .14);
+  --feedback-error-subtle: rgba(229, 128, 120, .14);
+  --feedback-info-subtle: rgba(140, 169, 190, .14);
+
+  /* ─── Состояния слота записи ─────────────────────────────────────────── */
+  /* «Занят» и «Недоступен» в дизайн-системе нарисованы полосатым градиентом
+     поверх этой заливки — здесь только базовый цвет из таблицы токенов. */
+  --slot-free: #332522;                      /* свободен */
+  --slot-selected: #F2C2C0;                  /* выбран */
+  --slot-booked: #3D2B28;                    /* занят */
+  --slot-past: #2B201D;                      /* прошедший */
+  --slot-blocked: #3D2A28;                   /* недоступен */
+
+  /* ─── Отступы ────────────────────────────────────────────────────────── */
+  /* Пять шагов из таблицы токенов. В разделе «Пространство» шкала шире —
+     см. примечание в конце файла. */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --space-8: 32px;
+
+  /* ─── Скругления ─────────────────────────────────────────────────────── */
+  --radius-sm: 8px;                          /* инпуты, чипы */
+  --radius-md: 16px;                         /* кнопки */
+  --radius-lg: 24px;                         /* карточки */
+  --radius-full: 999px;                      /* пилюли, аватары */
+}
+
+/*
+ * Светлая палитра — раздел «Цвет», колонка «Светлая тема» (админ-панель).
+ * В таблице токенов её нет, поэтому имена взяты из раздела «Цвет» как есть.
+ */
+:root {
+  --bg-base-light: #FDF8F6;                  /* фон админ-панели */
+  --bg-surface-light: #FFFFFF;               /* карточки и таблицы */
+  --text-primary-light: #2A1C1A;             /* основной текст */
+  --text-secondary-light: #5C4440;           /* вторичный текст */
+  --text-muted-light: #8A726D;               /* плейсхолдеры */
+  --border-default-light: #E8DAD6;           /* разделители, обводки */
+  --accent-text-light: #A65451;              /* ссылки, иконки-акценты на светлом */
+
+  --feedback-success-light: #4F7A3D;
+  --feedback-warning-light: #8A5A14;
+  --feedback-error-light: #B23A32;
+  --feedback-info-light: #3F647C;
+}
+
+/*
+ * Роли, о которых просили отдельно. Новых значений здесь нет — только ссылки
+ * на токены выше, по назначению, записанному в самой дизайн-системе
+ * («accent/primary — основной CTA», «text/on-accent — текст на розовых
+ * кнопках»). Если такие псевдонимы не нужны, блок можно удалить целиком.
+ */
+:root {
+  --button-bg: var(--accent-primary);
+  --button-bg-hover: var(--accent-hover);
+  --button-text: var(--text-on-accent);
+  --button-radius: var(--radius-md);
+}
+
+/*
+ * ЧЕГО В ДИЗАЙН-СИСТЕМЕ НЕТ — и поэтому нет здесь:
+ *
+ * 1. Отступы 12px, 48px, 64px и 96px показаны в разделе «Пространство»
+ *    (шкала sp-12, sp-48, sp-64, sp-96), но в таблицу токенов не попали.
+ *    Значения известны, канонических имён для них нет — не стал придумывать.
+ *
+ * 2. Токенов типографики в таблице токенов нет вообще. Вся шкала выше —
+ *    гарнитуры, размеры, межстрочные, начертания, трекинг и регистр — взята
+ *    из раздела «Типографика», где эти свойства заданы по ступеням.
+ *
+ * 3. Светлых вариантов фона «elevated», акцента и состояний слота в разделе
+ *    «Цвет» не приведено — светлая палитра там короче тёмной.
+ */
