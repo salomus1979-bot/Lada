@@ -65,7 +65,7 @@
             <div style="padding:18px; display:flex; flex-direction:column; flex:1;">
               <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:8px; margin-bottom:4px;">
                 <span style="font-size:15px; font-weight:700;">{{ m.name }}</span>
-                <i data-lucide="more-horizontal" width="16" height="16" stroke-width="1.5" style="color:#8A726D; cursor:pointer; flex:none;"></i>
+                <span onClick="{{ m.archiveClick }}" title="{{ m.archiveHint }}" style="display:inline-flex; cursor:pointer; flex:none;"><i data-lucide="more-horizontal" width="16" height="16" stroke-width="1.5" style="color:#8A726D;"></i></span>
               </div>
               <div style="font-size:12.5px; color:#8A726D; margin-bottom:8px;">{{ m.spec }} · опыт {{ m.years }}</div>
               <div style="display:flex; align-items:center; gap:4px; margin-bottom:10px;">
@@ -87,32 +87,36 @@
         </sc-for>
       </div>
 
-      <div>
-        <div style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:#8A726D; margin-bottom:10px;">Предупреждение при попытке архивировать мастера с будущими записями</div>
-        <div style="background:#FFFFFF; border:1px solid #E8DAD6; border-radius:22px; padding:22px; width:380px; box-shadow:0 8px 20px rgba(42,28,26,.08);">
-          <div style="width:40px; height:40px; border-radius:12px; background:#FBF2E3; display:flex; align-items:center; justify-content:center; margin-bottom:14px;">
-            <i data-lucide="triangle-alert" width="20" height="20" stroke-width="1.5" style="color:#8A5A14;"></i>
-          </div>
-          <div style="font-size:14.5px; font-weight:700; margin-bottom:8px;">Нельзя архивировать мастера</div>
-          <div style="font-size:12.5px; color:#5C4440; line-height:1.5; margin-bottom:14px;">У Ольги Беловой 6 будущих записей. Перенесите или отмените их перед архивацией:</div>
-          <div style="display:flex; flex-direction:column; gap:6px; margin-bottom:18px;">
-            <sc-for list="{{ warningBookings }}" as="wb" hint-placeholder-count="3"><a href="25. Админ - Детали записи.dc.html" style="font-size:12.5px; font-weight:600;">{{ wb }}</a></sc-for>
-          </div>
-          <div style="display:flex; gap:10px;">
-            <button style="flex:1; background:transparent; color:#5C4440; border:1.5px solid #E8DAD6; border-radius:14px; padding:10px; font-size:12.5px; font-weight:700; font-family:'Manrope',sans-serif;">Отмена</button>
-            <button onClick="{{ goToBookings }}" style="flex:1; background:#2A1C1A; color:#F2C2C0; border:none; border-radius:14px; padding:10px; font-size:12.5px; font-weight:700; font-family:'Manrope',sans-serif; cursor:pointer;">Открыть записи</button>
-          </div>
-        </div>
-      </div>
-
     </main>
   </div>
+
+  <sc-if value="{{ archiveMaster }}">
+    <div style="position:fixed; inset:0; background:rgba(42,28,26,.45); display:flex; align-items:center; justify-content:center; z-index:100; padding:24px;">
+      <div onClick="{{ closeArchive }}" style="position:absolute; inset:0;"></div>
+      <div style="position:relative; background:#FFFFFF; border-radius:22px; padding:22px; width:380px; max-width:100%; box-shadow:0 24px 60px rgba(42,28,26,.3);">
+        <div style="width:40px; height:40px; border-radius:12px; background:#FBF2E3; display:flex; align-items:center; justify-content:center; margin-bottom:14px;">
+          <i data-lucide="triangle-alert" width="20" height="20" stroke-width="1.5" style="color:#8A5A14;"></i>
+        </div>
+        <div style="font-size:14.5px; font-weight:700; margin-bottom:8px;">Нельзя архивировать мастера</div>
+        <div style="font-size:12.5px; color:#5C4440; line-height:1.5; margin-bottom:14px;">У {{ archiveMaster.nameGenitive }} {{ archiveMaster.futureBookings }} будущих записей. Перенесите или отмените их перед архивацией:</div>
+        <div style="display:flex; flex-direction:column; gap:6px; margin-bottom:18px;">
+          <sc-for list="{{ warningBookings }}" as="wb" hint-placeholder-count="3"><a href="25. Админ - Детали записи.dc.html" style="font-size:12.5px; font-weight:600;">{{ wb }}</a></sc-for>
+        </div>
+        <div style="display:flex; gap:10px;">
+          <button onClick="{{ closeArchive }}" style="flex:1; background:transparent; color:#5C4440; border:1.5px solid #E8DAD6; border-radius:14px; padding:10px; font-size:12.5px; font-weight:700; font-family:'Manrope',sans-serif; cursor:pointer;">Отмена</button>
+          <button onClick="{{ goToBookings }}" style="flex:1; background:#2A1C1A; color:#F2C2C0; border:none; border-radius:14px; padding:10px; font-size:12.5px; font-weight:700; font-family:'Manrope',sans-serif; cursor:pointer;">Открыть записи</button>
+        </div>
+      </div>
+    </div>
+  </sc-if>
 </div>
 
 </x-dc>
 <script type="text/x-dc" data-dc-script>
 class Component extends DCLogic {
+  state = { archiveIndex: null };
   componentDidMount(){ this.renderIcons(); }
+  componentDidUpdate(){ this.renderIcons(); }
   renderIcons(){ if(window.lucide) window.lucide.createIcons(); }
   renderVals(){
     const goToDashboard = () => { window.location.href = '21. Админ - Дашборд дня.dc.html'; };
@@ -138,14 +142,30 @@ class Component extends DCLogic {
 
     const starsRow = (filled)=> Array.from({length:5}, (_,i)=>({ c: i<filled?'#A65451':'#E8DAD6', f: i<filled?'#A65451':'none' }));
 
-    const masters = [
-      { name:'Ольга Белова', spec:'Маникюр, брови', years:'6 лет', stars:starsRow(5), rating:'4,9', chips:['Маникюр','Брови'], weekBookings:18, badge:'Доступ выдан', badgeBg:'#EEF6EA', badgeColor:'#4F7A3D', actionLabel:null, opacity:1, archiveNote:null },
-      { name:'Ирина Волкова', spec:'Педикюр, ресницы', years:'5 лет', stars:starsRow(5), rating:'4,8', chips:['Педикюр','Ресницы'], weekBookings:14, badge:'Доступ выдан', badgeBg:'#EEF6EA', badgeColor:'#4F7A3D', actionLabel:null, opacity:1, archiveNote:null },
-      { name:'Мария Зайцева', spec:'Ресницы, брови', years:'3 года', stars:starsRow(4), rating:'4,7', chips:['Ресницы','Брови'], weekBookings:9, badge:'Доступ не выдан', badgeBg:'#F3E9E6', badgeColor:'#5C4440', actionLabel:'Выдать доступ', actionOnClick:null, opacity:1, archiveNote:null },
-      { name:'Татьяна Нечаева', spec:'Маникюр', years:'2 года', stars:starsRow(4), rating:'4,6', chips:['Маникюр'], weekBookings:0, badge:'В архиве', badgeBg:'#F3E9E6', badgeColor:'#8A726D', actionLabel:null, opacity:.55, archiveNote:'Не отображается на сайте' },
+    // Архивация — DELETE /admin/masters/:id: мягкое удаление, активные будущие
+    // записи дают 409 со счётчиком. Ровно это и показывает модалка.
+    const stop = (fn) => (e) => { if(e && e.stopPropagation) e.stopPropagation(); fn(); };
+    const noop = (e) => { if(e && e.stopPropagation) e.stopPropagation(); };
+    const openArchive = (i) => stop(()=>this.setState({ archiveIndex:i }));
+
+    const mastersData = [
+      { name:'Ольга Белова', nameGenitive:'Ольги Беловой', spec:'Маникюр, брови', years:'6 лет', stars:starsRow(5), rating:'4,9', chips:['Маникюр','Брови'], weekBookings:18, futureBookings:6, badge:'Доступ выдан', badgeBg:'#EEF6EA', badgeColor:'#4F7A3D', actionLabel:null, opacity:1, archiveNote:null },
+      { name:'Ирина Волкова', nameGenitive:'Ирины Волковой', spec:'Педикюр, ресницы', years:'5 лет', stars:starsRow(5), rating:'4,8', chips:['Педикюр','Ресницы'], weekBookings:14, futureBookings:4, badge:'Доступ выдан', badgeBg:'#EEF6EA', badgeColor:'#4F7A3D', actionLabel:null, opacity:1, archiveNote:null },
+      { name:'Мария Зайцева', nameGenitive:'Марии Зайцевой', spec:'Ресницы, брови', years:'3 года', stars:starsRow(4), rating:'4,7', chips:['Ресницы','Брови'], weekBookings:9, futureBookings:2, badge:'Доступ не выдан', badgeBg:'#F3E9E6', badgeColor:'#5C4440', actionLabel:'Выдать доступ', actionOnClick:null, opacity:1, archiveNote:null },
+      { name:'Татьяна Нечаева', nameGenitive:'Татьяны Нечаевой', spec:'Маникюр', years:'2 года', stars:starsRow(4), rating:'4,6', chips:['Маникюр'], weekBookings:0, futureBookings:0, badge:'В архиве', badgeBg:'#F3E9E6', badgeColor:'#8A726D', actionLabel:null, opacity:.55, archiveNote:'Не отображается на сайте' },
     ];
+    const masters = mastersData.map((m,i)=>({
+      ...m,
+      // Мастер в архиве: архивировать нечего, возврата из архива в прототипе нет.
+      // noop гасит клик, чтобы «⋯» не открывал карточку мастера вместо меню.
+      archiveClick: m.futureBookings > 0 ? openArchive(i) : noop,
+      archiveHint: m.futureBookings > 0 ? 'Архивировать мастера' : 'Мастер в архиве',
+    }));
+    const archiveMaster = this.state.archiveIndex === null ? null : mastersData[this.state.archiveIndex];
+
     const warningBookings = ['23 окт, 14:00 — Анна Соколова', '24 окт, 11:00 — Дарья Миронова', '25 окт, 16:30 — Ксения Орлова'];
-    return { sidebarItems, tabs, masters, warningBookings,
+    return { sidebarItems, tabs, masters, warningBookings, archiveMaster,
+      closeArchive: ()=>this.setState({ archiveIndex:null }),
       goToDashboard, goToBookings, goToMasterForm };
   }
 }

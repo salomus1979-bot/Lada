@@ -128,8 +128,8 @@
             </div>
             <div style="display:flex; gap:6px; flex-wrap:wrap;">
               <button onClick="{{ goToRequests }}" style="flex:1; background:transparent; color:#5C4440; border:1.5px solid #E8DAD6; border-radius:12px; padding:8px; font-size:12px; font-weight:700; font-family:'Manrope',sans-serif; white-space:nowrap; cursor:pointer;">Посмотреть</button>
-              <button style="flex:1; background:#EEF6EA; color:#4F7A3D; border:none; border-radius:12px; padding:8px; font-size:12px; font-weight:700; font-family:'Manrope',sans-serif; white-space:nowrap;">Принять</button>
-              <button style="flex:1; background:#FBEAE8; color:#B23A32; border:none; border-radius:12px; padding:8px; font-size:12px; font-weight:700; font-family:'Manrope',sans-serif; white-space:nowrap;">Отклонить</button>
+              <button onClick="{{ goToMasterForm }}" style="flex:1; background:#EEF6EA; color:#4F7A3D; border:none; border-radius:12px; padding:8px; font-size:12px; font-weight:700; font-family:'Manrope',sans-serif; white-space:nowrap; cursor:pointer;">Принять</button>
+              <button onClick="{{ goToMasterForm }}" style="flex:1; background:#FBEAE8; color:#B23A32; border:none; border-radius:12px; padding:8px; font-size:12px; font-weight:700; font-family:'Manrope',sans-serif; white-space:nowrap; cursor:pointer;">Отклонить</button>
             </div>
           </div>
 
@@ -165,6 +165,7 @@ class Component extends DCLogic {
     const goToServices = () => { window.location.href = '31. Админ - Услуги.dc.html'; };
     const goToSettings = () => { window.location.href = '33. Админ - Настройки студии.dc.html'; };
     const goToRequests = () => { window.location.href = '34. Админ - Запросы мастеров.dc.html'; };
+    const goToMasterForm = () => { window.location.href = '29. Админ - Карточка мастера (форма).dc.html'; };
     const sidebarItems = [
       {icon:'layout-dashboard', label:'Дашборд', bg:'transparent', fg:'#C4ADA8', badge:null, onClick:goToDashboard},
       {icon:'calendar', label:'Расписание', bg:'transparent', fg:'#C4ADA8', badge:null, onClick:goToSchedule},
@@ -193,7 +194,7 @@ class Component extends DCLogic {
       {label:'Доля отмен', value:'4%', color:'#4F7A3D'},
     ];
 
-    return { sidebarItems, serviceGroups, stats, goToDashboard, goToMasters, goToRequests };
+    return { sidebarItems, serviceGroups, stats, goToDashboard, goToMasters, goToRequests, goToMasterForm };
   }
 }
 

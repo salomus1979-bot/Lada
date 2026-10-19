@@ -60,7 +60,7 @@
           <div style="background:#FFFFFF; border:1px solid #E8DAD6; border-radius:20px; padding:22px;">
             <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:8px;">
               <span style="font-family:'Oswald',sans-serif; font-weight:700; text-transform:uppercase; font-size:20px;">Запись №1042</span>
-              <span style="font-size:11px; font-weight:700; padding:4px 10px; border-radius:999px; background:#EEF6EA; color:#4F7A3D;">Подтверждена</span>
+              <span style="font-size:11px; font-weight:700; padding:4px 10px; border-radius:999px; background:{{ statusBadge.bg }}; color:{{ statusBadge.fg }};">{{ statusBadge.label }}</span>
             </div>
             <div style="font-size:14px; color:#5C4440; font-variant-numeric:tabular-nums;">Пятница, 23 октября · 14:00–16:00</div>
           </div>
@@ -147,9 +147,9 @@
             <div style="height:1px; background:#E8DAD6; margin:8px 0;"></div>
 
             <div style="font-size:11.5px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:#8A726D; margin-bottom:4px;">Отметить статус</div>
-            <button style="background:#EEF6EA; color:#4F7A3D; border:none; border-radius:14px; padding:10px; font-size:12.5px; font-weight:700; font-family:'Manrope',sans-serif; display:flex; align-items:center; justify-content:center; gap:6px;"><i data-lucide="check" width="14" height="14" stroke-width="2"></i>Клиент пришёл</button>
-            <button style="background:#FBEAE8; color:#B23A32; border:none; border-radius:14px; padding:10px; font-size:12.5px; font-weight:700; font-family:'Manrope',sans-serif; display:flex; align-items:center; justify-content:center; gap:6px;"><i data-lucide="user-x" width="14" height="14" stroke-width="1.5"></i>Клиент не пришёл</button>
-            <button style="background:#F3E9E6; color:#5C4440; border:none; border-radius:14px; padding:10px; font-size:12.5px; font-weight:700; font-family:'Manrope',sans-serif; display:flex; align-items:center; justify-content:center; gap:6px;"><i data-lucide="check-check" width="14" height="14" stroke-width="1.5"></i>Визит завершён</button>
+            <sc-for list="{{ statusButtons }}" as="sb" hint-placeholder-count="3">
+              <button onClick="{{ sb.onClick }}" style="background:{{ sb.bg }}; color:{{ sb.fg }}; border:none; border-radius:14px; padding:10px; font-size:12.5px; font-weight:700; font-family:'Manrope',sans-serif; display:flex; align-items:center; justify-content:center; gap:6px; cursor:pointer; box-shadow:{{ sb.ring }};"><i data-lucide="{{ sb.icon }}" width="14" height="14" stroke-width="{{ sb.stroke }}"></i>{{ sb.label }}</button>
+            </sc-for>
 
             <div style="font-size:11px; color:#B9A69F; margin-top:6px; line-height:1.4;">Удаление записей недоступно. Используйте отмену.</div>
           </div>
@@ -163,7 +163,9 @@
 </x-dc>
 <script type="text/x-dc" data-dc-script>
 class Component extends DCLogic {
+  state = { status: null };
   componentDidMount(){ this.renderIcons(); }
+  componentDidUpdate(){ this.renderIcons(); }
   renderIcons(){ if(window.lucide) window.lucide.createIcons(); }
   renderVals(){
     const goToDashboard = () => { window.location.href = '21. Админ - Дашборд дня.dc.html'; };
@@ -192,7 +194,26 @@ class Component extends DCLogic {
       {time:'14 окт, 15:12', text:'Создана клиентом Анна Соколова', connector:true},
       {time:'14 окт, 15:30', text:'Перенесена администратором Елена Крылова, причина «Просьба клиента»', connector:false},
     ];
-    return { sidebarItems, serviceRows, logEntries, goToDashboard, goToBookings };
+    // Отметка статуса визита: POST /admin/appointments/:id/status.
+    // state.status === null — визит подтверждён, но статус ещё не отмечен.
+    // «Клиент пришёл» уходит в API как confirmed, бейдж показывает подпись действия.
+    const statusDefs = [
+      {key:'arrived',   label:'Клиент пришёл',    icon:'check',       stroke:'2',   bg:'#EEF6EA', fg:'#4F7A3D'},
+      {key:'no_show',   label:'Клиент не пришёл', icon:'user-x',      stroke:'1.5', bg:'#FBEAE8', fg:'#B23A32'},
+      {key:'completed', label:'Визит завершён',   icon:'check-check', stroke:'1.5', bg:'#F3E9E6', fg:'#5C4440'},
+    ];
+    const current = statusDefs.find(s => s.key === this.state.status);
+    const statusBadge = current
+      ? { label: current.label, bg: current.bg, fg: current.fg }
+      : { label: 'Подтверждена', bg: '#EEF6EA', fg: '#4F7A3D' };
+    const statusButtons = statusDefs.map(s => ({
+      ...s,
+      ring: s.key === this.state.status ? 'inset 0 0 0 1.5px ' + s.fg : 'none',
+      onClick: () => this.setState({ status: s.key }),
+    }));
+
+    return { sidebarItems, serviceRows, logEntries, goToDashboard, goToBookings,
+      statusBadge, statusButtons };
   }
 }
 

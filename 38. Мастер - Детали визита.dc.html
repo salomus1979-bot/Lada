@@ -24,7 +24,7 @@
 
 <div style="font-family:'Manrope',sans-serif; background:#1C1412; min-height:100vh; display:flex; gap:24px; justify-content:center; flex-wrap:wrap; padding:32px;">
 
-  <div style="width:390px; background:#241A18; color:#F5EBE8; border-radius:28px; overflow:hidden; display:flex; flex-direction:column; min-height:800px;">
+  <div style="width:390px; background:#241A18; color:#F5EBE8; border-radius:28px; overflow:hidden; display:flex; flex-direction:column; min-height:800px; position:relative;">
     <div onClick="{{ goToMyDay }}" style="padding:18px 18px 0; display:flex; align-items:center; gap:10px; margin-bottom:6px;">
       <i data-lucide="arrow-left" width="20" height="20" stroke-width="1.5" style="color:#C4ADA8;"></i>
       <span style="font-size:13px; font-weight:600; color:#C4ADA8;">Назад</span>
@@ -32,7 +32,7 @@
     <div style="padding:14px 18px 0; flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:14px;">
 
       <div>
-        <span style="display:inline-flex; font-size:11px; font-weight:700; padding:4px 10px; border-radius:999px; background:rgba(143,191,120,.14); color:#8FBF78; margin-bottom:10px;">Подтверждена</span>
+        <span style="display:inline-flex; font-size:11px; font-weight:700; padding:4px 10px; border-radius:999px; background:{{ statusBadge.bg }}; color:{{ statusBadge.fg }}; margin-bottom:10px;">{{ statusBadge.label }}</span>
         <div style="font-size:19px; font-weight:700; font-variant-numeric:tabular-nums; margin-bottom:4px;">Пятница, 23 октября · 14:00–16:00</div>
         <div style="font-size:12.5px; color:#9A807A;">через 9 дней</div>
       </div>
@@ -72,20 +72,39 @@
       </div>
 
       <div style="display:flex; gap:8px;">
-        <button style="flex:1; background:rgba(143,191,120,.14); color:#8FBF78; border:none; border-radius:14px; padding:12px 6px; font-size:12px; font-weight:700; font-family:'Manrope',sans-serif;">Клиент пришёл</button>
-        <button style="flex:1; background:rgba(229,128,120,.14); color:#E58078; border:none; border-radius:14px; padding:12px 6px; font-size:12px; font-weight:700; font-family:'Manrope',sans-serif;">Не пришёл</button>
-        <button style="flex:1; background:#3D2B28; color:#C4ADA8; border:none; border-radius:14px; padding:12px 6px; font-size:12px; font-weight:700; font-family:'Manrope',sans-serif;">Завершён</button>
+        <sc-for list="{{ statusButtons }}" as="sb" hint-placeholder-count="3">
+          <button onClick="{{ sb.onClick }}" style="flex:1; background:{{ sb.bg }}; color:{{ sb.fg }}; border:none; border-radius:14px; padding:12px 6px; font-size:12px; font-weight:700; font-family:'Manrope',sans-serif; cursor:pointer; box-shadow:{{ sb.ring }};">{{ sb.label }}</button>
+        </sc-for>
       </div>
 
-      <button style="width:100%; background:transparent; color:#E58078; border:1.5px solid #5A3832; border-radius:14px; padding:13px; font-size:13.5px; font-weight:700; font-family:'Manrope',sans-serif;">Запросить отмену</button>
+      <button onClick="{{ openSheet }}" style="width:100%; background:transparent; color:#E58078; border:1.5px solid #5A3832; border-radius:14px; padding:13px; font-size:13.5px; font-weight:700; font-family:'Manrope',sans-serif; cursor:pointer;">Запросить отмену</button>
       <div style="display:flex; gap:8px; align-items:flex-start; background:#2B201D; border-radius:12px; padding:11px 13px; margin-bottom:20px;">
         <i data-lucide="info" width="14" height="14" stroke-width="1.5" style="color:#8CA9BE; flex:none; margin-top:1px;"></i>
         <span style="font-size:11.5px; color:#9A807A; line-height:1.4;">Отменить запись может только администратор. Мы отправим ему ваш запрос.</span>
       </div>
 
     </div>
+
+    <sc-if value="{{ sheetOpen }}">
+      <div style="position:absolute; inset:0; z-index:20;">
+        <div onClick="{{ closeSheet }}" style="position:absolute; inset:0; background:rgba(0,0,0,.45);"></div>
+        <div style="position:absolute; left:0; right:0; bottom:0; background:#2B201D; border-top:1px solid #4A3733; border-radius:24px 24px 0 0; padding:22px 20px 26px; box-shadow:0 -10px 30px rgba(0,0,0,.3);">
+          <div style="width:36px; height:4px; border-radius:999px; background:#4A3733; margin:0 auto 18px;"></div>
+          <div style="font-size:16px; font-weight:700; margin-bottom:14px;">Запросить отмену</div>
+          <label style="display:block; font-size:12px; font-weight:600; color:#C4ADA8; margin-bottom:6px;">Причина *</label>
+          <textarea placeholder="Опишите причину отмены" style="width:100%; min-height:76px; background:#332522; border:1px solid #4A3733; border-radius:8px; padding:11px 14px; font-size:13.5px; color:#F5EBE8; font-family:'Manrope',sans-serif; resize:vertical; margin-bottom:10px;"></textarea>
+          <div style="font-size:11.5px; color:#9A807A; line-height:1.4; margin-bottom:18px;">Администратор получит запрос и решит, отменить или перенести визит.</div>
+          <div style="display:flex; gap:10px;">
+            <button onClick="{{ closeSheet }}" style="flex:1; background:transparent; color:#C4ADA8; border:1.5px solid #4A3733; border-radius:14px; padding:12px; font-size:13px; font-weight:700; font-family:'Manrope',sans-serif; cursor:pointer;">Отмена</button>
+            <button onClick="{{ closeSheet }}" style="flex:1; background:#F2C2C0; color:#2A1C1A; border:none; border-radius:14px; padding:12px; font-size:13px; font-weight:700; font-family:'Manrope',sans-serif; cursor:pointer;">Отправить запрос</button>
+          </div>
+        </div>
+      </div>
+    </sc-if>
   </div>
 
+  <div style="width:390px;">
+    <div style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:#F5EBE8; margin-bottom:10px;">Состояние: шит запроса отмены <span style="text-transform:none; color:#9A807A; font-weight:600;">· статичный макет</span></div>
   <div style="width:390px; background:#241A18; color:#F5EBE8; border-radius:28px; overflow:hidden; display:flex; flex-direction:column; min-height:800px; position:relative;">
     <div onClick="{{ goToMyDay }}" style="padding:18px 18px 0; display:flex; align-items:center; gap:10px;">
       <i data-lucide="arrow-left" width="20" height="20" stroke-width="1.5" style="color:#C4ADA8;"></i>
@@ -108,6 +127,7 @@
       </div>
     </div>
   </div>
+  </div>
 
   <div style="width:390px;">
     <div style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:#F5EBE8; margin-bottom:10px;">Состояние: запрос отправлен</div>
@@ -123,11 +143,33 @@
 </x-dc>
 <script type="text/x-dc" data-dc-script>
 class Component extends DCLogic {
+  state = { sheetOpen: false, status: null };
   componentDidMount(){ this.renderIcons(); }
+  componentDidUpdate(){ this.renderIcons(); }
   renderIcons(){ if(window.lucide) window.lucide.createIcons(); }
   renderVals(){
     const goToMyDay = () => { window.location.href = '36. Мастер - Мой день.dc.html'; };
-    return { goToMyDay };
+
+    // Отметка статуса визита: POST /master/appointments/:id/status.
+    // state.status === null — визит подтверждён, но статус ещё не отмечен.
+    // «Клиент пришёл» уходит в API как confirmed, бейдж показывает подпись действия.
+    const statusDefs = [
+      {key:'arrived',   label:'Клиент пришёл', bg:'rgba(143,191,120,.14)', fg:'#8FBF78'},
+      {key:'no_show',   label:'Не пришёл',     bg:'rgba(229,128,120,.14)', fg:'#E58078'},
+      {key:'completed', label:'Завершён',      bg:'#3D2B28',               fg:'#C4ADA8'},
+    ];
+    const current = statusDefs.find(s => s.key === this.state.status);
+    const statusBadge = current
+      ? { label: current.label, bg: current.bg, fg: current.fg }
+      : { label: 'Подтверждена', bg: 'rgba(143,191,120,.14)', fg: '#8FBF78' };
+    const statusButtons = statusDefs.map(s => ({
+      ...s,
+      ring: s.key === this.state.status ? 'inset 0 0 0 1.5px ' + s.fg : 'none',
+      onClick: () => this.setState({ status: s.key }),
+    }));
+
+    return { goToMyDay, statusBadge, statusButtons, sheetOpen: this.state.sheetOpen,
+      openSheet: ()=>this.setState({sheetOpen:true}), closeSheet: ()=>this.setState({sheetOpen:false}) };
   }
 }
 
