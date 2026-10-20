@@ -18,13 +18,12 @@
  * случай, когда роль отозвали при открытой странице: тогда она сама уводит
  * человека, не дожидаясь первого 403 от API.
  *
- * Роли приходят списком (`user.roles`), и проверка — вхождение в список, а не
- * равенство: у одного человека их может быть несколько (например мастер,
- * который заодно администрирует).
+ * Само правило «это администратор» — одно на все страницы, в js/roles.js.
  */
 
 import { getMe, logout } from './api.js';
 import { $, showError, refreshIcons } from './ui.js';
+import { isAdmin } from './roles.js';
 
 /** Куда уходим, когда сессии нет. */
 const LOGIN_PAGE = '/login.html';
@@ -32,18 +31,6 @@ const LOGIN_PAGE = '/login.html';
 const LANDING_PAGE = '/';
 /** Что показываем аккаунту без роли администратора. */
 const FORBIDDEN_PAGE = '/admin-forbidden.html';
-
-/** Роли, которым открыт раздел. Те же, что у requireRole в API. */
-const ADMIN_ROLES = ['admin', 'owner'];
-
-/**
- * Есть ли у пользователя роль администратора.
- * Роли — список, поэтому вопрос именно «входит ли», а не «равна ли».
- */
-export function isAdmin(user) {
-  return !!user && Array.isArray(user.roles)
-    && ADMIN_ROLES.some((role) => user.roles.includes(role));
-}
 
 /** Инициалы для кружка-аватара: так же, как их считает API для своих списков. */
 export function initials(name) {
@@ -123,7 +110,7 @@ function setupLogout() {
  *
  * Когда разделы начнут показывать данные, рядом появятся свои модули
  * (admin-appointments.js и остальные), а этот останется общим слоем:
- * `isAdmin` и `initials` для этого и экспортируются.
+ * `initials` для этого и экспортируется.
  */
 export function initAdminShell() {
   setupLogout();

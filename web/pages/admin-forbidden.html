@@ -10,21 +10,27 @@
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/tokens.css">
 <link rel="stylesheet" href="/css/admin.css">
+<script type="module" src="/js/admin-forbidden.js"></script>
 </head>
 <!-- Эту страницу отдаёт web/server.js с кодом 403, когда в /admin пришёл
      аккаунт без роли администратора. Ни сайдбара, ни меню раздела на ней нет:
      пункты, в которые всё равно нельзя войти, человеку не нужны.
 
-     Своего скрипта у страницы тоже нет: ей нечего запрашивать. -->
+     Единственный запрос страницы — `GET /auth/me`: она называет аккаунт и его
+     роли, чтобы было видно, почему не пустило. -->
 <body class="adm adm--plain">
 
 <main class="adm-forbid">
   <a class="adm-forbid__logo" href="/">Лада</a>
   <h1 class="adm-forbid__title">Этот раздел только для администраторов</h1>
   <p class="adm-forbid__text">
-    Вы вошли в сервис, но роли администратора у аккаунта нет. Её назначают в
-    базе данных — получить её из интерфейса нельзя.
+    Роли администратора у аккаунта нет. Её назначают в базе данных — получить
+    её из интерфейса нельзя.
   </p>
+  <!-- Имя, адрес и роли текущего аккаунта: наполняет js/admin-forbidden.js
+       из `GET /auth/me`. Пока ответа нет, строки на экране тоже нет — пустое
+       место лучше, чем обещание данных, которых может не быть. -->
+  <p class="adm-forbid__who" data-who role="status" hidden></p>
   <div class="adm-forbid__links">
     <a class="adm-btn" href="/account.html">В личный кабинет</a>
     <a class="adm-forbid__back" href="/">На сайт</a>

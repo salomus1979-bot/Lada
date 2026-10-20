@@ -356,6 +356,19 @@ body.adm--plain { display: block; }
   line-height: var(--text-body-l-lh);
 }
 
+/* Под каким аккаунтом вошли и какие у него роли — ответ на «почему не
+   пустило» прямо на экране. */
+.adm-forbid__who {
+  padding: calc(var(--space-2) + var(--space-1)) var(--space-4);
+  border-radius: var(--radius-md);
+  background: var(--bg-surface-light);
+  border: 1px solid var(--border-default-light);
+  color: var(--text-secondary-light);
+  font-size: var(--text-body-s);
+  line-height: var(--text-body-s-lh);
+}
+.adm-forbid__who[hidden] { display: none; }
+
 .adm-forbid__links { display: flex; align-items: center; gap: var(--space-6); flex-wrap: wrap; }
 
 .adm-forbid__back {

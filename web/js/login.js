@@ -12,12 +12,13 @@
  * не читается и никуда не сохраняется.
  */
 
-import { login } from './api.js';
+import { login, getMe } from './api.js';
 import {
   initIcons, setupPasswordToggle, clearErrors, clearErrorOnInput, setFieldError,
   showFormError, focusFirstInvalid, applyApiError, submitting, field,
   checkEmail, checkRequired, nextPage,
 } from './auth-form.js';
+import { CABINET_PAGE, homePageFor } from './roles.js';
 
 /**
  * Куда ведёт успешный вход у клиента — `7. Кабинет - Предстоящие записи`, а
@@ -28,30 +29,35 @@ import {
  * вернётся в воронку, а не в свой раздел. Поэтому `?next=` (он принимает
  * только страницы воронки, см. auth-form.js) проверяется первым.
  */
-const AFTER_LOGIN = nextPage('account.html');
-const CAME_FROM_BOOKING = AFTER_LOGIN !== 'account.html';
-
-/** Первая страница раздела администратора. */
-const ADMIN_PAGE = '/admin/appointments';
+const AFTER_LOGIN = nextPage(CABINET_PAGE);
+const CAME_FROM_BOOKING = AFTER_LOGIN !== CABINET_PAGE;
 
 /**
- * Роли, которым открыт раздел администратора. Те же, что проверяет сервер:
- * `requireRole('admin', 'owner')` в api/src/routes/admin.js и guard в
- * web/server.js. Здесь это только выбор страницы после входа — доступ
- * решается на сервере.
+ * Роли вошедшего. Обычно они уже в ответе `POST /auth/login` — сервер
+ * собирает их по таблице `user_roles` и кладёт в `user.roles`.
+ *
+ * Если роли в ответе не пришли, их спрашивают отдельно — `GET /auth/me`.
+ * Это не перестраховка на пустом месте: без такого запроса страница молча
+ * считала бы, что ролей нет, и администратор уезжал бы в клиентский кабинет —
+ * ровно так выглядит «сервис не перенаправляет в /admin», и по одному
+ * поведению не отличить, что именно сломалось. Теперь источник ролей один —
+ * сервер, а не форма входа, и спросить его можно дважды.
  */
-const ADMIN_ROLES = ['admin', 'owner'];
+async function rolesOfLoggedIn(user) {
+  if (user && Array.isArray(user.roles)) return user;
+  try {
+    return await getMe();
+  } catch {
+    // Профиль не отдался — ведём в кабинет, как всех. Пункт «Админ-панель»
+    // там появится сам, когда `GET /auth/me` ответит (account-shell.js).
+    return user;
+  }
+}
 
-/**
- * Куда вести вошедшего. Роли приходят СПИСКОМ (`user.roles` из ответа
- * `POST /auth/login`, собранный сервером по таблице `user_roles`), поэтому
- * вопрос — «есть ли роль в списке», а не «равна ли роль администратору»:
- * у одного человека их может быть несколько.
- */
-function pageForUser(user) {
+/** Куда вести вошедшего: шаг воронки, если вход прерывал запись, иначе — по роли. */
+async function pageForUser(user) {
   if (CAME_FROM_BOOKING) return AFTER_LOGIN;
-  const roles = Array.isArray(user && user.roles) ? user.roles : [];
-  return ADMIN_ROLES.some((role) => roles.includes(role)) ? ADMIN_PAGE : AFTER_LOGIN;
+  return homePageFor(await rolesOfLoggedIn(user), AFTER_LOGIN);
 }
 
 const form = document.getElementById('login-form');
@@ -94,7 +100,7 @@ form.addEventListener('submit', async (event) => {
       password: field(form, 'password').value,
     });
     // Успех — сессия уже в куке, дальше решают роли из ответа сервера.
-    window.location.assign(pageForUser(user));
+    window.location.assign(await pageForUser(user));
   } catch (err) {
     if (err.status === 401) {
       // Сервер намеренно не говорит, что именно не подошло: иначе по ответу
