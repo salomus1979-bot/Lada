@@ -34,6 +34,13 @@
     <a class="side__item" href="profile.html">
       <i class="icon" data-lucide="user" aria-hidden="true"></i>Профиль
     </a>
+    <!-- Пункт раздела администратора: в разметке скрыт и показывается только
+         аккаунту с ролью admin или owner (showAdminLink в account-shell.js).
+         Это удобство, а не защита: /admin закрыт на сервере (web/server.js),
+         а /api/admin/* — в API (requireRole). -->
+    <a class="side__item" href="/admin/appointments" data-role="admin" hidden>
+      <i class="icon" data-lucide="shield" aria-hidden="true"></i>Админ-панель
+    </a>
     <!-- «Выйти» — не ссылка: это запрос POST /auth/logout, после него лендинг. -->
     <button class="side__item side__item--button" type="button" data-action="logout">
       <i class="icon" data-lucide="log-out" aria-hidden="true"></i>Выйти

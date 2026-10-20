@@ -1,0 +1,428 @@
+/*
+ * Раздел администратора (`/admin`). Каркас: сайдбар с меню, шапка и пустые
+ * страницы разделов «Записи», «Услуги» и «Мастера».
+ *
+ * Образец — административные экраны прототипа: `23. Админ - Записи`,
+ * `31. Админ - Услуги`, `28. Админ - Мастера` (раскладка и сайдбар у всех
+ * четырнадцати экранов одинаковые) и шапка со `21. Админ - Дашборд дня`.
+ *
+ * Почему этот файл не подключает landing.css, как остальные страницы:
+ * админ-панель — это СВЕТЛАЯ тема. В дизайн-системе под неё есть своя
+ * палитра (`--*-light` в tokens.css, раздел «Светлая тема (админ-панель)»),
+ * а база из landing.css задаёт тёмный фон и акценты тёмной темы. Поэтому база
+ * здесь своя — десяток правил, повторённых осознанно, а не ещё один слой
+ * переопределений поверх тёмного лендинга. Сайдбар при этом остаётся тёмным,
+ * как в прототипе, и берёт токены тёмной палитры.
+ *
+ * Правило 4 из docs/frontend-rules.md: цвета, шрифты и размеры — только из
+ * tokens.css. Ни одного подобранного значения: либо переменная, либо
+ * арифметика по шкале (`calc` на --space-*). Чем значения прототипа
+ * отличаются от токенов — перечислено в конце файла.
+ */
+
+:root {
+  /* Ширина сайдбара (в прототипе 240px). Сетки в дизайн-системе нет, поэтому
+     считается шагами шкалы: 32 × 7.5 = 240px. В кабинете клиента та же
+     величина выведена от колонки макета (--container-max / 5), но
+     --container-max живёт в landing.css, который админка не подключает. */
+  --adm-side-w: calc(var(--space-8) * 7.5);
+  /* Горизонтальные поля содержимого (в прототипе 40px). */
+  --adm-x: calc(var(--space-8) + var(--space-2));
+}
+
+/* ─── База ───────────────────────────────────────────────────────────── */
+
+*, *::before, *::after { box-sizing: border-box; }
+
+body.adm {
+  margin: 0;
+  display: flex;
+  min-height: 100vh;
+  background: var(--bg-base-light);
+  color: var(--text-primary-light);
+  font-family: var(--font-text);
+  font-size: var(--text-body-m);
+  line-height: var(--text-body-m-lh);
+  -webkit-font-smoothing: antialiased;
+}
+
+.adm h1, .adm h2, .adm p { margin: 0; }
+
+.adm ::selection { background: var(--accent-primary); color: var(--text-on-accent); }
+
+/* Ссылки светлой темы: в палитре админки для них своя роль. */
+.adm a { color: var(--accent-text-light); text-decoration: none; }
+.adm a:hover { text-decoration: underline; }
+
+.adm :focus-visible { outline: 2px solid var(--accent-text-light); outline-offset: var(--space-1); }
+
+/* Иконки lucide: размер — от размера текста рядом, своей шкалы у них в
+   дизайн-системе нет. Скрипт заменяет <i> на <svg> и переносит на него
+   классы, поэтому у каждого правила два селектора: до замены и после.
+   Те же правила, что в landing.css, — он здесь не подключён. */
+.adm .icon { display: inline-flex; flex: none; }
+.adm .icon svg, .adm svg.icon { width: 1.25em; height: 1.25em; stroke-width: 1.5; flex: none; }
+
+/* ─── Сайдбар ────────────────────────────────────────────────────────── */
+/* Тёмный, как в прототипе: на светлой странице это единственный тёмный блок,
+   и токены у него из тёмной палитры. */
+
+.adm-side {
+  width: var(--adm-side-w);
+  flex: none;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-6) var(--space-4);
+  background: var(--bg-base);
+}
+
+.adm-side__logo {
+  font-family: var(--font-display);
+  font-size: var(--text-h4);
+  line-height: var(--text-h4-lh);
+  font-weight: var(--text-display-xl-weight);
+  text-transform: var(--text-display-xl-case);
+  padding-inline: var(--space-2);
+}
+.adm-side__logo, .adm-side__logo:hover { color: var(--accent-primary); text-decoration: none; }
+
+/* Бейдж роли: подпись «Администратор» под логотипом. Это не данные —
+   страница открывается только аккаунту с этой ролью (проверку делают
+   web/server.js и requireRole в API). */
+.adm-side__role {
+  align-self: start;
+  margin: 0 var(--space-2) var(--space-6);
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-full);
+  background: var(--accent-subtle);
+  color: var(--accent-primary);
+  font-size: var(--text-caption-mobile);
+  line-height: var(--text-caption-lh);
+  font-weight: var(--text-label-weight);
+}
+
+/* ─── Меню ───────────────────────────────────────────────────────────── */
+
+.adm-nav {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.adm-nav__item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) calc(var(--space-2) + var(--space-1));
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  font-size: var(--text-body-s);
+  line-height: var(--text-body-s-lh);
+  font-weight: var(--text-h4-weight);
+}
+.adm-nav__item:hover {
+  background: var(--accent-subtle);
+  color: var(--text-primary);
+  text-decoration: none;
+}
+.adm-nav__item--current,
+.adm-nav__item--current:hover {
+  background: var(--accent-subtle);
+  color: var(--accent-primary);
+}
+
+/* ─── Юзер-блок сайдбара ─────────────────────────────────────────────── */
+
+.adm-user {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-4) var(--space-2) var(--space-2);
+  border-top: 1px solid var(--border-default);
+}
+
+.adm-user__avatar {
+  width: var(--space-8);
+  height: var(--space-8);
+  flex: none;
+  border-radius: var(--radius-full);
+  background: var(--accent-primary);
+  color: var(--text-on-accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--text-caption);
+  font-weight: var(--text-label-weight);
+}
+/* Пока имя не пришло, кружок пустой — заливку снимаем, чтобы он не обещал
+   инициалы, которых ещё нет. */
+.adm-user[aria-busy="true"] .adm-user__avatar { background: var(--bg-elevated); }
+
+.adm-user__text { min-width: 0; display: flex; flex-direction: column; }
+.adm-user__name {
+  color: var(--text-primary);
+  font-size: var(--text-body-s);
+  line-height: var(--text-body-s-lh);
+  font-weight: var(--text-h4-weight);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* «Выйти» — не ссылка: это запрос POST /auth/logout, после него лендинг. */
+.adm-user__logout {
+  align-self: start;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--text-muted);
+  font-family: var(--font-text);
+  font-size: var(--text-caption-mobile);
+  line-height: var(--text-caption-lh);
+  cursor: pointer;
+}
+.adm-user__logout:hover { color: var(--text-secondary); }
+.adm-user__logout:disabled { cursor: default; }
+
+/* ─── Шапка и содержимое ─────────────────────────────────────────────── */
+
+.adm__body { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+
+.adm-top {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+  padding: var(--space-4) var(--adm-x);
+  background: var(--bg-surface-light);
+  border-bottom: 1px solid var(--border-default-light);
+}
+
+.adm-top__title {
+  font-family: var(--text-h2-font);
+  font-size: var(--text-h2);
+  line-height: var(--text-h2-lh);
+  font-weight: var(--text-h2-weight);
+  text-transform: var(--text-display-l-case);
+}
+
+.adm-top__site {
+  font-size: var(--text-body-s);
+  line-height: var(--text-body-s-lh);
+  font-weight: var(--text-h4-weight);
+}
+
+.adm__content {
+  flex: 1;
+  padding: var(--space-8) var(--adm-x);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+/* ─── Карточка раздела ───────────────────────────────────────────────── */
+
+.adm-card {
+  background: var(--bg-surface-light);
+  border: 1px solid var(--border-default-light);
+  border-radius: var(--radius-lg);
+  padding: var(--space-6);
+}
+
+/* Пустой раздел: страница есть, данных на ней пока нет — и сказано об этом
+   прямо, а не пустым экраном. */
+.adm-blank { display: flex; flex-direction: column; gap: var(--space-2); }
+
+.adm-blank__title {
+  font-family: var(--text-h4-font);
+  font-size: var(--text-h4);
+  line-height: var(--text-h4-lh);
+  font-weight: var(--text-h4-weight);
+}
+
+.adm-blank__text {
+  max-width: calc(var(--space-8) * 20);
+  color: var(--text-secondary-light);
+  font-size: var(--text-body-m);
+  line-height: var(--text-body-m-lh);
+}
+
+.adm-blank__text code {
+  font-family: var(--font-text);
+  font-size: var(--text-body-s);
+  padding: 0 var(--space-1);
+  border-radius: var(--radius-sm);
+  background: var(--bg-base-light);
+  border: 1px solid var(--border-default-light);
+  color: var(--text-primary-light);
+}
+
+/* ─── Кнопка светлой темы ────────────────────────────────────────────── */
+
+.adm-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: calc(var(--space-2) + var(--space-1)) var(--space-6);
+  border: none;
+  border-radius: var(--radius-md);
+  background: var(--text-primary-light);
+  color: var(--accent-primary);
+  font-family: var(--text-button-font);
+  font-size: var(--text-button);
+  line-height: var(--text-button-lh);
+  font-weight: var(--text-button-weight);
+  letter-spacing: var(--text-button-tracking);
+  cursor: pointer;
+}
+.adm-btn:hover { background: var(--text-secondary-light); color: var(--accent-primary); text-decoration: none; }
+
+/* ─── Ошибка на экране ───────────────────────────────────────────────── */
+/* Классы те же, что в landing.css: сообщение об ошибке на любой странице
+   рисует общий showError из js/ui.js (правило 7). Здесь они в светлой теме. */
+
+.adm .load-error {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+  padding: calc(var(--space-2) + var(--space-1)) var(--space-4);
+  border-radius: var(--radius-md);
+  background: var(--feedback-error-subtle);
+  border: 1px solid var(--feedback-error-light);
+  color: var(--feedback-error-light);
+  font-size: var(--text-body-s);
+  line-height: var(--text-body-s-lh);
+}
+.adm .load-error[hidden] { display: none; }
+
+.adm .load-error__retry {
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--accent-text-light);
+  font-family: var(--font-text);
+  font-size: var(--text-body-s);
+  font-weight: var(--text-label-weight);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+/* ─── Страница «только для администраторов» ──────────────────────────── */
+/* Её отдаёт web/server.js с кодом 403, когда в /admin пришёл не администратор.
+   Ни сайдбара, ни меню на ней нет: пункты раздела человеку не нужны. */
+
+body.adm--plain { display: block; }
+
+.adm-forbid {
+  max-width: calc(var(--space-8) * 18);
+  margin: 0 auto;
+  padding: calc(var(--space-8) * 2) var(--space-4);
+  display: flex;
+  flex-direction: column;
+  align-items: start;
+  gap: var(--space-4);
+}
+
+.adm-forbid__logo {
+  font-family: var(--font-display);
+  font-size: var(--text-h4);
+  line-height: var(--text-h4-lh);
+  font-weight: var(--text-display-xl-weight);
+  text-transform: var(--text-display-xl-case);
+}
+.adm-forbid__logo, .adm-forbid__logo:hover { color: var(--accent-text-light); text-decoration: none; }
+
+.adm-forbid__title {
+  font-family: var(--text-h1-font);
+  font-size: var(--text-h1);
+  line-height: var(--text-h1-lh);
+  font-weight: var(--text-h1-weight);
+}
+
+.adm-forbid__text {
+  color: var(--text-secondary-light);
+  font-size: var(--text-body-l);
+  line-height: var(--text-body-l-lh);
+}
+
+.adm-forbid__links { display: flex; align-items: center; gap: var(--space-6); flex-wrap: wrap; }
+
+.adm-forbid__back {
+  font-size: var(--text-body-s);
+  line-height: var(--text-body-s-lh);
+  font-weight: var(--text-h4-weight);
+}
+
+/* ─── Мобильные ──────────────────────────────────────────────────────── */
+/* Админ-панель в прототипе нарисована только для десктопа. Чтобы на узком
+   экране она не оставалась двумя колонками, сайдбар переезжает наверх. */
+
+@media (max-width: 900px) {
+  body.adm { display: block; }
+  .adm-side {
+    width: auto;
+    position: static;
+    height: auto;
+    flex-direction: row;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--space-4);
+    padding: var(--space-4);
+  }
+  .adm-side__role { margin: 0; }
+  .adm-nav { flex-direction: row; flex-wrap: wrap; flex-basis: 100%; }
+  .adm-user { border-top: none; padding: 0; }
+  .adm-top { position: static; padding: var(--space-4); }
+  .adm-top__title { font-size: var(--text-h2-mobile); }
+  .adm__content { padding: var(--space-4); }
+  .adm-forbid { padding: var(--space-8) var(--space-4); }
+  .adm-forbid__title { font-size: var(--text-h1-mobile); }
+  .adm-forbid__text { font-size: var(--text-body-l-mobile); }
+}
+
+/*
+ * ЧТО ИЗ ПРОТОТИПА НЕ ЛЕГЛО НА ТОКЕНЫ (значения прототипа → что взято).
+ *
+ * 1. Фон сайдбара #2A1C1A. В палитре это значение носит имя --text-on-accent
+ *    (и --text-primary-light) — то есть цвет ТЕКСТА, а не панели. Взят
+ *    --bg-base (#241A18), названный в дизайн-системе «фон приложения»:
+ *    разница в несколько единиц, а роль правильная.
+ * 2. Разделитель над юзер-блоком #3D2B28 — это --bg-elevated, цвет модалок.
+ *    Взят --border-default (#4A3733), названный «разделители, обводки».
+ * 3. Тёмная кнопка светлой темы: в прототипе #2A1C1A с текстом #F2C2C0.
+ *    Светлого токена кнопки в дизайн-системе нет (в разделе «Цвет» светлая
+ *    колонка короче тёмной), поэтому фон — --text-primary-light, то самое
+ *    значение #2A1C1A, а текст — --accent-primary, как в прототипе.
+ * 4. Hover ссылки #8A423F в палитре отсутствует (--accent-hover есть только
+ *    у тёмной темы). Поэтому ссылки в админке подчёркиваются на hover, а
+ *    цвет не меняется — нового значения не появилось.
+ * 5. Размеры текста 10.5, 11.5, 13, 13.5, 14, 15, 20, 26, 28 px — мимо
+ *    двенадцати ступеней шкалы. Подняты/опущены до ближайшей, тем же
+ *    выбором, что в кабинете: 10.5/11.5 → caption-mobile (11), 13/13.5 →
+ *    body-s (13), 14/15 → body-m (15), 20 → h4 (20, совпало), 26/28 → h2
+ *    (32) у заголовка страницы.
+ * 6. Отступы 2, 6, 9, 10, 12, 14, 18, 20, 22, 40 px. В шкале токенов только
+ *    4/8/16/24/32 — взяты её шаги и кратные им через calc: 40 = 32+8
+ *    (--adm-x), 12 = 8+4, остальные округлены до ближайшего шага.
+ * 7. Радиусы 10, 18, 20 px → ближайшие токены: --radius-sm (8) у пунктов
+ *    меню, --radius-md (16) у кнопок, --radius-lg (24) у карточек.
+ * 8. Ширины: сайдбар 240px, содержимое max-width 1240px. Сетки в
+ *    дизайн-системе нет; сайдбар посчитан шагами шкалы (см. --adm-side-w), а
+ *    ограничение ширины содержимого не вводилось вовсе — в разделах будут
+ *    широкие таблицы, и обрезать их по 1240px нечем, кроме выдуманного
+ *    значения.
+ * 9. Бейдж «2» у пункта «Запросы» и сам пункт в каркасе не верстались:
+ *    счётчик непрочитанных брать негде (п. 1-2 списка пробелов в
+ *    docs/ui-map.md), а разделов в этом каркасе всего три.
+ */

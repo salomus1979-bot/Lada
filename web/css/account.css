@@ -97,6 +97,10 @@
   background: var(--accent-subtle);
   color: var(--accent-primary);
 }
+/* Пункт «Админ-панель» лежит в разметке скрытым и показывается только
+   аккаунту с ролью admin/owner: `display:flex` выше перебил бы атрибут
+   `hidden`, поэтому он назван явно. */
+.side__item[hidden] { display: none; }
 .side__new { flex: none; }
 
 /* ─── Шапка кабинета ─────────────────────────────────────────────────── */

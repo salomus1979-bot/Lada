@@ -23,6 +23,29 @@ const LOGIN_PAGE = 'login.html';
 const LANDING_PAGE = '/';
 
 /**
+ * Роли, которым открыт раздел администратора. Те же, что проверяет сервер:
+ * `requireRole('admin', 'owner')` в api/src/routes/admin.js и guard в
+ * web/server.js.
+ */
+const ADMIN_ROLES = ['admin', 'owner'];
+
+/**
+ * Есть ли у пользователя роль администратора.
+ *
+ * Роли приходят СПИСКОМ (`user.roles`), поэтому вопрос — «есть ли роль в
+ * списке», а не «равна ли роль администратору»: у одного человека их может
+ * быть несколько (например мастер, который заодно администрирует).
+ *
+ * Отсюда в кабинете только одно: показывать ли пункт «Админ-панель» в
+ * сайдбаре. Защитой это не является — скрытый пункт меню ничего не закрывает,
+ * доступ к `/admin` и к `/api/admin/*` закрыт на сервере.
+ */
+export function isAdmin(user) {
+  return !!user && Array.isArray(user.roles)
+    && ADMIN_ROLES.some((role) => user.roles.includes(role));
+}
+
+/**
  * 401 на странице кабинета — это не ошибка на экране, а «не вошёл».
  * Текст «Не удалось загрузить» тут был бы неправдой: загружать нечего, пока
  * человек не вошёл. Поэтому молча уводим на вход, `replace` — чтобы «назад»
@@ -57,6 +80,19 @@ export function initials(name) {
 }
 
 /**
+ * Пункт «Админ-панель» в сайдбаре кабинета: в разметке он скрыт и
+ * показывается только аккаунту с ролью администратора.
+ *
+ * Это удобство, а не ограничение: пункта нет — раздел всё равно существует, и
+ * закрывает его сервер (см. isAdmin выше).
+ */
+function showAdminLink(user) {
+  const link = $('[data-role="admin"]');
+  if (!link) return;
+  link.hidden = !isAdmin(user);
+}
+
+/**
  * Юзер-блок в шапке: имя и инициалы из `GET /auth/me`.
  * Профиль нужен обоим экранам кабинета и ничего больше о себе не решает,
  * поэтому возвращаем его наружу — страница ждёт его вместе со своими данными.
@@ -76,6 +112,7 @@ export async function loadMe(onUser) {
     avatar.removeAttribute('aria-busy');
     $('[data-user="block"]').removeAttribute('aria-busy');
     box.hidden = true;
+    showAdminLink(user);
     if (onUser) onUser(user);
     return user;
   } catch (err) {

@@ -71,6 +71,107 @@ app.use('/api', (req, res) => {
   req.pipe(upstream);
 });
 
+/* ─────────────────────────── доступ в /admin ───────────────────────────── */
+
+/**
+ * ПРОВЕРКА ПРАВ НА СТРАНИЦЫ РАЗДЕЛА АДМИНИСТРАТОРА.
+ *
+ * Второй рубеж после API: `/api/admin/*` закрыт в самом API
+ * (`router.use(requireRole('admin','owner'))` в начале api/src/routes/admin.js,
+ * ответ — 403). Но страницы отдаёт этот сервер, и статика сама по себе никого
+ * не спрашивает: без этого guard'а разметку `/admin` получил бы любой. Поэтому
+ * доступ закрыт здесь, а не только в интерфейсе — скрытый пункт меню в
+ * кабинете защитой не является.
+ *
+ * Кто пришёл, сервер узнаёт у API: `GET /api/auth/me` с cookie запроса. Своей
+ * проверки сессии у фронтенда нет и быть не должно — он не знает ни токенов,
+ * ни ролей, и выдумывать вторую реализацию прав значило бы развести их с API.
+ *
+ * Роли приходят СПИСКОМ (`user.roles`), и проверка — вхождение в список, а не
+ * равенство: у одного человека их может быть несколько.
+ */
+const ADMIN_PATH = /^\/admin(\/|$)/;
+const ADMIN_ROLES = ['admin', 'owner'];
+const FORBIDDEN_PAGE = path.join(__dirname, 'pages', 'admin-forbidden.html');
+
+/** Есть ли у пользователя роль администратора. */
+function hasAdminRole(user) {
+  return !!user && Array.isArray(user.roles)
+    && ADMIN_ROLES.some((role) => user.roles.includes(role));
+}
+
+/**
+ * Спрашивает у API, кто пришёл.
+ *
+ * @returns {Promise<{status: number, user: object|null}>} `status` 200 с
+ *   профилем, 401 без сессии, либо 0 — API не ответил вовсе.
+ */
+function whoAmI(req) {
+  return new Promise((resolve) => {
+    const upstream = http.request(
+      {
+        host: API_HOST,
+        port: apiPort,
+        method: 'GET',
+        path: '/api/auth/me',
+        // Пробрасывается только cookie: ответ зависит от сессии, и никакие
+        // другие заголовки запроса на права не влияют.
+        headers: { Accept: 'application/json', ...(req.headers.cookie ? { cookie: req.headers.cookie } : {}) },
+        timeout: 2000,
+      },
+      (apiRes) => {
+        let body = '';
+        apiRes.on('data', (chunk) => { body += chunk; });
+        apiRes.on('end', () => {
+          try {
+            const parsed = JSON.parse(body);
+            resolve({ status: apiRes.statusCode, user: parsed.user || null });
+          } catch {
+            resolve({ status: apiRes.statusCode, user: null });
+          }
+        });
+      },
+    );
+    upstream.on('timeout', () => { upstream.destroy(); resolve({ status: 0, user: null }); });
+    upstream.on('error', () => resolve({ status: 0, user: null }));
+    upstream.end();
+  });
+}
+
+app.use(async (req, res, next) => {
+  if (!ADMIN_PATH.test(req.path)) return next();
+
+  const { status, user } = await whoAmI(req);
+
+  // API не ответил — пускать нельзя: прав мы не знаем. Молча отдавать 403
+  // тоже неправильно, человек решил бы, что дело в роли.
+  if (status === 0) {
+    res.status(502).type('text/plain; charset=utf-8').end(
+      `Права проверить не удалось: API на ${API_HOST}:${apiPort} не отвечает. `
+      + 'Запустите его: npm start',
+    );
+    return;
+  }
+
+  // Не вошёл — на форму входа. Она одна на всех: после входа сервис смотрит
+  // роли и сам возвращает администратора в /admin (web/js/login.js).
+  if (status === 401 || !user) {
+    res.redirect(302, '/login.html');
+    return;
+  }
+
+  // Вошёл, но роли нет — 403 и страница с сообщением.
+  if (!hasAdminRole(user)) {
+    res.status(403).sendFile(FORBIDDEN_PAGE);
+    return;
+  }
+
+  next();
+});
+
+/** Корень раздела: первый пункт меню. */
+app.get(['/admin', '/admin/'], (_req, res) => res.redirect(302, '/admin/appointments'));
+
 // Вёрстка: экран прототипа — страница в web/pages (правило 2), общий слой
 // запросов и стили — рядом, токены дизайн-системы отдаются из корня web.
 app.use(express.static(path.join(__dirname, 'pages'), { extensions: ['html'] }));

@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Лада — админ: записи</title>
+<meta name="description" content="Админ-панель студии «Лада»: записи студии.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/tokens.css">
+<!-- Админка — светлая тема дизайн-системы, поэтому landing.css (тёмная база)
+     здесь не подключается. Почему — в начале css/admin.css. -->
+<link rel="stylesheet" href="/css/admin.css">
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js" defer></script>
+<script type="module" src="/js/admin-shell.js"></script>
+</head>
+<body class="adm">
+
+<!-- ─── Сайдбар админ-панели ───────────────────────────────────────────────
+     Образец — `23. Админ - Записи.dc.html` (сайдбар одинаков на всех
+     административных экранах прототипа). В каркасе три пункта из четырнадцати
+     разделов прототипа: «Записи», «Услуги» и «Мастера».
+──────────────────────────────────────────────────────────────────────────── -->
+<aside class="adm-side">
+  <a class="adm-side__logo" href="/admin/appointments">Лада</a>
+  <span class="adm-side__role">Администратор</span>
+
+  <nav class="adm-nav" aria-label="Разделы админ-панели">
+    <a class="adm-nav__item adm-nav__item--current" href="/admin/appointments" aria-current="page">
+      <i class="icon" data-lucide="list" aria-hidden="true"></i>Записи
+    </a>
+    <a class="adm-nav__item" href="/admin/services">
+      <i class="icon" data-lucide="droplet" aria-hidden="true"></i>Услуги
+    </a>
+    <a class="adm-nav__item" href="/admin/masters">
+      <i class="icon" data-lucide="user-cog" aria-hidden="true"></i>Мастера
+    </a>
+  </nav>
+
+  <div class="adm-user" data-user="block" aria-busy="true">
+    <span class="adm-user__avatar" data-user="initials" aria-hidden="true"></span>
+    <div class="adm-user__text">
+      <span class="adm-user__name" data-user="name"></span>
+      <!-- «Выйти» — не ссылка: это запрос POST /auth/logout, после него лендинг. -->
+      <button class="adm-user__logout" type="button" data-action="logout">Выйти</button>
+    </div>
+  </div>
+</aside>
+
+<div class="adm__body">
+
+  <!-- ─── Шапка ───────────────────────────────────────────────────────── -->
+  <header class="adm-top">
+    <h1 class="adm-top__title">Записи</h1>
+    <a class="adm-top__site" href="/">На сайт →</a>
+  </header>
+
+  <main class="adm__content">
+    <p class="load-error" data-error="me" role="status" hidden></p>
+
+    <!-- Каркас: данных на странице пока нет, и сказано об этом прямо. Какие
+         эндпоинты наполнят раздел — из строки экрана `23. Админ - Записи`
+         в docs/ui-map.md. -->
+    <section class="adm-card adm-blank">
+      <h2 class="adm-blank__title">Раздел пока пустой</h2>
+      <p class="adm-blank__text">
+        Здесь появится список записей студии: дата и время, клиент, мастер,
+        услуги, сумма и статус — из <code>GET /api/admin/appointments</code>
+        с фильтрами по периоду, мастеру и статусу.
+      </p>
+    </section>
+  </main>
+</div>
+
+</body>
+</html>

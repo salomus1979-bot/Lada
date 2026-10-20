@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Лада — раздел только для администраторов</title>
+<meta name="description" content="Раздел администратора студии «Лада» доступен только аккаунтам с ролью администратора.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/tokens.css">
+<link rel="stylesheet" href="/css/admin.css">
+</head>
+<!-- Эту страницу отдаёт web/server.js с кодом 403, когда в /admin пришёл
+     аккаунт без роли администратора. Ни сайдбара, ни меню раздела на ней нет:
+     пункты, в которые всё равно нельзя войти, человеку не нужны.
+
+     Своего скрипта у страницы тоже нет: ей нечего запрашивать. -->
+<body class="adm adm--plain">
+
+<main class="adm-forbid">
+  <a class="adm-forbid__logo" href="/">Лада</a>
+  <h1 class="adm-forbid__title">Этот раздел только для администраторов</h1>
+  <p class="adm-forbid__text">
+    Вы вошли в сервис, но роли администратора у аккаунта нет. Её назначают в
+    базе данных — получить её из интерфейса нельзя.
+  </p>
+  <div class="adm-forbid__links">
+    <a class="adm-btn" href="/account.html">В личный кабинет</a>
+    <a class="adm-forbid__back" href="/">На сайт</a>
+  </div>
+</main>
+
+</body>
+</html>
