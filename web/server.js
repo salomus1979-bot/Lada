@@ -71,7 +71,16 @@ app.use('/api', (req, res) => {
   req.pipe(upstream);
 });
 
-app.use(express.static(path.join(__dirname, 'public'), { extensions: ['html'] }));
+// Вёрстка: экран прототипа — страница в web/pages (правило 2), общий слой
+// запросов и стили — рядом, токены дизайн-системы отдаются из корня web.
+app.use(express.static(path.join(__dirname, 'pages'), { extensions: ['html'] }));
+app.use('/css', express.static(path.join(__dirname, 'css')));
+app.use('/js', express.static(path.join(__dirname, 'js')));
+app.get('/tokens.css', (_req, res) => res.sendFile(path.join(__dirname, 'tokens.css')));
+
+// Черновой фронт из web/public — тот самый, которым проверяли API руками.
+// Он никуда не делся, просто уступил корень вёрстке: /draft/catalog.html.
+app.use('/draft', express.static(path.join(__dirname, 'public'), { extensions: ['html'] }));
 
 /** Отвечает ли на этом порту именно API «Лады». */
 function isLadaApi(port) {

@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Лада — мои записи</title>
+<meta name="description" content="Личный кабинет студии «Лада»: предстоящие визиты, перенос и отмена записи.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/tokens.css">
+<!-- Общий слой вёрстки: база, кнопки, карточки, чипы, аватары, заглушки и
+     блок ошибки — те же классы, что на лендинге. -->
+<link rel="stylesheet" href="/css/landing.css">
+<link rel="stylesheet" href="/css/account.css">
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js" defer></script>
+<script type="module" src="/js/account.js"></script>
+</head>
+<body class="cab">
+
+<!-- ─── Сайдбар кабинета ────────────────────────────────────────────────── -->
+<aside class="side">
+  <a class="side__logo" href="/">Лада</a>
+  <nav class="side__nav" aria-label="Разделы кабинета">
+    <a class="side__item side__item--current" href="account.html" aria-current="page">
+      <i class="icon" data-lucide="calendar" aria-hidden="true"></i>Мои записи
+    </a>
+    <a class="side__item" href="history.html">
+      <i class="icon" data-lucide="history" aria-hidden="true"></i>История
+    </a>
+    <a class="side__item" href="notifications.html">
+      <i class="icon" data-lucide="bell" aria-hidden="true"></i>Уведомления
+    </a>
+    <a class="side__item" href="profile.html">
+      <i class="icon" data-lucide="user" aria-hidden="true"></i>Профиль
+    </a>
+    <!-- «Выйти» — не ссылка: это запрос POST /auth/logout, после него лендинг. -->
+    <button class="side__item side__item--button" type="button" data-action="logout">
+      <i class="icon" data-lucide="log-out" aria-hidden="true"></i>Выйти
+    </button>
+  </nav>
+  <a class="btn btn--primary side__new" href="booking-services.html">
+    <i class="icon" data-lucide="plus" aria-hidden="true"></i>Новая запись
+  </a>
+</aside>
+
+<div class="cab__body">
+
+  <!-- ─── Шапка кабинета ──────────────────────────────────────────────── -->
+  <header class="topbar">
+    <nav class="topbar__nav" aria-label="Разделы сайта">
+      <a class="nav__link" href="catalog.html">Услуги</a>
+      <a class="nav__link" href="/#masters">Мастера</a>
+      <a class="nav__link" href="/#steps">Как записаться</a>
+      <a class="nav__link" href="/#contacts">Контакты</a>
+    </nav>
+    <div class="topbar__actions">
+      <!-- Колокольчик без бейджа: признак «прочитано» хранить негде —
+           ни таблицы уведомлений, ни роутов в API нет (ui-map, пп. 1-2). -->
+      <a class="topbar__bell" href="notifications.html" aria-label="Уведомления">
+        <i class="icon" data-lucide="bell" aria-hidden="true"></i>
+      </a>
+      <a class="topbar__user" href="profile.html" data-user="block" aria-busy="true">
+        <span class="avatar avatar--muted topbar__initials" data-user="initials" aria-hidden="true"></span>
+        <span class="topbar__name" data-user="name"><span class="skeleton skeleton--line"></span></span>
+        <i class="icon" data-lucide="chevron-down" aria-hidden="true"></i>
+      </a>
+    </div>
+  </header>
+
+  <main class="cab__content">
+    <h1 class="cab__title">Мои записи</h1>
+    <p class="load-error" data-error="me" role="status" hidden></p>
+
+    <!-- ─── Табы ──────────────────────────────────────────────────────── -->
+    <!-- «Прошедшие» и «Отменённые» делятся на клиенте по `status` ответа
+         `GET /appointments?scope=past`: отдельного scope у API нет
+         (решение 6 карты экранов). -->
+    <div class="tabs" role="tablist" aria-label="Какие записи показывать">
+      <button class="tabs__tab" type="button" role="tab" id="tab-upcoming"
+              data-tab="upcoming" aria-selected="true" aria-controls="appointments">Предстоящие</button>
+      <button class="tabs__tab" type="button" role="tab" id="tab-past"
+              data-tab="past" aria-selected="false" aria-controls="appointments">Прошедшие</button>
+      <button class="tabs__tab" type="button" role="tab" id="tab-cancelled"
+              data-tab="cancelled" aria-selected="false" aria-controls="appointments">Отменённые</button>
+    </div>
+
+    <!-- Сколько здесь записей, известно только из ответа API: в разметке
+         стоят заглушки, их количество ничего не обещает. -->
+    <div class="appts" id="appointments" role="tabpanel" aria-labelledby="tab-upcoming"
+         data-list="appointments" aria-busy="true">
+      <article class="appt skeleton-host">
+        <span class="skeleton skeleton--line"></span>
+        <span class="skeleton skeleton--line skeleton--wide"></span>
+        <span class="skeleton skeleton--avatar"></span>
+        <span class="skeleton skeleton--line skeleton--wide"></span>
+        <span class="skeleton skeleton--chip"></span>
+      </article>
+      <article class="appt skeleton-host">
+        <span class="skeleton skeleton--line"></span>
+        <span class="skeleton skeleton--line skeleton--wide"></span>
+        <span class="skeleton skeleton--avatar"></span>
+        <span class="skeleton skeleton--line skeleton--wide"></span>
+        <span class="skeleton skeleton--chip"></span>
+      </article>
+    </div>
+    <p class="load-error" data-error="appointments" role="status" hidden></p>
+  </main>
+</div>
+
+<!-- ─── Шаблон карточки визита ────────────────────────────────────────── -->
+
+<template id="tpl-appt">
+  <article class="appt">
+    <div class="appt__head">
+      <span class="chip appt__badge">Ближайшая</span>
+      <span class="chip chip--quiet appt__status"></span>
+      <span class="appt__until"></span>
+    </div>
+    <p class="appt__when"></p>
+    <div class="appt__master">
+      <span class="avatar avatar--muted appt__initials" aria-hidden="true"></span>
+      <span class="appt__master-name"></span>
+    </div>
+    <p class="appt__services"></p>
+    <div class="appt__foot">
+      <span class="appt__total"></span>
+      <div class="appt__actions">
+        <a class="appt__more" href="appointment.html">Подробнее</a>
+        <a class="btn btn--ghost appt__reschedule" href="appointment-reschedule.html">Перенести</a>
+        <button class="btn appt__cancel" type="button">Отменить</button>
+      </div>
+      <!-- Подтверждение отмены прямо в карточке: модалка с причиной — это
+           экран 9, сюда она не относится. -->
+      <div class="appt__confirm" hidden>
+        <span class="appt__confirm-text">Отменить запись?</span>
+        <button class="btn appt__confirm-yes" type="button">Да, отменить</button>
+        <button class="btn btn--ghost appt__confirm-no" type="button">Нет</button>
+      </div>
+    </div>
+    <p class="appt__hint" hidden></p>
+  </article>
+</template>
+
+</body>
+</html>

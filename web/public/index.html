@@ -66,6 +66,7 @@ document.getElementById('settings').onclick = guard(box, async () => {
     ['Значение', (r) => r[1]],
   ], [
     ['Студия', `${settings.name}, ${settings.address}, ${settings.phone}`],
+    ['Режим работы', settings.hours_display],
     ['Часовой пояс', settings.timezone],
     ['Шаг сетки слотов', `${settings.slot_step_min} мин`],
     ['Отмена и перенос', `не позднее чем за ${settings.cancel_window_hours} ч`],

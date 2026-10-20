@@ -239,11 +239,75 @@ function clientAdminView(row, { timezone } = {}) {
   };
 }
 
-function settingsPublicView(row) {
+/** Дни недели в нумерации схемы: 1 — понедельник, 7 — воскресенье. */
+const WEEKDAY_SHORT = {
+  1: 'пн', 2: 'вт', 3: 'ср', 4: 'чт', 5: 'пт', 6: 'сб', 7: 'вс',
+};
+
+/** Минуты от полуночи в «ЧЧ:ММ». */
+const hoursMinutes = (minutes) => `${String(Math.floor(minutes / 60)).padStart(2, '0')}`
+  + `:${String(minutes % 60).padStart(2, '0')}`;
+
+/** Часы работы студии по дням недели: строки salon_hours как есть. */
+function salonHoursView(rows) {
+  return rows.map((row) => ({
+    weekday: row.weekday,
+    weekday_short: WEEKDAY_SHORT[row.weekday],
+    is_closed: row.is_closed === 1,
+    start_min: row.is_closed === 1 ? null : row.start_min,
+    end_min: row.is_closed === 1 ? null : row.end_min,
+    display: row.is_closed === 1
+      ? 'выходной'
+      : `${hoursMinutes(row.start_min)}–${hoursMinutes(row.end_min)}`,
+  }));
+}
+
+/**
+ * Одна строка режима работы для витрины: «вт–сб 10:00–20:00».
+ * Подряд идущие дни с одинаковыми часами сливаются в диапазон, выходные
+ * пропускаются. Строку собирает сервер, чтобы каждый экран не пересчитывал
+ * одно и то же, — так же, как `price_display` и `when_display`.
+ */
+function salonHoursDisplay(hours) {
+  const open = hours.filter((day) => !day.is_closed);
+  if (open.length === 0) return 'закрыто';
+  if (open.length === 7 && open.every((day) => day.display === open[0].display)) {
+    return `ежедневно ${open[0].display}`;
+  }
+
+  const groups = [];
+  for (const day of open) {
+    const last = groups[groups.length - 1];
+    if (last && last.to.weekday === day.weekday - 1 && last.to.display === day.display) {
+      last.to = day;
+    } else {
+      groups.push({ from: day, to: day });
+    }
+  }
+
+  return groups
+    .map((group) => (group.from === group.to
+      ? `${group.from.weekday_short} ${group.from.display}`
+      : `${group.from.weekday_short}–${group.to.weekday_short} ${group.from.display}`))
+    .join(', ');
+}
+
+/**
+ * Публичные настройки студии.
+ * @param {object} row строка salon_settings
+ * @param {object[]} hourRows строки salon_hours (семь, по дню недели)
+ */
+function settingsPublicView(row, hourRows = []) {
+  const hours = salonHoursView(hourRows);
   return {
     name: row.name,
     phone: row.phone,
     address: row.address,
+    // Часы работы студии: разбор по дням и готовая строка для витрины.
+    // Разовые отмены и переносы (salon_day_overrides) сюда не входят —
+    // это режим обычной недели.
+    hours,
+    hours_display: salonHoursDisplay(hours),
     timezone: row.timezone,
     slot_step_min: row.slot_step_min,
     cancel_window_hours: row.cancel_window_hours,

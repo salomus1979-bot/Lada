@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Лада — выбор мастера</title>
+<meta name="description" content="Шаг 2 из 4: выберите мастера для записи в студию «Лада».">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/tokens.css">
+<link rel="stylesheet" href="/css/landing.css">
+<link rel="stylesheet" href="/css/booking.css">
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js" defer></script>
+<script type="module" src="/js/booking-master.js"></script>
+</head>
+<body>
+
+<header class="bk-header">
+  <div class="bk-header__inner container">
+    <a class="brand__logo" href="/">Лада</a>
+
+    <nav class="stepper" aria-label="Шаги записи">
+      <div class="stepper__item stepper__item--done">
+        <a class="stepper__link" href="booking-services.html">
+          <span class="stepper__num"><i class="icon" data-lucide="check" aria-hidden="true"></i></span>
+          <span class="stepper__label">Услуги</span>
+        </a>
+        <span class="stepper__line"></span>
+      </div>
+      <div class="stepper__item stepper__item--current">
+        <span class="stepper__link" aria-current="step">
+          <span class="stepper__num">02</span>
+          <span class="stepper__label">Мастер</span>
+        </span>
+        <span class="stepper__line"></span>
+      </div>
+      <div class="stepper__item">
+        <span class="stepper__link">
+          <span class="stepper__num">03</span>
+          <span class="stepper__label">Дата и время</span>
+        </span>
+        <span class="stepper__line"></span>
+      </div>
+      <div class="stepper__item">
+        <span class="stepper__link">
+          <span class="stepper__num">04</span>
+          <span class="stepper__label">Подтверждение</span>
+        </span>
+      </div>
+    </nav>
+
+    <button class="bk-exit" type="button" data-exit>
+      <i class="icon" data-lucide="x" aria-hidden="true"></i>Выйти
+    </button>
+  </div>
+</header>
+
+<main class="bk-main container">
+  <h1 class="bk-title">Выберите мастера</h1>
+
+  <!-- Состав визита с шага 1: услуги, длительность, сумма. -->
+  <p class="bk-summary" data-summary aria-busy="true">
+    <span class="skeleton skeleton--line skeleton--wide"></span>
+  </p>
+
+  <div class="masters-grid" data-list="masters" aria-busy="true">
+    <div class="card masters-grid__wide"><span class="skeleton skeleton--line skeleton--wide"></span></div>
+    <div class="card card--flush"><span class="skeleton skeleton--photo"></span><span class="skeleton skeleton--line"></span></div>
+    <div class="card card--flush"><span class="skeleton skeleton--photo"></span><span class="skeleton skeleton--line"></span></div>
+    <div class="card card--flush"><span class="skeleton skeleton--photo"></span><span class="skeleton skeleton--line"></span></div>
+  </div>
+  <p class="load-error" data-error="masters" role="status" hidden></p>
+</main>
+
+<div class="bk-foot">
+  <div class="bk-foot__inner container">
+    <a class="btn btn--ghost" href="booking-services.html">
+      <i class="icon" data-lucide="arrow-left" aria-hidden="true"></i>Назад
+    </a>
+    <div class="bk-foot__right">
+      <span class="bk-hint" data-hint>Мастер не выбран</span>
+      <a class="btn btn--primary btn--off" data-next aria-disabled="true">Выбрать время</a>
+    </div>
+  </div>
+</div>
+
+<template id="tpl-any-master">
+  <button class="card masters-grid__wide any-master" type="button">
+    <span class="tile"><i class="icon icon--accent" data-lucide="users" aria-hidden="true"></i></span>
+    <span class="any-master__body">
+      <span class="any-master__title">Любой свободный мастер</span>
+      <span class="any-master__desc">Покажем все свободные окна студии — так выбор времени шире</span>
+    </span>
+    <span class="any-master__mark"></span>
+  </button>
+</template>
+
+<template id="tpl-master-pick">
+  <button class="card card--flush master-pick" type="button">
+    <span class="pick-mark"><i class="icon" data-lucide="check" aria-hidden="true"></i></span>
+    <span class="photo photo--wide master-pick__photo">фото мастера</span>
+    <span class="master-pick__body">
+      <span class="master-pick__name"></span>
+      <span class="master-pick__spec"></span>
+      <span class="master-pick__chips"></span>
+      <span class="master-pick__spacer"></span>
+      <span class="master-pick__ok">
+        <i class="icon" data-lucide="circle-check" aria-hidden="true"></i>Выполняет все выбранные услуги
+      </span>
+    </span>
+  </button>
+</template>
+
+<template id="tpl-master-off">
+  <div class="card card--flush master-pick master-pick--off">
+    <span class="photo photo--wide master-pick__photo">фото мастера</span>
+    <span class="master-pick__body">
+      <span class="master-pick__name"></span>
+      <span class="master-pick__spec"></span>
+      <span class="master-pick__chips"></span>
+      <span class="master-pick__spacer"></span>
+      <span class="master-pick__why">
+        <i class="icon" data-lucide="circle-x" aria-hidden="true"></i>Не выполняет все выбранные услуги
+      </span>
+      <span class="master-pick__missing"></span>
+      <a href="booking-services.html">Изменить состав услуг</a>
+    </span>
+  </div>
+</template>
+
+<template id="tpl-no-master">
+  <div class="card no-master masters-grid__wide">
+    <span class="tile"><i class="icon" data-lucide="search-x" aria-hidden="true"></i></span>
+    <p class="no-master__title">Нет мастера, который выполняет все выбранные услуги</p>
+    <p class="no-master__text">Уберите часть услуг или выберите мастера, который выполнит доступные</p>
+    <a class="btn btn--outline" href="booking-services.html">Изменить состав услуг</a>
+  </div>
+</template>
+
+<template id="tpl-chip-quiet">
+  <span class="chip chip--quiet"></span>
+</template>
+
+</body>
+</html>

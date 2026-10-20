@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Лада — услуги и цены</title>
+<meta name="description" content="Полный прайс студии «Лада»: услуги по категориям с ценой и длительностью.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/tokens.css">
+<!-- Общий слой вёрстки: база, кнопки, шапка, подвал, карточки, чипы,
+     заглушки и блок ошибки — те же классы, что на лендинге. -->
+<link rel="stylesheet" href="/css/landing.css">
+<link rel="stylesheet" href="/css/catalog.css">
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js" defer></script>
+<script type="module" src="/js/catalog.js"></script>
+</head>
+<body id="top">
+
+<header class="header">
+  <div class="header__inner container">
+    <div class="brand">
+      <a class="brand__logo" href="/" data-settings="name">Лада</a>
+      <span class="brand__tagline">студия маникюра и бровей</span>
+    </div>
+    <nav class="nav" aria-label="Разделы сайта">
+      <a class="nav__link nav__link--current" href="catalog.html" aria-current="page">Услуги</a>
+      <a class="nav__link" href="/#masters">Мастера</a>
+      <a class="nav__link" href="/#steps">Как записаться</a>
+      <a class="nav__link" href="/#reviews">Отзывы</a>
+      <a class="nav__link" href="/#contacts">Контакты</a>
+    </nav>
+    <div class="header__actions">
+      <a class="btn btn--ghost" href="login.html">Войти</a>
+      <a class="btn btn--primary" href="booking-services.html">Записаться</a>
+    </div>
+  </div>
+</header>
+
+<main>
+
+  <!-- ─── Заголовок и якоря категорий ─────────────────────────────────── -->
+  <section class="page-head container">
+    <h1 class="page-title">Услуги и цены</h1>
+    <p class="page-lead">Выберите услуги — дальше покажем свободное время.</p>
+    <nav class="cat-nav" data-list="cat-nav" aria-label="Категории услуг" aria-busy="true">
+      <span class="skeleton skeleton--chip"></span>
+      <span class="skeleton skeleton--chip"></span>
+    </nav>
+  </section>
+
+  <!-- ─── Прайс по категориям ─────────────────────────────────────────── -->
+  <!-- Сколько здесь категорий и услуг, известно только из ответа API:
+       в разметке стоят заглушки, их количество ничего не обещает. -->
+  <div class="container">
+    <div class="catalog" data-list="catalog" aria-busy="true">
+      <section class="cat">
+        <span class="skeleton skeleton--title"></span>
+        <span class="skeleton skeleton--line skeleton--wide"></span>
+        <div class="cat__grid">
+          <div class="card skeleton-host"><span class="skeleton skeleton--line skeleton--wide"></span><span class="skeleton skeleton--line"></span><span class="skeleton skeleton--line"></span><span class="skeleton skeleton--chip"></span></div>
+          <div class="card skeleton-host"><span class="skeleton skeleton--line skeleton--wide"></span><span class="skeleton skeleton--line"></span><span class="skeleton skeleton--line"></span><span class="skeleton skeleton--chip"></span></div>
+          <div class="card skeleton-host"><span class="skeleton skeleton--line skeleton--wide"></span><span class="skeleton skeleton--line"></span><span class="skeleton skeleton--line"></span><span class="skeleton skeleton--chip"></span></div>
+        </div>
+      </section>
+      <section class="cat">
+        <span class="skeleton skeleton--title"></span>
+        <span class="skeleton skeleton--line skeleton--wide"></span>
+        <div class="cat__grid">
+          <div class="card skeleton-host"><span class="skeleton skeleton--line skeleton--wide"></span><span class="skeleton skeleton--line"></span><span class="skeleton skeleton--line"></span><span class="skeleton skeleton--chip"></span></div>
+          <div class="card skeleton-host"><span class="skeleton skeleton--line skeleton--wide"></span><span class="skeleton skeleton--line"></span><span class="skeleton skeleton--line"></span><span class="skeleton skeleton--chip"></span></div>
+          <div class="card skeleton-host"><span class="skeleton skeleton--line skeleton--wide"></span><span class="skeleton skeleton--line"></span><span class="skeleton skeleton--line"></span><span class="skeleton skeleton--chip"></span></div>
+        </div>
+      </section>
+    </div>
+    <p class="load-error" data-error="catalog" role="status" hidden></p>
+  </div>
+
+  <!-- ─── Нет нужной услуги ───────────────────────────────────────────── -->
+  <section class="container callout">
+    <p class="callout__title">Не нашли нужную услугу?</p>
+    <p class="callout__text">Позвоните нам — подберём подходящий вариант:
+      <span class="callout__phone" data-settings="phone" aria-busy="true"><span class="skeleton skeleton--line"></span></span>
+    </p>
+    <a class="btn btn--primary btn--lg" href="booking-services.html">Записаться онлайн</a>
+  </section>
+
+</main>
+
+<!-- ─── Плавающая панель корзины ──────────────────────────────────────── -->
+<!-- Корзина локальная: выбор услуг нигде не сохраняется и API не вызывает.
+     Пока ничего не выбрано, панели нет — ей нечего показывать. -->
+<div class="cart" data-cart="panel" hidden>
+  <div class="cart__panel">
+    <p class="cart__summary" data-cart="summary" role="status"></p>
+    <a class="btn btn--primary cart__go" href="booking-services.html">Выбрать мастера</a>
+  </div>
+</div>
+
+<footer class="footer container" id="contacts">
+  <div class="footer__cols">
+    <div>
+      <span class="tile"><i class="icon icon--accent" data-lucide="map-pin" aria-hidden="true"></i></span>
+      <p class="footer__title">Адрес</p>
+      <p class="footer__text" data-settings="address" aria-busy="true"><span class="skeleton skeleton--line"></span></p>
+    </div>
+    <div>
+      <span class="tile"><i class="icon icon--accent" data-lucide="clock" aria-hidden="true"></i></span>
+      <p class="footer__title">Режим работы</p>
+      <p class="footer__text footer__text--hours" data-settings="hours_display" aria-busy="true"><span class="skeleton skeleton--line"></span></p>
+    </div>
+    <div>
+      <span class="tile"><i class="icon icon--accent" data-lucide="phone" aria-hidden="true"></i></span>
+      <p class="footer__title">Телефон</p>
+      <p class="footer__text" data-settings="phone" aria-busy="true"><span class="skeleton skeleton--line"></span></p>
+    </div>
+    <div>
+      <span class="tile"><i class="icon icon--accent" data-lucide="calendar" aria-hidden="true"></i></span>
+      <p class="footer__title">Запись</p>
+      <p class="footer__text">Выберите время онлайн</p>
+      <a class="btn btn--primary" href="booking-services.html">Записаться</a>
+    </div>
+  </div>
+  <p class="load-error" data-error="settings" role="status" hidden></p>
+  <div class="footer__bottom">
+    <p class="footer__copy">© 2026 <span data-settings="name">Лада</span>. Все права защищены. Политика конфиденциальности.</p>
+    <div class="footer__social" aria-hidden="true">
+      <i class="icon" data-lucide="camera"></i>
+      <i class="icon" data-lucide="send"></i>
+    </div>
+  </div>
+</footer>
+
+<!-- ─── Шаблоны для данных из API ─────────────────────────────────────── -->
+
+<template id="tpl-cat-link">
+  <a class="chip chip--nav"></a>
+</template>
+
+<template id="tpl-category">
+  <section class="cat">
+    <h2 class="cat__title"></h2>
+    <p class="cat__desc"></p>
+    <div class="cat__grid" aria-busy="true">
+      <div class="card skeleton-host"><span class="skeleton skeleton--line skeleton--wide"></span><span class="skeleton skeleton--line"></span><span class="skeleton skeleton--line"></span><span class="skeleton skeleton--chip"></span></div>
+      <div class="card skeleton-host"><span class="skeleton skeleton--line skeleton--wide"></span><span class="skeleton skeleton--line"></span><span class="skeleton skeleton--line"></span><span class="skeleton skeleton--chip"></span></div>
+      <div class="card skeleton-host"><span class="skeleton skeleton--line skeleton--wide"></span><span class="skeleton skeleton--line"></span><span class="skeleton skeleton--line"></span><span class="skeleton skeleton--chip"></span></div>
+    </div>
+    <p class="load-error" role="status" hidden></p>
+  </section>
+</template>
+
+<template id="tpl-service">
+  <article class="card srv">
+    <h3 class="srv__name"></h3>
+    <p class="srv__desc"></p>
+    <p class="srv__time"><i class="icon" data-lucide="clock" aria-hidden="true"></i><span class="srv__time-value"></span></p>
+    <p class="srv__price"></p>
+    <span class="chip chip--quiet srv__masters"></span>
+    <button class="btn btn--outline btn--block srv__add" type="button" aria-pressed="false">Добавить к записи</button>
+  </article>
+</template>
+
+</body>
+</html>

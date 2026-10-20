@@ -1,0 +1,660 @@
+/*
+ * Воронка записи, шаги 3 и 4 и экраны результата. Структура, тексты и порядок
+ * блоков — из «3. Запись - Шаг 3. Дата и время.dc.html»,
+ * «4. Запись - Шаг 4. Подтверждение.dc.html», «5. Запись создана.dc.html» и
+ * «6. Ошибка - время занято.dc.html».
+ *
+ * Общий слой берётся из landing.css (база, кнопки, `.card`, `.chip`,
+ * `.avatar`, `.slot`, заглушки, `.load-error`) и booking.css (шапка с
+ * шаг-индикатором, сводка шага, нижняя панель, `.btn--off`). Здесь только
+ * своё: календарь месяца, сетка слотов, строка удержания, сводка
+ * подтверждения, экран «Вы записаны» и экран «время занято».
+ *
+ * Правило 4 из docs/frontend-rules.md: цвета, шрифты и размеры — только из
+ * tokens.css либо арифметика по шкале. Расхождения — в конце файла.
+ */
+
+/* ─── Информационная плашка ──────────────────────────────────────────── */
+/* Тот же блок есть в appointment.css и auth.css: он нужен каждому слою
+   отдельно, а общий слой этих экранов — landing.css, куда он не входил. */
+
+.notice {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  padding: calc(var(--space-2) + var(--space-1)) var(--space-4);
+  border: 1px solid var(--feedback-info);
+  border-radius: var(--radius-sm);
+  background: var(--feedback-info-subtle);
+  font-size: var(--text-body-s);
+  line-height: var(--text-body-s-lh);
+  color: var(--text-secondary);
+}
+.notice[hidden] { display: none; }
+.notice .icon svg, .notice svg.icon { color: var(--feedback-info); }
+
+/* ─── Шаг 3: раскладка ───────────────────────────────────────────────── */
+
+.time-grid {
+  display: grid;
+  /* Пропорции прототипа: календарь уже, слоты шире. */
+  grid-template-columns: 0.85fr 1.15fr;
+  gap: var(--space-8);
+  align-items: start;
+}
+.time-grid[hidden] { display: none; }
+
+/* ─── Календарь месяца ───────────────────────────────────────────────── */
+
+.cal { gap: var(--space-4); }
+.cal__head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); }
+.cal__month {
+  font-family: var(--font-display);
+  font-size: var(--text-body-l);
+  line-height: var(--text-body-l-lh);
+  font-weight: var(--text-h4-weight);
+  text-transform: var(--text-display-l-case);
+}
+.cal__nav {
+  display: inline-flex;
+  padding: var(--space-1);
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+.cal__nav:hover:enabled { color: var(--accent-primary); }
+.cal__nav:disabled { color: var(--border-default); cursor: not-allowed; }
+.cal__week, .cal__grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: var(--space-1); }
+.cal__week {
+  font-size: var(--text-caption);
+  line-height: var(--text-caption-lh);
+  text-transform: var(--text-label-case);
+  color: var(--text-muted);
+  text-align: center;
+}
+.cal__cell {
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm);
+  background: var(--bg-base);
+  color: var(--text-secondary);
+  font-family: var(--font-text);
+  font-size: var(--text-body-s);
+  line-height: var(--text-body-s-lh);
+  font-weight: var(--text-label-weight);
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+}
+.cal__cell:hover:enabled { border-color: var(--accent-primary); color: var(--text-primary); }
+.cal__cell--blank { border: none; background: none; }
+/* Прошедший день и день за горизонтом записи выглядят одинаково: выбрать
+   нельзя ни тот, ни другой. */
+.cal__cell--past, .cal__cell--beyond {
+  color: var(--text-muted);
+  background: var(--slot-past);
+  cursor: not-allowed;
+}
+/* Выходной студии — та же штриховка, что «занято» у слотов. */
+.cal__cell--closed {
+  color: var(--text-muted);
+  cursor: not-allowed;
+  background: repeating-linear-gradient(135deg,
+    var(--slot-past), var(--slot-past) var(--space-1),
+    var(--bg-surface) var(--space-1), var(--bg-surface) var(--space-2));
+}
+.cal__cell--today { border-color: var(--text-muted); }
+.cal__cell--selected, .cal__cell--selected:hover:enabled {
+  background: var(--slot-selected);
+  border-color: var(--slot-selected);
+  color: var(--text-on-accent);
+}
+
+.cal__legend {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  margin: 0;
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--border-default);
+  list-style: none;
+}
+.cal__legend-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-caption);
+  line-height: var(--text-caption-lh);
+  color: var(--text-muted);
+}
+.cal__swatch {
+  flex: none;
+  width: var(--space-2);
+  height: var(--space-2);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-default);
+}
+.cal__swatch--today { border-color: var(--text-muted); }
+.cal__swatch--selected { background: var(--slot-selected); border-color: var(--slot-selected); }
+.cal__swatch--past { background: var(--slot-past); }
+.cal__swatch--closed {
+  background: repeating-linear-gradient(135deg,
+    var(--slot-past), var(--slot-past) 2px, var(--bg-surface) 2px, var(--bg-surface) var(--space-1));
+}
+
+/* Экран 6: тот же календарь, но сбоку и мельче — как в прототипе. */
+.cal--compact { padding: var(--space-4); }
+.cal--compact .cal__month { font-size: var(--text-body-s); }
+
+/* ─── Сетка слотов ───────────────────────────────────────────────────── */
+
+.slots { min-width: 0; display: flex; flex-direction: column; gap: var(--space-4); }
+.slots__day {
+  font-family: var(--font-text);
+  font-size: var(--text-h4);
+  line-height: var(--text-h4-lh);
+  font-weight: var(--text-h3-weight);
+}
+.slots__day::first-letter { text-transform: uppercase; }
+.slots__parts { display: flex; flex-direction: column; gap: var(--space-6); }
+.slots__part-title {
+  font-family: var(--text-label-font);
+  font-size: var(--text-label);
+  line-height: var(--text-label-lh);
+  font-weight: var(--text-label-weight);
+  letter-spacing: var(--text-label-tracking);
+  text-transform: var(--text-label-case);
+  color: var(--text-muted);
+  margin-bottom: var(--space-2);
+}
+.slots__grid {
+  display: grid;
+  /* Слот не уже минимальной ширины .slot из landing.css. */
+  grid-template-columns: repeat(auto-fill, minmax(calc(var(--space-8) * 3), 1fr));
+  gap: var(--space-2);
+}
+.slots__slot { position: relative; cursor: pointer; font-family: var(--font-text); }
+.slots__slot--picked, .slots__slot--picked:hover {
+  background: var(--slot-selected);
+  border-color: var(--slot-selected);
+  color: var(--text-on-accent);
+}
+/* Время, которое перехватили во время оформления (экран 6). */
+.slots__slot--taken {
+  cursor: not-allowed;
+  color: var(--feedback-error);
+  border-color: var(--feedback-error);
+  background: repeating-linear-gradient(135deg,
+    var(--slot-booked), var(--slot-booked) var(--space-1),
+    var(--border-default) var(--space-1), var(--border-default) var(--space-2));
+}
+.slots__tag {
+  position: absolute;
+  bottom: calc(var(--space-8) * -1);
+  left: 0;
+  right: 0;
+  font-size: var(--text-caption);
+  line-height: var(--text-caption-lh);
+  font-weight: var(--text-label-weight);
+  color: var(--feedback-error);
+  text-align: center;
+}
+/* Метка подписывает слот снизу, а не наезжает сверху: ряду нужно место. */
+.slots__grid:has(.slots__slot--taken) { padding-bottom: var(--space-6); }
+
+/* ─── Удержание слота ────────────────────────────────────────────────── */
+/* Решение 8 карты экранов: в прототипе таймера нет, удержание настоящее. */
+
+.hold {
+  padding: calc(var(--space-2) + var(--space-1)) var(--space-4);
+  border: 1px solid var(--accent-primary);
+  border-radius: var(--radius-sm);
+  background: var(--accent-subtle);
+  font-size: var(--text-body-s);
+  line-height: var(--text-body-s-lh);
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+.hold[hidden] { display: none; }
+/* Удержание истекло или его нет вовсе (гость) — это предупреждение. */
+.hold--over, .hold--warn, .hold--guest {
+  border-color: var(--feedback-warning);
+  background: var(--feedback-warning-subtle);
+}
+
+/* ─── Шаг 4: раскладка ───────────────────────────────────────────────── */
+
+.confirm {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(calc(var(--container-max) / 5), 1fr);
+  gap: var(--space-8);
+  align-items: start;
+}
+.confirm__main { min-width: 0; }
+.confirm__side { display: flex; flex-direction: column; gap: var(--block-gap); min-width: 0; }
+
+/* ─── Шаг 4: сводка визита ───────────────────────────────────────────── */
+
+.sum { padding: 0; gap: 0; }
+.sum__row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding: var(--space-4) var(--space-6);
+  border-bottom: 1px solid var(--border-default);
+}
+.sum__body { flex: 1; min-width: 0; }
+.sum__label {
+  font-family: var(--text-label-font);
+  font-size: var(--text-label);
+  line-height: var(--text-label-lh);
+  font-weight: var(--text-label-weight);
+  letter-spacing: var(--text-label-tracking);
+  text-transform: var(--text-label-case);
+  color: var(--text-muted);
+  margin-bottom: var(--space-2);
+}
+.sum__services { display: flex; flex-direction: column; gap: var(--space-1); }
+.sum__service {
+  font-size: var(--text-body-m);
+  line-height: var(--text-body-m-lh);
+  color: var(--text-primary);
+}
+.sum__service-meta { color: var(--text-muted); font-variant-numeric: tabular-nums; }
+.sum__master { display: flex; align-items: center; gap: var(--space-2); }
+.sum__avatar {
+  flex: none;
+  width: var(--space-8);
+  height: var(--space-8);
+  font-size: var(--text-body-s);
+}
+.sum__master-name {
+  font-size: var(--text-body-m);
+  line-height: var(--text-body-m-lh);
+  font-weight: var(--text-h3-weight);
+}
+.sum__plain {
+  font-size: var(--text-body-m);
+  line-height: var(--text-body-m-lh);
+  font-weight: var(--text-h3-weight);
+  font-variant-numeric: tabular-nums;
+}
+.sum__plain::first-letter { text-transform: uppercase; }
+.sum__total {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding: var(--space-4) var(--space-6);
+}
+.sum__total-label { font-size: var(--text-caption); color: var(--text-muted); }
+.sum__total-value {
+  font-size: var(--text-h4);
+  line-height: var(--text-h4-lh);
+  font-weight: var(--text-h3-weight);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ─── Шаг 4: комментарий, согласие, кнопки ───────────────────────────── */
+
+.confirm__label {
+  display: block;
+  margin: var(--space-6) 0 var(--space-1);
+  font-size: var(--text-caption);
+  line-height: var(--text-caption-lh);
+  font-weight: var(--text-h4-weight);
+  color: var(--text-secondary);
+}
+.confirm__textarea {
+  width: 100%;
+  min-height: calc(var(--space-8) * 2 + var(--space-4));
+  padding: calc(var(--space-2) + var(--space-1)) var(--space-4);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm);
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  font-family: var(--font-text);
+  font-size: var(--text-body-m);
+  line-height: var(--text-body-m-lh);
+  resize: vertical;
+}
+.confirm__textarea::placeholder { color: var(--text-muted); }
+
+.consent { display: flex; align-items: flex-start; gap: var(--space-2); margin-top: var(--space-4); }
+.consent__box {
+  flex: none;
+  width: calc(var(--space-4) + var(--space-1));
+  height: calc(var(--space-4) + var(--space-1));
+  margin: 0;
+  accent-color: var(--accent-primary);
+}
+.consent__text {
+  font-size: var(--text-body-s);
+  line-height: var(--text-body-s-lh);
+  color: var(--text-secondary);
+}
+.consent--invalid .consent__box { outline: 1px solid var(--feedback-error); outline-offset: 2px; }
+.consent__error {
+  margin-top: var(--space-1);
+  font-size: var(--text-caption);
+  line-height: var(--text-caption-lh);
+  color: var(--feedback-error);
+}
+.consent__error[hidden] { display: none; }
+
+.confirm__rules { margin-top: var(--space-4); }
+.confirm__actions {
+  display: flex;
+  gap: var(--space-2);
+  margin-top: var(--space-6);
+  flex-wrap: wrap;
+}
+.confirm__submit { flex: 1; justify-content: center; }
+.confirm__submit:disabled {
+  background: var(--border-default);
+  color: var(--text-muted);
+  cursor: not-allowed;
+}
+/* Кружок «отправляем»: в прототипе это иконка loader-2 с вращением. */
+.confirm__spinner svg, svg.confirm__spinner { animation: hold-spin 800ms linear infinite; }
+@keyframes hold-spin { to { transform: rotate(360deg); } }
+
+/* ─── Шаг 4: кто записывается и панель гостя ─────────────────────────── */
+
+.who { gap: var(--space-1); }
+.who[hidden] { display: none; }
+.who__title {
+  font-family: var(--text-label-font);
+  font-size: var(--text-label);
+  line-height: var(--text-label-lh);
+  font-weight: var(--text-label-weight);
+  letter-spacing: var(--text-label-tracking);
+  text-transform: var(--text-label-case);
+  color: var(--text-muted);
+}
+.who__name {
+  font-size: var(--text-body-m);
+  line-height: var(--text-body-m-lh);
+  font-weight: var(--text-h3-weight);
+}
+.who__phone {
+  font-size: var(--text-body-s);
+  line-height: var(--text-body-s-lh);
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.guest { display: flex; flex-direction: column; gap: var(--space-2); }
+.guest[hidden] { display: none; }
+.guest__visit { gap: var(--space-1); }
+.guest__visit-when { font-size: var(--text-caption); line-height: var(--text-caption-lh); color: var(--text-muted); }
+.guest__visit-total {
+  font-size: var(--text-body-s);
+  line-height: var(--text-body-s-lh);
+  font-weight: var(--text-label-weight);
+  font-variant-numeric: tabular-nums;
+}
+/* Панель входа выделена рамкой-акцентом, как в прототипе. */
+.guest__panel { background: var(--bg-elevated); border-color: var(--accent-primary); gap: var(--space-1); }
+.guest__title {
+  font-size: var(--text-body-m);
+  line-height: var(--text-body-m-lh);
+  font-weight: var(--text-h3-weight);
+}
+.guest__note {
+  font-size: var(--text-caption);
+  line-height: var(--text-caption-lh);
+  color: var(--text-muted);
+  margin-bottom: var(--space-4);
+}
+.guest__actions { display: flex; flex-direction: column; gap: var(--space-2); }
+
+/* ─── Экран 5: запись создана ────────────────────────────────────────── */
+
+.done {
+  max-width: calc(var(--container-max) / 1.75);
+  padding-block: var(--section-y);
+  text-align: center;
+}
+.done__mark {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: calc(var(--space-8) * 2 + var(--space-2));
+  height: calc(var(--space-8) * 2 + var(--space-2));
+  margin: 0 auto var(--space-6);
+  border-radius: var(--radius-full);
+  background: var(--accent-subtle);
+}
+.done__mark-inner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: calc(var(--space-8) + var(--space-6));
+  height: calc(var(--space-8) + var(--space-6));
+  border-radius: var(--radius-full);
+  background: var(--accent-primary);
+  color: var(--text-on-accent);
+  font-size: var(--text-h3);
+}
+.done__title {
+  font-family: var(--text-display-l-font);
+  font-size: var(--text-display-l);
+  line-height: var(--text-display-l-lh);
+  font-weight: var(--text-display-xl-weight);
+  letter-spacing: var(--text-display-l-tracking);
+  text-transform: var(--text-display-l-case);
+  margin-bottom: var(--space-2);
+}
+.done__lead {
+  font-size: var(--text-body-m);
+  line-height: var(--text-body-m-lh);
+  color: var(--text-muted);
+  margin-bottom: var(--space-8);
+}
+.done__error { text-align: left; }
+
+.done__card { text-align: left; align-items: flex-start; gap: var(--space-4); }
+.done__status { align-self: flex-start; }
+.done__status--ok { background: var(--feedback-success-subtle); color: var(--feedback-success); border-color: transparent; }
+.done__status--wait { background: var(--feedback-warning-subtle); color: var(--feedback-warning); border-color: transparent; }
+.done__status--off { background: var(--feedback-error-subtle); color: var(--feedback-error); border-color: transparent; }
+.done__when {
+  font-size: var(--text-h4);
+  line-height: var(--text-h4-lh);
+  font-weight: var(--text-h3-weight);
+  font-variant-numeric: tabular-nums;
+}
+.done__when::first-letter { text-transform: uppercase; }
+.done__master {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  width: 100%;
+  padding-bottom: var(--space-4);
+  border-bottom: 1px solid var(--border-default);
+}
+.done__avatar { flex: none; width: var(--space-8); height: var(--space-8); font-size: var(--text-body-s); }
+.done__master-name {
+  font-size: var(--text-body-m);
+  line-height: var(--text-body-m-lh);
+  font-weight: var(--text-h3-weight);
+}
+.done__services {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  width: 100%;
+  padding-bottom: var(--space-4);
+  border-bottom: 1px solid var(--border-default);
+}
+.done__service { font-size: var(--text-body-s); line-height: var(--text-body-s-lh); color: var(--text-secondary); }
+.done__total { display: flex; justify-content: space-between; align-items: center; width: 100%; gap: var(--space-4); }
+.done__total-label { font-size: var(--text-caption); color: var(--text-muted); }
+.done__total-value {
+  font-size: var(--text-h4);
+  line-height: var(--text-h4-lh);
+  font-weight: var(--text-h3-weight);
+  font-variant-numeric: tabular-nums;
+}
+.done__place {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-body-s);
+  line-height: var(--text-body-s-lh);
+  color: var(--text-muted);
+}
+.done__place[hidden] { display: none; }
+.done__rules { margin-top: var(--block-gap); text-align: left; }
+.done__actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin-top: var(--space-6);
+}
+.done__ics {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-1);
+  margin-top: var(--space-4);
+  font-size: var(--text-body-s);
+  font-weight: var(--text-label-weight);
+}
+/* Файл ещё не собран (запись не загрузилась) — ссылке некуда вести. */
+.done__ics.is-disabled { color: var(--text-muted); pointer-events: none; }
+
+/* ─── Экран 6: время занято ──────────────────────────────────────────── */
+
+.alert {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-4);
+  margin-bottom: var(--space-6);
+  padding: var(--space-6);
+  border: 1px solid var(--feedback-error);
+  border-radius: var(--radius-lg);
+  background: var(--feedback-error-subtle);
+}
+.alert__tile {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: var(--space-8);
+  height: var(--space-8);
+  border-radius: var(--radius-sm);
+  background: var(--feedback-error-subtle);
+  color: var(--feedback-error);
+}
+.alert[hidden] { display: none; }
+.alert__body { min-width: 0; }
+.alert__title {
+  font-size: var(--text-h4);
+  line-height: var(--text-h4-lh);
+  font-weight: var(--text-h3-weight);
+  margin-bottom: var(--space-1);
+}
+.alert__text { font-size: var(--text-body-s); line-height: var(--text-body-s-lh); color: var(--text-secondary); }
+
+.taken__summary { margin-bottom: var(--space-4); }
+.taken-grid {
+  display: grid;
+  /* В прототипе слоты шире календаря — он здесь вспомогательный. */
+  grid-template-columns: minmax(0, 1fr) minmax(calc(var(--container-max) / 6), 0.65fr);
+  gap: var(--space-6);
+  align-items: start;
+  margin-bottom: var(--space-6);
+}
+.nearest { display: flex; align-items: center; gap: var(--space-2); flex-wrap: wrap; margin-bottom: var(--space-6); }
+.nearest[hidden] { display: none; }
+.nearest__label { font-size: var(--text-body-s); line-height: var(--text-body-s-lh); color: var(--text-muted); }
+.nearest__slot { cursor: pointer; font-family: var(--font-text); }
+
+.taken__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--border-default);
+}
+.taken__actions .btn:disabled {
+  background: var(--border-default);
+  color: var(--text-muted);
+  cursor: not-allowed;
+}
+/* «Ближайшая свободная дата» — в прототипе ссылка, но действие здесь не
+   переход, а поиск даты запросами: поэтому кнопка, оформленная ссылкой. */
+.taken__nearest-link {
+  background: none;
+  border: none;
+  padding: 0;
+  font-family: var(--font-text);
+  font-size: var(--text-body-s);
+  font-weight: var(--text-label-weight);
+  color: var(--accent-primary);
+  cursor: pointer;
+}
+.taken__nearest-link:hover { color: var(--accent-hover); }
+.taken__nearest-link:disabled { color: var(--text-muted); cursor: progress; }
+
+/* ─── Узкие экраны ───────────────────────────────────────────────────── */
+
+@media (max-width: 900px) {
+  .time-grid, .confirm, .taken-grid { grid-template-columns: 1fr; }
+  /* Календарь на узком экране уходит под слоты — выбор дня важнее сетки. */
+  .taken-grid .cal { order: 2; }
+  .confirm__side { order: -1; }
+}
+
+@media (max-width: 600px) {
+  .done__title { font-size: var(--text-display-l-mobile); }
+  .slots__day, .sum__total-value, .done__when, .done__total-value, .alert__title {
+    font-size: var(--text-h4-mobile);
+  }
+  .confirm__actions { flex-direction: column; }
+  .confirm__actions .btn { width: 100%; justify-content: center; }
+  .sum__row, .sum__total { padding-inline: var(--space-4); }
+}
+
+/*
+ * ЧТО ИЗ ПРОТОТИПА НЕ ЛЕГЛО НА ТОКЕНЫ (значение прототипа → что взято).
+ * Общее — кнопки, прозрачности, тени, толщина рамок, размеры текста и
+ * отступы мимо шкалы — уже разобрано в конце landing.css и booking.css;
+ * здесь только новое для этих четырёх экранов.
+ *
+ * 1. Размеры текста 9, 10.5, 11, 11.5, 12.5, 13.5, 14.5, 17, 19 px → ступени
+ *    caption (12), body-s (13), body-m (15), body-l (18), h4 (20); заголовок
+ *    «Вы записаны» clamp(34…48) → display-l (64/40) по медиазапросу.
+ * 2. Кружок галочки 72/52 px и аватар мастера 34 px собраны из шагов шкалы
+ *    (72 = 32*2+8, 52 = 32+24, 34 → 32).
+ * 3. Скругления 7, 10, 14, 20 px → --radius-sm (8), --radius-md (16),
+ *    --radius-lg (24): своих ступеней у них нет.
+ * 4. Рамки 1.5px (панель гостя, выбранный слот, «только что занято») → 1px.
+ * 5. Пунктир у свободного слота (`1px dashed`) в прототипе отличал «свободен»
+ *    от «занят». Здесь все слоты на экране свободны (см. п. 8 ниже), и
+ *    пунктир остался бы украшением: взята обычная рамка .slot из landing.css.
+ * 6. Подсветка «только что занято» box-shadow 0 0 0 3px — теней в токенах
+ *    нет: осталась рамка --feedback-error и подпись под слотом.
+ * 7. Точки «много/мало свободных окон» в клетках календаря: это запрос
+ *    доступности на каждый день месяца (31 запрос, а в режиме «любой мастер»
+ *    втрое больше). Отброшены — как и на экране 10; поэтому и легенда
+ *    календаря короче на два пункта.
+ * 8. Состояния слотов «занято», «прошедшее» и «заблокировано»:
+ *    `GET /masters/:id/availability` отдаёт только свободное начало визита,
+ *    занятого времени в ответе нет вовсе. Поэтому и легенды слотов из
+ *    прототипа нет: показывать в ней было бы нечего, кроме «свободен» и
+ *    «выбран». Единственное исключение — слот, который перехватили во время
+ *    оформления: его экран 6 знает из ответа 409 и рисует отдельно.
+ * 9. Демонстрационные блоки прототипа «Состояние: нет окна», «Состояние:
+ *    загрузка», «Состояние: гость» и «Состояние: отправка» — это не части
+ *    экрана, а показ состояний рядом. Они стали настоящими состояниями:
+ *    пустой день, заглушки, панель гостя и кнопка «Подтверждаем запись…».
+ */

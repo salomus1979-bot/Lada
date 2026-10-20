@@ -1,0 +1,222 @@
+/*
+ * Каталог услуг и прайс. Структура, тексты и порядок блоков — из
+ * «18. Каталог услуг и прайс.dc.html».
+ *
+ * Общий слой страница берёт из landing.css: база, кнопки, шапка, подвал,
+ * `.card`, `.chip`, `.tile`, заглушки `.skeleton` и блок `.load-error` там
+ * уже описаны ровно так, как нужно здесь. Поэтому в этом файле только то,
+ * чего на лендинге не было: заголовок страницы, якоря категорий, карточка
+ * услуги и плавающая панель корзины.
+ *
+ * Правило 4 из docs/frontend-rules.md: цвета, шрифты и размеры — только из
+ * tokens.css. Ни одного подобранного значения: либо переменная, либо
+ * арифметика по шкале (`calc` на --space-*). Чем значения прототипа
+ * отличаются от токенов — перечислено в конце файла.
+ */
+
+/* ─── Заголовок страницы и якоря категорий ───────────────────────────── */
+
+.page-head { padding-block: var(--section-y) var(--space-8); }
+.page-title {
+  font-family: var(--text-display-l-font);
+  font-size: var(--text-display-l);
+  line-height: var(--text-display-l-lh);
+  font-weight: var(--text-display-xl-weight);
+  letter-spacing: var(--text-display-l-tracking);
+  text-transform: var(--text-display-l-case);
+  margin-bottom: var(--space-4);
+}
+.page-lead {
+  font-size: var(--text-body-m);
+  line-height: var(--text-body-m-lh);
+  color: var(--text-muted);
+  margin-bottom: calc(var(--space-6) + var(--space-1)); /* 28px */
+}
+
+/* Якоря категорий: те же чипы, что в виджете лендинга, но ссылками. */
+.cat-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  min-height: calc(var(--space-8) + var(--space-2));
+}
+.chip--nav { color: var(--text-secondary); }
+.chip--nav:hover { color: var(--text-primary); border-color: var(--accent-primary); }
+
+/* Текущий раздел в шапке — тот, на котором человек стоит. */
+.nav__link--current { color: var(--accent-primary); }
+
+/* ─── Категория ──────────────────────────────────────────────────────── */
+
+.catalog { padding-bottom: var(--section-y); }
+.cat {
+  padding-block: calc(var(--space-8) + var(--space-4)); /* 48px */
+  border-top: 1px solid var(--border-default);
+}
+.cat__title {
+  font-family: var(--text-h2-font);
+  font-size: var(--text-h2);
+  line-height: var(--text-h2-lh);
+  font-weight: var(--text-h2-weight);
+  text-transform: var(--text-display-l-case);
+  margin-bottom: var(--space-1);
+}
+.cat__desc {
+  font-size: var(--text-body-s);
+  line-height: var(--text-body-s-lh);
+  color: var(--text-muted);
+  max-width: calc(var(--container-max) / 2);
+  margin-bottom: var(--space-6);
+}
+.cat__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(calc(var(--container-max) / 5), 1fr));
+  gap: var(--space-4);
+}
+/* Заглушка категории: полоса вместо заголовка и вместо описания. */
+.cat > .skeleton { margin-bottom: var(--space-4); }
+.skeleton--title { height: var(--space-6); width: calc(var(--space-8) * 5); }
+
+/* ─── Карточка услуги ────────────────────────────────────────────────── */
+
+.srv { gap: var(--space-1); }
+.srv--picked { border-color: var(--accent-primary); }
+.srv__name {
+  font-size: var(--text-body-m);
+  line-height: var(--text-body-m-lh);
+  font-weight: var(--text-h3-weight);
+}
+/* Описание тянется: тогда цена и кнопка стоят на одной линии во всех
+   карточках ряда, как в прототипе. */
+.srv__desc {
+  font-size: var(--text-caption);
+  line-height: var(--text-caption-lh);
+  color: var(--text-muted);
+  flex: 1;
+  margin-bottom: var(--space-2);
+}
+.srv__time {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: var(--text-caption);
+  line-height: var(--text-caption-lh);
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+.srv__time .icon svg, .srv__time svg.icon { color: var(--text-muted); }
+.srv__price {
+  font-size: var(--text-h4);
+  line-height: var(--text-h4-lh);
+  font-weight: var(--text-h3-weight);
+  font-variant-numeric: tabular-nums;
+}
+/* Чип тянулся бы на всю карточку: в колонке он растягивается по ширине. */
+.srv__masters { align-self: flex-start; margin-block: var(--space-1) var(--space-2); }
+/* Выбранная услуга: кнопка заливается акцентом — это и есть отметка
+   «добавлено», отдельной галочки в прототипе нет. */
+.srv__add[aria-pressed="true"] {
+  background: var(--accent-primary);
+  border-color: var(--accent-primary);
+  color: var(--text-on-accent);
+}
+
+/* ─── Нет нужной услуги ──────────────────────────────────────────────── */
+
+.callout {
+  padding-block: calc(var(--space-8) + var(--space-4));
+  border-top: 1px solid var(--border-default);
+  text-align: center;
+}
+.callout__title {
+  font-size: var(--text-body-l);
+  line-height: var(--text-body-l-lh);
+  font-weight: var(--text-h3-weight);
+  margin-bottom: var(--space-2);
+}
+.callout__text {
+  font-size: var(--text-body-s);
+  line-height: var(--text-body-s-lh);
+  color: var(--text-muted);
+  margin-bottom: var(--block-gap);
+}
+.callout__phone { white-space: nowrap; }
+.callout__phone .skeleton--line { display: inline-block; vertical-align: middle; }
+
+/* ─── Плавающая панель корзины ───────────────────────────────────────── */
+/* Липнет ко дну окна, как в прототипе; клики ловит только сама панель,
+   чтобы прозрачная полоса не перекрывала карточки под ней. */
+
+.cart {
+  position: sticky;
+  bottom: var(--space-6);
+  z-index: 50;
+  display: flex;
+  justify-content: center;
+  padding-inline: var(--page-x);
+  pointer-events: none;
+}
+.cart[hidden] { display: none; }
+.cart__panel {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+  justify-content: center;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-full);
+  padding: var(--space-2) var(--space-2) var(--space-2) var(--space-6);
+  pointer-events: auto;
+}
+.cart__summary {
+  font-size: var(--text-body-s);
+  line-height: var(--text-body-s-lh);
+  font-weight: var(--text-h4-weight);
+  font-variant-numeric: tabular-nums;
+}
+.cart__go { border-radius: var(--radius-full); flex: none; }
+
+/* ─── Узкие экраны ───────────────────────────────────────────────────── */
+/* Мобильных макетов в прототипе нет; раскладка складывается в одну колонку,
+   размеры текста переключаются на ступень `-mobile` из токенов. */
+
+@media (max-width: 900px) {
+  .page-head { padding-block: var(--space-8); }
+  .cart__panel { padding: var(--space-2) var(--space-4); border-radius: var(--radius-lg); }
+}
+
+@media (max-width: 600px) {
+  .page-title { font-size: var(--text-display-l-mobile); }
+  .cat__title { font-size: var(--text-h2-mobile); }
+  .page-lead { font-size: var(--text-body-m-mobile); }
+  .srv__name { font-size: var(--text-body-m-mobile); }
+  .srv__price { font-size: var(--text-h4-mobile); }
+  .callout__title { font-size: var(--text-body-l-mobile); }
+}
+
+/*
+ * ЧТО ИЗ ПРОТОТИПА НЕ ЛЕГЛО НА ТОКЕНЫ (значения прототипа → что взято).
+ * Общая часть — кнопки, шапка, подвал, карточки, прозрачности и тени —
+ * уже разобрана в конце landing.css; здесь только новое для этого экрана.
+ *
+ * 1. Размеры текста 11, 12.5, 13.5, 15, 16, 17, 28 px — мимо двенадцати
+ *    ступеней шкалы. Подняты/опущены до ближайшей, тем же выбором, что на
+ *    лендинге: 12.5 → caption, 13.5 → body-s, 15 → body-m, 16 → body-l,
+ *    17 → h4, 28 → h2 (ближайшая ступень сверху — 32px).
+ * 2. Отступы 6, 10, 12, 14, 20, 48, 64, 80 px. В шкале токенов только
+ *    4/8/16/24/32 — взяты её шаги и кратные им через calc: 48 = 32+16,
+ *    20 = --block-gap из landing.css, 28 = 24+4.
+ * 3. Заголовок h1 — clamp(36px, 5vw, 56px). Плавного размера шкала не
+ *    описывает: взята ступень display-l (64px) и её -mobile (40px), с
+ *    переключением по медиазапросу — так же, как заголовок hero на лендинге.
+ * 4. Тень панели корзины 0 12px 32px rgba(36,26,24,.4) и рамки 1.5px:
+ *    ни теней, ни толщин рамок в токенах нет. Панель отделена рамкой
+ *    1px --border-default на фоне --bg-elevated.
+ * 5. Ширины: сетка карточек minmax(260px, 1fr) и описание категории
+ *    max-width:560px. Сетки в дизайн-системе нет, поэтому ширины считаются
+ *    от --container-max из landing.css: 1200/5 = 240px на карточку,
+ *    1200/2 = 600px на описание.
+ * 6. Радиус панели корзины и чипов 999px → --radius-full (999px, совпало);
+ *    радиус карточки 20px → --radius-lg (24px) из класса .card.
+ */

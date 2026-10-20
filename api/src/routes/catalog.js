@@ -96,9 +96,9 @@ router.get('/masters', (req, res) => {
   res.json({ masters: rows.map((r) => masterView(r, byMaster.get(r.id) || [])) });
 });
 
-/** GET /api/settings — публичные настройки студии и правила записи. */
+/** GET /api/settings — публичные настройки студии, часы работы и правила записи. */
 router.get('/settings', (_req, res) => {
-  res.json({ settings: settingsPublicView(db.settings()) });
+  res.json({ settings: settingsPublicView(db.settings(), db.salonHours()) });
 });
 
 module.exports = router;

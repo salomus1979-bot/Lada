@@ -1,0 +1,563 @@
+/*
+ * Экраны 9 «Детали записи и отмена» и 10 «Перенос записи». Структура, тексты
+ * и порядок блоков — из «9. Кабинет - Детали записи и отмена.dc.html» и
+ * «10. Кабинет - Перенос записи.dc.html».
+ *
+ * Общий слой берётся из landing.css (база, кнопки, `.card`, `.chip`, `.slot`,
+ * `.avatar`, `.nav__link`, заглушки `.skeleton`, блок `.load-error`,
+ * `.empty-note`) и account.css (сайдбар кабинета, его шапка, поля `--cab-x`).
+ * Здесь только то, чего в них не было: крошки, карточка записи в подробностях,
+ * модалка отмены, календарь, сетка слотов и панель подтверждения переноса.
+ *
+ * Правило 4 из docs/frontend-rules.md: цвета, шрифты и размеры — только из
+ * tokens.css. Ни одного подобранного значения: либо переменная, либо
+ * арифметика по шкале (`calc` на --space-*). Чем значения прототипа
+ * отличаются от токенов — перечислено в конце файла.
+ */
+
+/* ─── Общее для обоих экранов ────────────────────────────────────────── */
+
+/* Информационная плашка: цвет и подложка — статус `info` из токенов.
+   В прототипе такие плашки есть на обоих экранах. */
+.notice {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  padding: calc(var(--space-2) + var(--space-1)) var(--space-4);
+  border: 1px solid var(--feedback-info);
+  border-radius: var(--radius-sm);
+  background: var(--feedback-info-subtle);
+  font-size: var(--text-body-s);
+  line-height: var(--text-body-s-lh);
+  color: var(--text-secondary);
+}
+.notice[hidden] { display: none; }
+.notice .icon svg, .notice svg.icon { color: var(--feedback-info); }
+.notice--warn { border-color: var(--feedback-warning); background: var(--feedback-warning-subtle); }
+.notice--warn .icon svg, .notice--warn svg.icon { color: var(--feedback-warning); }
+
+/* ─── Экран 9: раскладка ─────────────────────────────────────────────── */
+
+/* У экрана 9 две колонки, поэтому он шире текстовой колонки кабинета. */
+.cab__content--wide { max-width: var(--container-max); }
+
+.crumbs {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+  margin-bottom: var(--block-gap);
+  font-size: var(--text-body-s);
+  line-height: var(--text-body-s-lh);
+  color: var(--text-muted);
+}
+.crumbs__current { color: var(--text-secondary); }
+
+.detail {
+  display: grid;
+  /* В прототипе minmax(260px, 0.6fr) — здесь колонка макета / 5. */
+  grid-template-columns: minmax(0, 1fr) minmax(calc(var(--container-max) / 5), 0.6fr);
+  gap: var(--space-8);
+  align-items: start;
+}
+.detail[hidden] { display: none; }
+.detail__main { min-width: 0; display: flex; flex-direction: column; gap: var(--block-gap); }
+.detail__aside {
+  min-width: 0;
+  position: sticky;
+  /* Ниже липкой шапки кабинета. */
+  top: calc(var(--space-8) * 2);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+/* ─── Экран 9: когда и в каком статусе ──────────────────────────────── */
+
+.detail__head { gap: var(--space-1); }
+.detail__status { align-self: flex-start; margin-bottom: var(--space-2); }
+/* Цвет статуса — из токенов статусов; нейтральный чип остаётся как есть. */
+.detail__status--ok { background: var(--feedback-success-subtle); color: var(--feedback-success); }
+.detail__status--wait { background: var(--feedback-warning-subtle); color: var(--feedback-warning); }
+.detail__status--off { background: var(--feedback-error-subtle); color: var(--feedback-error); }
+.detail__when {
+  font-family: var(--font-text);
+  font-size: var(--text-h3);
+  line-height: var(--text-h3-lh);
+  font-weight: var(--text-h3-weight);
+  font-variant-numeric: tabular-nums;
+}
+/* API отдаёт день недели строчными («пятница, 23 октября») — как в карточке
+   визита, первая буква поднимается в CSS. */
+.detail__when::first-letter { text-transform: uppercase; }
+.detail__created, .detail__cancel-reason {
+  font-size: var(--text-caption);
+  line-height: var(--text-caption-lh);
+  color: var(--text-muted);
+}
+.detail__cancel-reason { color: var(--text-secondary); margin-top: var(--space-2); }
+
+/* ─── Экран 9: заголовки блоков ─────────────────────────────────────── */
+
+.detail__label {
+  font-family: var(--text-label-font);
+  font-size: var(--text-label);
+  line-height: var(--text-label-lh);
+  font-weight: var(--text-label-weight);
+  letter-spacing: var(--text-label-tracking);
+  text-transform: var(--text-label-case);
+  color: var(--text-muted);
+  margin-bottom: var(--space-2);
+}
+
+/* ─── Экран 9: мастер ───────────────────────────────────────────────── */
+
+.detail__master { display: flex; align-items: center; gap: var(--space-4); }
+/* Кружок крупнее, чем в списке записей: в прототипе здесь 56px. */
+.detail__initials {
+  width: calc(var(--space-8) + var(--space-6));
+  height: calc(var(--space-8) + var(--space-6));
+  font-size: var(--text-body-l);
+}
+.detail__master-name {
+  font-size: var(--text-body-m);
+  line-height: var(--text-body-m-lh);
+  font-weight: var(--text-h3-weight);
+}
+
+/* ─── Экран 9: состав услуг ─────────────────────────────────────────── */
+
+/* Строки услуг разделены линией-рамкой, как в прототипе (там это зазор в
+   1px на фоне --border-default). */
+.detail__services {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  margin-bottom: var(--space-4);
+}
+.detail__service {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  padding: calc(var(--space-2) + var(--space-1)) var(--space-4);
+  background: var(--bg-base);
+  font-size: var(--text-body-s);
+  line-height: var(--text-body-s-lh);
+}
+.detail__service + .detail__service { border-top: 1px solid var(--border-default); }
+.detail__service-name { flex: 1; min-width: 0; }
+.detail__service-duration {
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+.detail__service-price {
+  font-weight: var(--text-h3-weight);
+  font-variant-numeric: tabular-nums;
+}
+.detail__total { display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); }
+.detail__total-label {
+  font-size: var(--text-caption);
+  line-height: var(--text-caption-lh);
+  color: var(--text-muted);
+}
+.detail__total-value {
+  font-size: var(--text-body-m);
+  line-height: var(--text-body-m-lh);
+  font-weight: var(--text-h3-weight);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ─── Экран 9: комментарий и контакты ───────────────────────────────── */
+
+.detail__comment {
+  font-size: var(--text-body-s);
+  line-height: var(--text-body-s-lh);
+  color: var(--text-secondary);
+  white-space: pre-line;
+}
+.detail__contacts {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.detail__contact {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-body-s);
+  line-height: var(--text-body-s-lh);
+  color: var(--text-secondary);
+}
+/* `hours_display` приходит строчными («вт–сб 10:00–20:00») — так же, как в
+   подвале лендинга. */
+.detail__hours::first-letter { text-transform: uppercase; }
+
+/* ─── Экран 9: действия ─────────────────────────────────────────────── */
+
+.detail__actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-6);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
+}
+/* «Отменить» — необратимое действие, поэтому цветом статуса ошибки, как в
+   карточке визита в кабинете. */
+.detail__cancel {
+  background: transparent;
+  color: var(--feedback-error);
+  border-color: var(--feedback-error);
+}
+.detail__cancel:hover:enabled { background: var(--feedback-error-subtle); }
+.detail__cancel:disabled {
+  color: var(--text-muted);
+  border-color: var(--border-default);
+  cursor: not-allowed;
+}
+.detail__cancel-yes {
+  flex: 1;
+  background: var(--feedback-error);
+  border-color: var(--feedback-error);
+  color: var(--text-on-accent);
+}
+.detail__cancel-yes:hover:enabled { background: var(--feedback-error-subtle); color: var(--feedback-error); }
+.detail__rules { align-items: flex-start; }
+
+/* Само окно модалки — общий слой, в css/landing.css: такое же окно
+   подтверждает выход из воронки на шагах 1-4. Здесь только красная кнопка
+   «Да, отменить» выше. */
+
+/* ─── Экран 10: шапка переноса ──────────────────────────────────────── */
+
+.rhead { border-bottom: 1px solid var(--border-default); }
+.rhead__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-6);
+  padding: var(--space-4) var(--cab-x);
+}
+.rhead__title {
+  font-family: var(--font-display);
+  font-size: var(--text-h4);
+  line-height: var(--text-h4-lh);
+  font-weight: var(--text-h2-weight);
+  text-transform: var(--text-display-l-case);
+}
+.rhead__close {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  color: var(--text-muted);
+  font-size: var(--text-body-s);
+  line-height: var(--text-body-s-lh);
+  font-weight: var(--text-h4-weight);
+}
+.rhead__close:hover { color: var(--accent-primary); }
+.rhead__locked {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+  padding: var(--space-4) var(--cab-x);
+  border-top: 1px solid var(--border-default);
+  background: var(--bg-surface);
+  font-size: var(--text-body-s);
+  line-height: var(--text-body-s-lh);
+  color: var(--text-muted);
+}
+.rhead__locked .icon svg, .rhead__locked svg.icon { color: var(--text-muted); }
+.rhead__summary { flex: 1; min-width: 0; }
+.rhead__note {
+  margin-left: auto;
+  font-size: var(--text-caption);
+  line-height: var(--text-caption-lh);
+  color: var(--text-muted);
+}
+/* Прежнее время зачёркнуто: оно освободится только после переноса. */
+.rhead__current {
+  padding: var(--space-2) var(--cab-x);
+  border-top: 1px solid var(--border-default);
+  font-size: var(--text-body-s);
+  line-height: var(--text-body-s-lh);
+  color: var(--text-muted);
+  text-decoration: line-through;
+}
+.rhead__error { margin: var(--space-4) var(--cab-x); }
+
+/* ─── Экран 10: раскладка ───────────────────────────────────────────── */
+
+.resched__body[hidden] { display: none; }
+.resched__main {
+  display: grid;
+  /* В прототипе 0.85fr / 1.15fr: календарь уже списка слотов. */
+  grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+  gap: var(--space-6);
+  align-items: start;
+  padding: var(--space-8) var(--cab-x);
+}
+
+/* ─── Экран 10: календарь ───────────────────────────────────────────── */
+
+.cal { gap: var(--space-4); }
+.cal__head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); }
+.cal__month {
+  font-family: var(--font-display);
+  font-size: var(--text-body-l);
+  line-height: var(--text-body-l-lh);
+  font-weight: var(--text-h4-weight);
+  text-transform: var(--text-display-l-case);
+}
+.cal__nav {
+  display: inline-flex;
+  padding: var(--space-1);
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+.cal__nav:hover:enabled { color: var(--accent-primary); }
+.cal__nav:disabled { color: var(--border-default); cursor: not-allowed; }
+.cal__week, .cal__grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: var(--space-1); }
+.cal__week {
+  font-size: var(--text-caption);
+  line-height: var(--text-caption-lh);
+  text-transform: var(--text-label-case);
+  color: var(--text-muted);
+  text-align: center;
+}
+.cal__cell {
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm);
+  background: var(--bg-base);
+  color: var(--text-secondary);
+  font-family: var(--font-text);
+  font-size: var(--text-body-s);
+  line-height: var(--text-body-s-lh);
+  font-weight: var(--text-label-weight);
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+}
+.cal__cell:hover:enabled { border-color: var(--accent-primary); color: var(--text-primary); }
+.cal__cell--blank { border: none; background: none; }
+/* Прошедший день и день за горизонтом записи выглядят одинаково: выбрать
+   нельзя ни тот, ни другой. */
+.cal__cell--past, .cal__cell--beyond {
+  color: var(--text-muted);
+  background: var(--slot-past);
+  cursor: not-allowed;
+}
+/* Выходной студии — та же штриховка, что «занято» у слотов. */
+.cal__cell--closed {
+  color: var(--text-muted);
+  cursor: not-allowed;
+  background: repeating-linear-gradient(135deg,
+    var(--slot-past), var(--slot-past) var(--space-1),
+    var(--bg-surface) var(--space-1), var(--bg-surface) var(--space-2));
+}
+.cal__cell--today { border-color: var(--text-muted); }
+/* День, на который запись стоит сейчас. */
+.cal__cell--current { border-style: dashed; border-color: var(--accent-primary); }
+.cal__cell--selected, .cal__cell--selected:hover:enabled {
+  background: var(--slot-selected);
+  border-color: var(--slot-selected);
+  color: var(--text-on-accent);
+}
+.cal__legend {
+  font-size: var(--text-caption);
+  line-height: var(--text-caption-lh);
+  color: var(--text-muted);
+}
+
+/* ─── Экран 10: слоты ───────────────────────────────────────────────── */
+
+.slots { min-width: 0; display: flex; flex-direction: column; gap: var(--space-4); }
+.slots__day {
+  font-family: var(--font-text);
+  font-size: var(--text-body-m);
+  line-height: var(--text-body-m-lh);
+  font-weight: var(--text-h3-weight);
+}
+.slots__day::first-letter { text-transform: uppercase; }
+.slots__parts { display: flex; flex-direction: column; gap: var(--space-6); }
+.slots__part-title {
+  font-family: var(--text-label-font);
+  font-size: var(--text-label);
+  line-height: var(--text-label-lh);
+  font-weight: var(--text-label-weight);
+  letter-spacing: var(--text-label-tracking);
+  text-transform: var(--text-label-case);
+  color: var(--text-muted);
+  margin-bottom: var(--space-2);
+}
+.slots__grid {
+  display: grid;
+  /* Слот не уже минимальной ширины .slot из landing.css. */
+  grid-template-columns: repeat(auto-fill, minmax(calc(var(--space-8) * 3), 1fr));
+  gap: var(--space-2);
+}
+.slots__slot { position: relative; cursor: pointer; }
+.slots__slot--picked, .slots__slot--picked:hover {
+  background: var(--slot-selected);
+  border-color: var(--slot-selected);
+  color: var(--text-on-accent);
+}
+/* Время текущей записи: занято ею же, поэтому нажать нельзя. */
+.slots__slot--current {
+  cursor: not-allowed;
+  color: var(--text-muted);
+  background: repeating-linear-gradient(135deg,
+    var(--slot-booked), var(--slot-booked) var(--space-1),
+    var(--border-default) var(--space-1), var(--border-default) var(--space-2));
+}
+.slots__tag {
+  position: absolute;
+  bottom: calc(var(--space-8) * -1);
+  left: 0;
+  right: 0;
+  font-size: var(--text-caption);
+  line-height: var(--text-caption-lh);
+  font-weight: var(--text-label-weight);
+  color: var(--text-secondary);
+  text-align: center;
+}
+/* Метка подписывает слот снизу, а не наезжает сверху, как в прототипе:
+   ряду слотов нужно место под неё. */
+.slots__grid:has(.slots__slot--current) { padding-bottom: var(--space-6); }
+
+/* ─── Экран 10: панель подтверждения ────────────────────────────────── */
+
+.rfoot {
+  position: sticky;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-4) var(--cab-x);
+  background: var(--bg-base);
+  border-top: 1px solid var(--border-default);
+}
+.rfoot__change {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+  font-size: var(--text-body-s);
+  line-height: var(--text-body-s-lh);
+  font-variant-numeric: tabular-nums;
+}
+.rfoot__old { color: var(--text-muted); text-decoration: line-through; }
+.rfoot__new { color: var(--text-primary); font-weight: var(--text-h3-weight); }
+.rfoot__change .icon svg, .rfoot__change svg.icon { color: var(--text-muted); }
+.rfoot__hold {
+  font-size: var(--text-caption);
+  line-height: var(--text-caption-lh);
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+.rfoot__hold[hidden] { display: none; }
+.rfoot__hold--over { color: var(--feedback-warning); }
+.rfoot__nearest { display: flex; align-items: center; gap: var(--space-2); flex-wrap: wrap; }
+.rfoot__nearest[hidden] { display: none; }
+.rfoot__nearest-label {
+  font-size: var(--text-body-s);
+  line-height: var(--text-body-s-lh);
+  color: var(--text-secondary);
+}
+.rfoot__nearest-slot { cursor: pointer; font-family: var(--font-text); }
+.rfoot__actions { display: flex; justify-content: flex-end; gap: var(--space-2); flex-wrap: wrap; }
+.rfoot__actions .btn:disabled { color: var(--text-muted); background: var(--slot-past); cursor: not-allowed; }
+
+/* ─── Узкие экраны ──────────────────────────────────────────────────── */
+/* Мобильных макетов в прототипе нет: обе раскладки складываются в одну
+   колонку, как кабинет и лендинг. */
+
+@media (max-width: 900px) {
+  .detail, .resched__main { grid-template-columns: 1fr; }
+  .detail__aside { position: static; }
+  .rhead__note { margin-left: 0; }
+  /* Липкая панель на телефоне заняла бы половину экрана. */
+  .rfoot { position: static; }
+}
+
+@media (max-width: 600px) {
+  .detail__when { font-size: var(--text-h3-mobile); }
+  .slots__day, .detail__total-value, .detail__master-name { font-size: var(--text-body-m-mobile); }
+}
+
+/*
+ * ЧТО ИЗ ПРОТОТИПА НЕ ЛЕГЛО НА ТОКЕНЫ И ЧЕМ ЭКРАН ОТЛИЧАЕТСЯ ОТ МАКЕТА.
+ * Общая часть (кнопки, прозрачности, тени, шкала текста и отступов) уже
+ * разобрана в конце landing.css и account.css; здесь только новое.
+ *
+ * РАЗМЕРЫ И ЦВЕТА
+ *
+ * 1. Размеры текста 8.5, 11.5, 12.5, 13.5, 15, 16, 17, 18, 22 px — мимо
+ *    двенадцати ступеней шкалы. Подняты/опущены до ближайшей, тем же выбором,
+ *    что на лендинге и в кабинете: 8.5/11.5/12.5 → caption (12), 13.5 →
+ *    body-s (13), 15/16 → body-m (15), 17 → h4 (20), 22 → h3 (24).
+ * 2. Отступы 6, 9, 10, 11, 12, 14, 18, 22, 26, 28, 32, 40, 56 px: взяты шаги
+ *    шкалы и кратные им через calc (12 = 8+4, 40 = --cab-x из account.css,
+ *    56 = 32+24), остальные округлены до ближайшего шага.
+ * 3. Ширины: карточка модалки 400px, правая колонка экрана 9 — minmax(260px,
+ *    0.6fr). Сетки в дизайн-системе нет, поэтому считаются от --container-max
+ *    из landing.css: 1200/3 = 400px, 1200/5 = 240px.
+ * 4. Подложка модалки rgba(20,14,13,.6) и её тень 0 16px 40px: ни этого цвета,
+ *    ни теней, ни backdrop-filter в токенах нет. Взят непрозрачный --bg-base
+ *    с opacity 0.6; тень не воспроизводится — карточка отделена рамкой.
+ * 5. Полосатая заливка «занято» и «выходной» собрана из токенов состояний
+ *    слота (--slot-booked, --slot-past, --border-default, --bg-surface): в
+ *    дизайн-системе сам градиент не описан, только базовые цвета.
+ * 6. Цвет погашенных элементов #6B5852 и #5A4642 в палитре отсутствует —
+ *    взяты --text-muted и --border-default, как в кабинете.
+ *
+ * ЧЕГО НЕТ В ДАННЫХ, И ПОЭТОМУ НЕТ НА ЭКРАНЕ
+ *
+ * 7. Экран 9, блок «Мастер»: в прототипе есть специализация, рейтинг со
+ *    звёздами и ссылка «Профиль мастера →». В `GET /appointments/:id` у
+ *    мастера только id и имя; ссылку убрали отдельным решением (п. 7 карты
+ *    экранов — публичной страницы мастера нет ни в API, ни в прототипе).
+ *    Специализацию и рейтинг отдаёт `GET /masters`, но это список, и экрану 9
+ *    он по карте не положен — вернутся вместе со страницей мастера.
+ * 8. Экран 10, точки под числами календаря («сколько окон в этот день»):
+ *    доступность считается на дату, отдельным запросом. Тридцать запросов на
+ *    месяц ради точек — не то, за что стоит платить, поэтому в календаре
+ *    гаснут только дни, о которых и так известно: прошедшие, выходные студии
+ *    (`GET /settings`, `hours`) и дальше горизонта записи. Личный выходной
+ *    мастера выглядит доступным до нажатия — тогда список слотов скажет, что
+ *    окна нет.
+ * 9. Экран 10, занятые слоты: `GET /masters/:id/availability` отдаёт только
+ *    свободное начало, занятого времени в ответе нет вовсе. Поэтому
+ *    полосатых «занято» из прототипа на экране нет — есть только то, на что
+ *    можно записаться. Единственное исключение — время самой записи: оно
+ *    занято ею же, в ответе его нет, и метка «Текущая запись» из прототипа
+ *    рисуется по ответу `GET /appointments/:id`.
+ *
+ * ЧТО СОБРАНО ИНАЧЕ, ЧЕМ В ПРОТОТИПЕ
+ *
+ * 10. Остаток удержания слота («Время держится за вами ещё 6:59») в прототипе
+ *     не нарисован, но удержание настоящее: `POST /holds` на `hold_ttl_min`
+ *     минут (решение 8 карты). Молча держать и молча отпускать время нельзя —
+ *     человек нажал бы «Перенести» на время, которое за ним уже не держится.
+ * 11. Метка «Текущая запись» в прототипе висит над слотом; здесь она
+ *     подписывает его снизу — сверху она налезала бы на заголовок части дня.
+ * 12. Модалка отмены: в прототипе в списке причин сразу выбрано «Не смогу
+ *     прийти», хотя подпись говорит «необязательно». Первым стоит пустой
+ *     вариант «Не указывать»: `cancel_reason` в API необязателен, и отправлять
+ *     причину за человека незачем.
+ * 13. «Да, отменить» в прототипе ведёт на экран 11 «История записей» — его
+ *     ещё не верстали. Отмена уводит на `account.html?tab=cancelled`: это тот
+ *     же список, в котором отменённая запись видна сразу.
+ */

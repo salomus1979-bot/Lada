@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Лада — дата и время записи</title>
+<meta name="description" content="Шаг 3 из 4: выберите дату и время визита в студию «Лада».">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/tokens.css">
+<link rel="stylesheet" href="/css/landing.css">
+<link rel="stylesheet" href="/css/booking.css">
+<link rel="stylesheet" href="/css/booking-time.css">
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js" defer></script>
+<script type="module" src="/js/booking-time.js"></script>
+</head>
+<body>
+
+<header class="bk-header">
+  <div class="bk-header__inner container">
+    <a class="brand__logo" href="/">Лада</a>
+
+    <nav class="stepper" aria-label="Шаги записи">
+      <div class="stepper__item stepper__item--done">
+        <a class="stepper__link" href="booking-services.html" data-back-link>
+          <span class="stepper__num"><i class="icon" data-lucide="check" aria-hidden="true"></i></span>
+          <span class="stepper__label">Услуги</span>
+        </a>
+        <span class="stepper__line"></span>
+      </div>
+      <div class="stepper__item stepper__item--done">
+        <a class="stepper__link" href="booking-master.html" data-back-link>
+          <span class="stepper__num"><i class="icon" data-lucide="check" aria-hidden="true"></i></span>
+          <span class="stepper__label">Мастер</span>
+        </a>
+        <span class="stepper__line"></span>
+      </div>
+      <div class="stepper__item stepper__item--current">
+        <span class="stepper__link" aria-current="step">
+          <span class="stepper__num">03</span>
+          <span class="stepper__label">Дата и время</span>
+        </span>
+        <span class="stepper__line"></span>
+      </div>
+      <div class="stepper__item">
+        <span class="stepper__link">
+          <span class="stepper__num">04</span>
+          <span class="stepper__label">Подтверждение</span>
+        </span>
+      </div>
+    </nav>
+
+    <button class="bk-exit" type="button" data-exit>
+      <i class="icon" data-lucide="x" aria-hidden="true"></i>Выйти
+    </button>
+  </div>
+</header>
+
+<main class="bk-main container">
+  <h1 class="bk-title">Выберите дату и время</h1>
+
+  <!-- Что уже выбрано на шагах 1 и 2: мастер, услуги, длительность, сумма. -->
+  <p class="bk-summary" data-summary aria-busy="true">
+    <span class="skeleton skeleton--line skeleton--wide"></span>
+  </p>
+
+  <p class="load-error" data-error="page" role="status" hidden></p>
+
+  <div class="time-grid" data-body>
+    <!-- ─── Календарь месяца ─────────────────────────────────────────── -->
+    <section class="card cal" aria-labelledby="cal-month">
+      <div class="cal__head">
+        <button class="cal__nav" type="button" data-cal="prev" aria-label="Предыдущий месяц">
+          <i class="icon" data-lucide="chevron-left" aria-hidden="true"></i>
+        </button>
+        <h2 class="cal__month" id="cal-month" data-cal="month"></h2>
+        <button class="cal__nav" type="button" data-cal="next" aria-label="Следующий месяц">
+          <i class="icon" data-lucide="chevron-right" aria-hidden="true"></i>
+        </button>
+      </div>
+      <div class="cal__week" aria-hidden="true">
+        <span>пн</span><span>вт</span><span>ср</span><span>чт</span><span>пт</span><span>сб</span><span>вс</span>
+      </div>
+      <div class="cal__grid" data-cal="grid"></div>
+      <!-- Легенда прототипа короче на два пункта: точек «много/мало окон» в
+           ней нет — см. конец booking-time.css. -->
+      <ul class="cal__legend">
+        <li class="cal__legend-item"><span class="cal__swatch cal__swatch--today"></span>Сегодня</li>
+        <li class="cal__legend-item"><span class="cal__swatch cal__swatch--selected"></span>Выбранный день</li>
+        <li class="cal__legend-item"><span class="cal__swatch cal__swatch--closed"></span>Студия закрыта</li>
+        <li class="cal__legend-item"><span class="cal__swatch cal__swatch--past"></span>Прошедший день или дальше горизонта записи</li>
+      </ul>
+      <button class="btn btn--ghost btn--block" type="button" data-action="nearest">
+        Ближайшая свободная дата
+      </button>
+    </section>
+
+    <!-- ─── Слоты выбранного дня ─────────────────────────────────────── -->
+    <section class="slots" aria-labelledby="slots-day">
+      <h2 class="slots__day" id="slots-day" data-slots="day"></h2>
+      <p class="notice slots__need" data-slots="need" hidden>
+        <i class="icon" data-lucide="info" aria-hidden="true"></i>
+        <span data-slots="need-text"></span>
+      </p>
+      <div class="slots__parts" data-list="slots" aria-busy="true">
+        <span class="skeleton skeleton--slot"></span>
+        <span class="skeleton skeleton--slot"></span>
+        <span class="skeleton skeleton--slot"></span>
+        <span class="skeleton skeleton--slot"></span>
+      </div>
+      <p class="load-error" data-error="slots" role="status" hidden></p>
+      <!-- Выбранный слот удержан за человеком на `hold_ttl_min` минут: в
+           прототипе этого нет, удержание настоящее (решение 8 карты). -->
+      <p class="hold" data-hold role="status" hidden></p>
+    </section>
+  </div>
+</main>
+
+<div class="bk-foot">
+  <div class="bk-foot__inner container">
+    <a class="btn btn--ghost" href="booking-master.html" data-back-link>
+      <i class="icon" data-lucide="arrow-left" aria-hidden="true"></i>Назад
+    </a>
+    <div class="bk-foot__right">
+      <span class="bk-hint" data-hint>Время не выбрано</span>
+      <a class="btn btn--primary btn--off" data-next aria-disabled="true">Перейти к подтверждению</a>
+    </div>
+  </div>
+</div>
+
+<!-- ─── Шаблоны ───────────────────────────────────────────────────────── -->
+
+<template id="tpl-cal-cell">
+  <button class="cal__cell" type="button"><span class="cal__num"></span></button>
+</template>
+
+<template id="tpl-slot-part">
+  <div class="slots__part">
+    <h3 class="slots__part-title"></h3>
+    <div class="slots__grid"></div>
+  </div>
+</template>
+
+<template id="tpl-slot">
+  <button class="slot slots__slot" type="button"></button>
+</template>
+
+</body>
+</html>

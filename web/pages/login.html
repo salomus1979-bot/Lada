@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Лада — вход</title>
+<meta name="description" content="Вход в личный кабинет студии «Лада».">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/tokens.css">
+<!-- Общий слой вёрстки: база, кнопки, `.photo`, `.load-error` — те же
+     классы, что на лендинге и в каталоге. -->
+<link rel="stylesheet" href="/css/landing.css">
+<link rel="stylesheet" href="/css/auth.css">
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js" defer></script>
+<script type="module" src="/js/login.js"></script>
+</head>
+<body>
+
+<main class="auth">
+  <div class="auth__col">
+    <div class="auth__inner">
+      <a class="brand__logo auth__logo" href="/">Лада</a>
+      <h1 class="auth__title">Вход в личный кабинет</h1>
+
+      <form id="login-form" novalidate>
+        <p class="load-error form-error" data-form-error role="alert" hidden>
+          <i class="icon" data-lucide="x-circle" aria-hidden="true"></i>
+          <span data-form-error-text></span>
+        </p>
+
+        <div class="field">
+          <label class="field__label" for="email">E-mail</label>
+          <div class="field__control">
+            <input id="email" name="email" type="email" autocomplete="email" placeholder="anna@mail.ru">
+          </div>
+          <span class="field__hint" data-error-for="email" hidden></span>
+        </div>
+
+        <div class="field field--with-toggle">
+          <label class="field__label" for="password">Пароль</label>
+          <div class="field__control">
+            <input id="password" name="password" type="password" autocomplete="current-password" placeholder="••••••••">
+            <button class="field__toggle" type="button" data-toggle-password="password" aria-label="Показать пароль" aria-pressed="false">
+              <i class="icon" data-lucide="eye" aria-hidden="true"></i>
+            </button>
+          </div>
+          <span class="field__hint" data-error-for="password" hidden></span>
+        </div>
+
+        <div class="form-row">
+          <a href="password-reset.html">Забыли пароль?</a>
+        </div>
+
+        <button class="btn btn--primary btn--block" type="submit">Войти</button>
+      </form>
+
+      <hr class="auth__divider">
+
+      <p class="auth__switch">Нет аккаунта? <a href="register.html">Зарегистрироваться</a></p>
+      <a class="auth__back" href="/">← Вернуться на сайт</a>
+    </div>
+  </div>
+
+  <aside class="auth__col photo auth__aside">
+    <span class="photo__caption">фото интерьера студии</span>
+    <p class="auth__quote">«Красота — это забота о себе, на которую всегда найдётся время»</p>
+  </aside>
+</main>
+
+</body>
+</html>

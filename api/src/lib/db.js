@@ -197,7 +197,12 @@ function settings() {
   return row;
 }
 
+/** Часы работы студии по дням недели: семь строк, 1 — понедельник. */
+function salonHours() {
+  return all('SELECT weekday, is_closed, start_min, end_min FROM salon_hours ORDER BY weekday');
+}
+
 module.exports = {
-  open, get, one, all, run, transaction, settings, DB_PATH,
+  open, get, one, all, run, transaction, settings, salonHours, DB_PATH,
   OVERLAP_ERROR, isOverlapError,
 };

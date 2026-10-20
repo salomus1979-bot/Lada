@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Лада — мои записи</title>
+<meta name="description" content="Личный кабинет студии «Лада»: записей пока нет — выберите услугу и удобное время.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/tokens.css">
+<!-- Общий слой вёрстки: база, кнопки, карточки, чипы, аватары, заглушки и
+     блок ошибки — те же классы, что на лендинге. -->
+<link rel="stylesheet" href="/css/landing.css">
+<link rel="stylesheet" href="/css/account.css">
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js" defer></script>
+<script type="module" src="/js/account-empty.js"></script>
+</head>
+<body class="cab">
+
+<!-- ─── Сайдбар кабинета ────────────────────────────────────────────────── -->
+<aside class="side">
+  <a class="side__logo" href="/">Лада</a>
+  <nav class="side__nav" aria-label="Разделы кабинета">
+    <a class="side__item side__item--current" href="account.html" aria-current="page">
+      <i class="icon" data-lucide="calendar" aria-hidden="true"></i>Мои записи
+    </a>
+    <a class="side__item" href="history.html">
+      <i class="icon" data-lucide="history" aria-hidden="true"></i>История
+    </a>
+    <a class="side__item" href="notifications.html">
+      <i class="icon" data-lucide="bell" aria-hidden="true"></i>Уведомления
+    </a>
+    <a class="side__item" href="profile.html">
+      <i class="icon" data-lucide="user" aria-hidden="true"></i>Профиль
+    </a>
+    <!-- «Выйти» — не ссылка: это запрос POST /auth/logout, после него лендинг. -->
+    <button class="side__item side__item--button" type="button" data-action="logout">
+      <i class="icon" data-lucide="log-out" aria-hidden="true"></i>Выйти
+    </button>
+  </nav>
+  <a class="btn btn--primary side__new" href="booking-services.html">
+    <i class="icon" data-lucide="plus" aria-hidden="true"></i>Новая запись
+  </a>
+</aside>
+
+<div class="cab__body">
+
+  <!-- ─── Шапка кабинета ──────────────────────────────────────────────── -->
+  <header class="topbar">
+    <nav class="topbar__nav" aria-label="Разделы сайта">
+      <a class="nav__link" href="catalog.html">Услуги</a>
+      <a class="nav__link" href="/#masters">Мастера</a>
+      <a class="nav__link" href="/#steps">Как записаться</a>
+      <a class="nav__link" href="/#contacts">Контакты</a>
+    </nav>
+    <div class="topbar__actions">
+      <!-- Колокольчик без бейджа: признак «прочитано» хранить негде —
+           ни таблицы уведомлений, ни роутов в API нет (ui-map, пп. 1-2). -->
+      <a class="topbar__bell" href="notifications.html" aria-label="Уведомления">
+        <i class="icon" data-lucide="bell" aria-hidden="true"></i>
+      </a>
+      <a class="topbar__user" href="profile.html" data-user="block" aria-busy="true">
+        <span class="avatar avatar--muted topbar__initials" data-user="initials" aria-hidden="true"></span>
+        <span class="topbar__name" data-user="name"><span class="skeleton skeleton--line"></span></span>
+        <i class="icon" data-lucide="chevron-down" aria-hidden="true"></i>
+      </a>
+    </div>
+  </header>
+
+  <main class="cab__content">
+    <h1 class="cab__title">Мои записи</h1>
+    <p class="load-error" data-error="me" role="status" hidden></p>
+
+    <!-- Табы: «Предстоящие» — этот экран, остальные списки живут на
+         account.html (там они и делятся по `status` ответа scope=past). -->
+    <div class="tabs" role="tablist" aria-label="Какие записи показывать">
+      <button class="tabs__tab" type="button" role="tab" aria-selected="true"
+              aria-controls="empty">Предстоящие (0)</button>
+      <a class="tabs__tab" role="tab" aria-selected="false" href="account.html?tab=past">Прошедшие</a>
+      <a class="tabs__tab" role="tab" aria-selected="false" href="account.html?tab=cancelled">Отменённые</a>
+    </div>
+
+    <!-- ─── Пустое состояние ──────────────────────────────────────────── -->
+    <!-- Пока `GET /appointments?scope=upcoming` не ответил, на месте блока
+         стоит заглушка: сказать «записей нет» до ответа было бы неправдой. -->
+    <div id="empty" role="tabpanel" data-list="empty" aria-busy="true">
+      <div class="appt skeleton-host">
+        <span class="skeleton skeleton--line skeleton--wide"></span>
+        <span class="skeleton skeleton--line"></span>
+        <span class="skeleton skeleton--chip"></span>
+      </div>
+    </div>
+    <p class="load-error" data-error="upcoming" role="status" hidden></p>
+
+    <!-- ─── Популярные услуги ─────────────────────────────────────────── -->
+    <!-- Признака «популярная» в API нет: берём первые три услуги витрины
+         `GET /services` (сервер сортирует по категориям и названию). -->
+    <section class="popular">
+      <h2 class="popular__title">Популярные услуги</h2>
+      <div class="popular__grid" data-list="popular" aria-busy="true">
+        <div class="card skeleton-host"><span class="skeleton skeleton--tile"></span><span class="skeleton skeleton--line skeleton--wide"></span><span class="skeleton skeleton--line"></span><span class="skeleton skeleton--chip"></span></div>
+        <div class="card skeleton-host"><span class="skeleton skeleton--tile"></span><span class="skeleton skeleton--line skeleton--wide"></span><span class="skeleton skeleton--line"></span><span class="skeleton skeleton--chip"></span></div>
+        <div class="card skeleton-host"><span class="skeleton skeleton--tile"></span><span class="skeleton skeleton--line skeleton--wide"></span><span class="skeleton skeleton--line"></span><span class="skeleton skeleton--chip"></span></div>
+      </div>
+      <p class="load-error" data-error="popular" role="status" hidden></p>
+    </section>
+  </main>
+</div>
+
+<!-- ─── Шаблоны ───────────────────────────────────────────────────────── -->
+
+<template id="tpl-empty">
+  <div class="empty-state">
+    <span class="empty-state__tile"><i class="icon" data-lucide="calendar-x" aria-hidden="true"></i></span>
+    <p class="empty-state__title">Пока нет записей</p>
+    <p class="empty-state__text">Выберите услуги и удобное время — это займёт пару минут</p>
+    <div class="empty-state__actions">
+      <a class="btn btn--primary" href="booking-services.html">Записаться онлайн</a>
+      <a class="btn btn--ghost" href="catalog.html">Посмотреть услуги</a>
+    </div>
+  </div>
+</template>
+
+<template id="tpl-popular">
+  <article class="card pop">
+    <span class="tile"><i class="icon icon--accent" data-lucide="sparkles" aria-hidden="true"></i></span>
+    <h3 class="pop__name"></h3>
+    <p class="pop__meta"></p>
+    <a class="btn btn--outline btn--block" href="booking-services.html">Записаться</a>
+  </article>
+</template>
+
+</body>
+</html>

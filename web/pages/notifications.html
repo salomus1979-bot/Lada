@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Лада — уведомления</title>
+<meta name="description" content="Уведомления по записям в студию «Лада»: напоминания о визите, подтверждения, переносы и отмены.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/tokens.css">
+<!-- Общий слой вёрстки: база, кнопки, карточки, чипы, аватары, заглушки и
+     блок ошибки — те же классы, что на лендинге. -->
+<link rel="stylesheet" href="/css/landing.css">
+<!-- Сайдбар кабинета и его шапка. -->
+<link rel="stylesheet" href="/css/account.css">
+<link rel="stylesheet" href="/css/cabinet.css">
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js" defer></script>
+<script type="module" src="/js/notifications.js"></script>
+</head>
+<body class="cab">
+
+<!-- ─── Сайдбар кабинета ────────────────────────────────────────────────── -->
+<!-- Бейджа «2» на пункте «Уведомления» нет: непрочитанные негде считать —
+     ни таблицы уведомлений, ни роутов в API (ui-map, пп. 1-2). -->
+<aside class="side">
+  <a class="side__logo" href="/">Лада</a>
+  <nav class="side__nav" aria-label="Разделы кабинета">
+    <a class="side__item" href="account.html">
+      <i class="icon" data-lucide="calendar" aria-hidden="true"></i>Мои записи
+    </a>
+    <a class="side__item" href="history.html">
+      <i class="icon" data-lucide="history" aria-hidden="true"></i>История
+    </a>
+    <a class="side__item side__item--current" href="notifications.html" aria-current="page">
+      <i class="icon" data-lucide="bell" aria-hidden="true"></i>Уведомления
+    </a>
+    <a class="side__item" href="profile.html">
+      <i class="icon" data-lucide="user" aria-hidden="true"></i>Профиль
+    </a>
+    <!-- «Выйти» — не ссылка: это запрос POST /auth/logout, после него лендинг. -->
+    <button class="side__item side__item--button" type="button" data-action="logout">
+      <i class="icon" data-lucide="log-out" aria-hidden="true"></i>Выйти
+    </button>
+  </nav>
+  <a class="btn btn--primary side__new" href="booking-services.html">
+    <i class="icon" data-lucide="plus" aria-hidden="true"></i>Новая запись
+  </a>
+</aside>
+
+<div class="cab__body">
+
+  <!-- ─── Шапка кабинета ──────────────────────────────────────────────── -->
+  <header class="topbar">
+    <nav class="topbar__nav" aria-label="Разделы сайта">
+      <a class="nav__link" href="catalog.html">Услуги</a>
+      <a class="nav__link" href="/#masters">Мастера</a>
+      <a class="nav__link" href="/#steps">Как записаться</a>
+      <a class="nav__link" href="/#contacts">Контакты</a>
+    </nav>
+    <div class="topbar__actions">
+      <a class="topbar__bell" href="notifications.html" aria-label="Уведомления" aria-current="page">
+        <i class="icon" data-lucide="bell" aria-hidden="true"></i>
+      </a>
+      <a class="topbar__user" href="profile.html" data-user="block" aria-busy="true">
+        <span class="avatar avatar--muted topbar__initials" data-user="initials" aria-hidden="true"></span>
+        <span class="topbar__name" data-user="name"><span class="skeleton skeleton--line"></span></span>
+        <i class="icon" data-lucide="chevron-down" aria-hidden="true"></i>
+      </a>
+    </div>
+  </header>
+
+  <main class="cab__content cab__content--feed">
+    <h1 class="cab__title">Уведомления</h1>
+    <p class="load-error" data-error="me" role="status" hidden></p>
+
+    <!-- Откуда лента, сказано прямо: отдельного хранилища уведомлений в
+         системе нет, всё в ней собрано из записей человека (решение 1 карты
+         экранов). Поэтому здесь нет ни «прочитано», ни фильтра
+         «Непрочитанные», ни «Отметить все как прочитанные». -->
+    <p class="cab__note">
+      Лента собрана из ваших записей: отдельных уведомлений студия пока не
+      хранит, поэтому отметить их прочитанными нечем. Времени отмены и переноса
+      в ответе тоже нет — такие уведомления датированы днём визита и в группах
+      стоят приблизительно.
+    </p>
+
+    <!-- Сколько здесь уведомлений, известно только из ответа API: в разметке
+         стоят заглушки, их количество ничего не обещает. -->
+    <div class="feed-list" data-list="feed" aria-busy="true">
+      <section class="feed-group">
+        <p class="feed-group__title"><span class="skeleton skeleton--line"></span></p>
+        <div class="feed">
+          <article class="feed__item skeleton-host">
+            <span class="skeleton skeleton--tile"></span>
+            <span class="skeleton skeleton--line skeleton--wide"></span>
+          </article>
+          <article class="feed__item skeleton-host">
+            <span class="skeleton skeleton--tile"></span>
+            <span class="skeleton skeleton--line skeleton--wide"></span>
+          </article>
+        </div>
+      </section>
+    </div>
+    <p class="load-error" data-error="feed" role="status" hidden></p>
+  </main>
+</div>
+
+<!-- ─── Шаблоны ленты ────────────────────────────────────────────────── -->
+
+<template id="tpl-feed-group">
+  <section class="feed-group">
+    <h2 class="feed-group__title"></h2>
+    <div class="feed"></div>
+  </section>
+</template>
+
+<template id="tpl-feed-item">
+  <article class="feed__item">
+    <span class="feed__tile" aria-hidden="true"><i class="icon"></i></span>
+    <div class="feed__body">
+      <p class="feed__text"></p>
+      <p class="feed__reason" hidden></p>
+      <p class="feed__meta">
+        <span class="feed__time"></span>
+        <a class="feed__link" hidden></a>
+      </p>
+    </div>
+  </article>
+</template>
+
+<!-- Пустая лента: та же пунктирная карточка, что в прототипе показывала
+     «Все уведомления прочитаны». -->
+<template id="tpl-feed-empty">
+  <div class="feed-empty">
+    <i class="icon feed-empty__icon" data-lucide="bell-off" aria-hidden="true"></i>
+    <p class="feed-empty__title">Уведомлений пока нет</p>
+    <p class="feed-empty__text">Они появятся, когда у вас будут записи.</p>
+  </div>
+</template>
+
+</body>
+</html>

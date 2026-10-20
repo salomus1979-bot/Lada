@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Лада — студия маникюра и бровей</title>
+<meta name="description" content="Студия «Лада»: запись онлайн за две минуты — свободное время мастеров видно сразу.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/tokens.css">
+<link rel="stylesheet" href="/css/landing.css">
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js" defer></script>
+<script type="module" src="/js/landing.js"></script>
+</head>
+<body id="top">
+
+<header class="header">
+  <div class="header__inner container">
+    <div class="brand">
+      <a class="brand__logo" href="#top" data-settings="name">Лада</a>
+      <span class="brand__tagline">студия маникюра и бровей</span>
+    </div>
+    <nav class="nav" aria-label="Разделы страницы">
+      <a class="nav__link" href="#services">Услуги</a>
+      <a class="nav__link" href="#masters">Мастера</a>
+      <a class="nav__link" href="#steps">Как записаться</a>
+      <a class="nav__link" href="#reviews">Отзывы</a>
+      <a class="nav__link" href="#contacts">Контакты</a>
+    </nav>
+    <div class="header__actions">
+      <a class="btn btn--ghost" href="login.html">Войти</a>
+      <a class="btn btn--primary" href="booking-services.html">Записаться</a>
+    </div>
+  </div>
+</header>
+
+<main>
+
+  <!-- ─── Hero ────────────────────────────────────────────────────────── -->
+  <section class="hero container">
+    <div class="hero__grid">
+      <div>
+        <p class="eyebrow">Запись онлайн за 2 минуты</p>
+        <h1 class="hero__title">Красота, которая начинается с удобного времени</h1>
+        <p class="hero__lead">Выбирайте мастера и свободный слот сами — без звонков и ожидания ответа в переписке.</p>
+        <div class="hero__actions">
+          <a class="btn btn--primary btn--lg" href="booking-services.html">Записаться онлайн</a>
+          <a class="btn btn--ghost btn--lg" href="catalog.html">Посмотреть прайс</a>
+        </div>
+        <p class="note"><i class="icon icon--accent" data-lucide="eye" aria-hidden="true"></i>Свободное время видно сразу</p>
+      </div>
+      <div class="photo photo--portrait">фото мастера за работой</div>
+    </div>
+  </section>
+
+  <!-- ─── Виджет быстрой записи ───────────────────────────────────────── -->
+  <section class="widget container container--narrow" aria-label="Быстрая запись">
+    <div class="widget__card">
+      <p class="widget__label">1. Выберите мастера</p>
+      <div class="widget__row" data-list="widget-masters" aria-busy="true">
+        <div class="wm skeleton-host"><span class="skeleton skeleton--avatar"></span><span class="skeleton skeleton--line"></span></div>
+        <div class="wm skeleton-host"><span class="skeleton skeleton--avatar"></span><span class="skeleton skeleton--line"></span></div>
+        <div class="wm skeleton-host"><span class="skeleton skeleton--avatar"></span><span class="skeleton skeleton--line"></span></div>
+        <div class="wm skeleton-host"><span class="skeleton skeleton--avatar"></span><span class="skeleton skeleton--line"></span></div>
+      </div>
+      <p class="load-error" data-error="widget-masters" role="status" hidden></p>
+
+      <p class="widget__label">2. Выберите услугу</p>
+      <div class="widget__row" data-list="widget-services" aria-busy="true">
+        <span class="skeleton skeleton--chip"></span>
+        <span class="skeleton skeleton--chip"></span>
+        <span class="skeleton skeleton--chip"></span>
+        <span class="skeleton skeleton--chip"></span>
+      </div>
+      <p class="load-error" data-error="widget-services" role="status" hidden></p>
+
+      <p class="widget__label">3. Ближайшее свободное время</p>
+      <div class="widget__row" data-list="widget-slots" aria-busy="true">
+        <span class="skeleton skeleton--slot"></span>
+        <span class="skeleton skeleton--slot"></span>
+        <span class="skeleton skeleton--slot"></span>
+        <span class="skeleton skeleton--slot"></span>
+        <span class="skeleton skeleton--slot"></span>
+        <span class="skeleton skeleton--slot"></span>
+      </div>
+      <p class="load-error" data-error="widget-slots" role="status" hidden></p>
+
+      <div class="widget__footer">
+        <a class="btn btn--primary" href="booking-services.html">Продолжить</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── Услуги ──────────────────────────────────────────────────────── -->
+  <section class="section container" id="services">
+    <div class="section__head">
+      <h2 class="section__title">Наши услуги</h2>
+      <p class="section__note">Индивидуальный подход и безупречный результат</p>
+    </div>
+    <div class="services">
+      <div class="photo services__promo">
+        <span class="photo__caption">фото интерьера студии</span>
+        <a class="link-arrow" href="catalog.html">Посмотреть полный прайс <i class="icon" data-lucide="arrow-right" aria-hidden="true"></i></a>
+      </div>
+      <div class="services__grid" data-list="services" aria-busy="true">
+        <div class="card skeleton-host"><span class="skeleton skeleton--tile"></span><span class="skeleton skeleton--line"></span><span class="skeleton skeleton--line skeleton--wide"></span><span class="skeleton skeleton--line"></span></div>
+        <div class="card skeleton-host"><span class="skeleton skeleton--tile"></span><span class="skeleton skeleton--line"></span><span class="skeleton skeleton--line skeleton--wide"></span><span class="skeleton skeleton--line"></span></div>
+        <div class="card skeleton-host"><span class="skeleton skeleton--tile"></span><span class="skeleton skeleton--line"></span><span class="skeleton skeleton--line skeleton--wide"></span><span class="skeleton skeleton--line"></span></div>
+        <div class="card skeleton-host"><span class="skeleton skeleton--tile"></span><span class="skeleton skeleton--line"></span><span class="skeleton skeleton--line skeleton--wide"></span><span class="skeleton skeleton--line"></span></div>
+      </div>
+    </div>
+    <p class="load-error" data-error="services" role="status" hidden></p>
+  </section>
+
+  <!-- ─── Мастера ─────────────────────────────────────────────────────── -->
+  <section class="section container" id="masters">
+    <h2 class="section__title">Наши мастера</h2>
+    <div class="masters" data-list="masters" aria-busy="true">
+      <div class="card card--flush skeleton-host"><span class="skeleton skeleton--photo"></span><span class="skeleton skeleton--line"></span><span class="skeleton skeleton--line skeleton--wide"></span></div>
+      <div class="card card--flush skeleton-host"><span class="skeleton skeleton--photo"></span><span class="skeleton skeleton--line"></span><span class="skeleton skeleton--line skeleton--wide"></span></div>
+      <div class="card card--flush skeleton-host"><span class="skeleton skeleton--photo"></span><span class="skeleton skeleton--line"></span><span class="skeleton skeleton--line skeleton--wide"></span></div>
+      <div class="card card--flush skeleton-host"><span class="skeleton skeleton--photo"></span><span class="skeleton skeleton--line"></span><span class="skeleton skeleton--line skeleton--wide"></span></div>
+    </div>
+    <p class="load-error" data-error="masters" role="status" hidden></p>
+  </section>
+
+  <!-- ─── Запись в 4 шага ─────────────────────────────────────────────── -->
+  <section class="section container" id="steps">
+    <h2 class="section__title">Запись в 4 шага</h2>
+    <ol class="steps">
+      <li class="step">
+        <div class="step__head"><span class="step__num">01</span><span class="tile"><i class="icon icon--accent" data-lucide="user" aria-hidden="true"></i></span></div>
+        <p class="step__title">Выберите мастера</p>
+        <p class="step__desc">Посмотрите специализацию и опыт</p>
+      </li>
+      <li class="step">
+        <div class="step__head"><span class="step__num">02</span><span class="tile"><i class="icon icon--accent" data-lucide="droplet" aria-hidden="true"></i></span></div>
+        <p class="step__title">Выберите услугу</p>
+        <p class="step__desc">Все процедуры с ценой и длительностью</p>
+      </li>
+      <li class="step">
+        <div class="step__head"><span class="step__num">03</span><span class="tile"><i class="icon icon--accent" data-lucide="calendar" aria-hidden="true"></i></span></div>
+        <p class="step__title">Откройте календарь</p>
+        <p class="step__desc">Выберите свободное время сами</p>
+      </li>
+      <li class="step">
+        <div class="step__head"><span class="step__num">04</span><span class="tile"><i class="icon icon--accent" data-lucide="check" aria-hidden="true"></i></span></div>
+        <p class="step__title">Подтвердите запись</p>
+        <p class="step__desc">Она появится в личном кабинете</p>
+      </li>
+    </ol>
+    <p class="note"><i class="icon icon--accent" data-lucide="shield" aria-hidden="true"></i>Запись можно отменить в личном кабинете, без звонка администратору</p>
+  </section>
+
+  <!-- ─── Преимущества ────────────────────────────────────────────────── -->
+  <section class="section container" id="advantages">
+    <h2 class="section__title">Преимущества</h2>
+    <div class="advantages">
+      <div class="advantages__col">
+        <div class="card advantage">
+          <span class="card__num">1/</span>
+          <span class="tile tile--outline"><i class="icon icon--accent" data-lucide="award" aria-hidden="true"></i></span>
+          <p class="advantage__title">Опытные мастера</p>
+          <p class="advantage__desc">Профильное образование и опыт от 3 лет</p>
+        </div>
+        <div class="card advantage">
+          <span class="card__num">2/</span>
+          <span class="tile tile--outline"><i class="icon icon--accent" data-lucide="calendar" aria-hidden="true"></i></span>
+          <p class="advantage__title">Запись без звонков</p>
+          <p class="advantage__desc">Свободное время видно онлайн круглосуточно</p>
+        </div>
+      </div>
+      <div class="photo">фото процедуры</div>
+      <div class="advantages__col">
+        <div class="card advantage">
+          <span class="card__num">3/</span>
+          <span class="tile tile--outline"><i class="icon icon--accent" data-lucide="shield" aria-hidden="true"></i></span>
+          <p class="advantage__title">Премиальные материалы</p>
+          <p class="advantage__desc">Сертифицированные препараты и составы</p>
+        </div>
+        <div class="card advantage">
+          <span class="card__num">4/</span>
+          <span class="tile tile--outline"><i class="icon icon--accent" data-lucide="heart" aria-hidden="true"></i></span>
+          <p class="advantage__title">Комфорт и забота</p>
+          <p class="advantage__desc">Уютная атмосфера и внимание к каждой детали</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── Отзывы ──────────────────────────────────────────────────────── -->
+  <section class="section container" id="reviews">
+    <h2 class="section__title">Отзывы</h2>
+    <div class="reviews">
+      <div class="reviews__summary">
+        <p class="reviews__score">4,9</p>
+        <div class="stars stars--lg" aria-hidden="true">
+          <i class="icon star" data-lucide="star"></i><i class="icon star" data-lucide="star"></i><i class="icon star" data-lucide="star"></i><i class="icon star" data-lucide="star"></i><i class="icon star" data-lucide="star"></i>
+        </div>
+        <p class="reviews__caption">средняя оценка</p>
+      </div>
+      <div class="reviews__grid">
+        <article class="card review">
+          <div class="review__head">
+            <span class="avatar avatar--muted">МК</span>
+            <div>
+              <p class="review__name">Мария К.</p>
+              <p class="review__service">Маникюр</p>
+            </div>
+          </div>
+          <div class="stars" aria-label="Оценка 5 из 5">
+            <i class="icon star" data-lucide="star"></i><i class="icon star" data-lucide="star"></i><i class="icon star" data-lucide="star"></i><i class="icon star" data-lucide="star"></i><i class="icon star" data-lucide="star"></i>
+          </div>
+          <p class="review__text">Записалась за минуту вечером, выбрала удобное время сама — ни одного звонка.</p>
+          <p class="review__date">2 недели назад</p>
+        </article>
+        <article class="card review">
+          <div class="review__head">
+            <span class="avatar avatar--muted">ОП</span>
+            <div>
+              <p class="review__name">Ольга П.</p>
+              <p class="review__service">Брови</p>
+            </div>
+          </div>
+          <div class="stars" aria-label="Оценка 5 из 5">
+            <i class="icon star" data-lucide="star"></i><i class="icon star" data-lucide="star"></i><i class="icon star" data-lucide="star"></i><i class="icon star" data-lucide="star"></i><i class="icon star" data-lucide="star"></i>
+          </div>
+          <p class="review__text">Понравилось, что сразу видно все свободные слоты — не пришлось ничего уточнять в переписке.</p>
+          <p class="review__date">месяц назад</p>
+        </article>
+        <article class="card review">
+          <div class="review__head">
+            <span class="avatar avatar--muted">ИС</span>
+            <div>
+              <p class="review__name">Ирина С.</p>
+              <p class="review__service">Ресницы</p>
+            </div>
+          </div>
+          <div class="stars" aria-label="Оценка 4 из 5">
+            <i class="icon star" data-lucide="star"></i><i class="icon star" data-lucide="star"></i><i class="icon star" data-lucide="star"></i><i class="icon star" data-lucide="star"></i><i class="icon star star--empty" data-lucide="star"></i>
+          </div>
+          <p class="review__text">Удобно, что можно выбрать конкретного мастера и свою запись потом отменить в кабинете.</p>
+          <p class="review__date">месяц назад</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── Частые вопросы ──────────────────────────────────────────────── -->
+  <section class="section container container--text" id="faq">
+    <h2 class="section__title">Частые вопросы</h2>
+    <div class="faq">
+      <div class="faq__item">
+        <button class="faq__q" type="button" aria-expanded="true" aria-controls="faq-1">
+          <span>Как отменить или перенести запись?</span>
+          <i class="icon faq__chevron" data-lucide="chevron-down" aria-hidden="true"></i>
+        </button>
+        <div class="faq__a" id="faq-1">В личном кабинете — в разделе «Мои записи» есть кнопка отмены. Перенос делается отменой текущей записи и созданием новой на удобное время.</div>
+      </div>
+      <div class="faq__item">
+        <button class="faq__q" type="button" aria-expanded="false" aria-controls="faq-2">
+          <span>Нужно ли вносить предоплату?</span>
+          <i class="icon faq__chevron" data-lucide="chevron-down" aria-hidden="true"></i>
+        </button>
+        <div class="faq__a" id="faq-2" hidden>Нет, предоплата не требуется — оплата принимается на месте, после процедуры.</div>
+      </div>
+      <div class="faq__item">
+        <button class="faq__q" type="button" aria-expanded="false" aria-controls="faq-3">
+          <span>Что если нужного времени нет в календаре?</span>
+          <i class="icon faq__chevron" data-lucide="chevron-down" aria-hidden="true"></i>
+        </button>
+        <div class="faq__a" id="faq-3" hidden>Это значит, что слот уже занят. Выберите ближайшее свободное время — календарь обновляется в реальном времени.</div>
+      </div>
+      <div class="faq__item">
+        <button class="faq__q" type="button" aria-expanded="false" aria-controls="faq-4">
+          <span>Можно ли записаться к конкретному мастеру?</span>
+          <i class="icon faq__chevron" data-lucide="chevron-down" aria-hidden="true"></i>
+        </button>
+        <div class="faq__a" id="faq-4" hidden>Да, вы сами выбираете мастера на первом шаге записи и видите только его свободные слоты.</div>
+      </div>
+      <div class="faq__item">
+        <button class="faq__q" type="button" aria-expanded="false" aria-controls="faq-5">
+          <span>Как восстановить пароль от личного кабинета?</span>
+          <i class="icon faq__chevron" data-lucide="chevron-down" aria-hidden="true"></i>
+        </button>
+        <div class="faq__a" id="faq-5" hidden>На странице входа есть ссылка «Забыли пароль» — следуйте инструкциям для восстановления доступа.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── Призыв ──────────────────────────────────────────────────────── -->
+  <section class="cta">
+    <h2 class="cta__title">Выберите своё время</h2>
+    <p class="cta__lead">Свободные слоты видны прямо сейчас — запись займёт пару минут</p>
+    <a class="btn btn--primary btn--lg" href="booking-services.html">Записаться онлайн</a>
+  </section>
+
+</main>
+
+<footer class="footer container" id="contacts">
+  <div class="footer__cols">
+    <div>
+      <span class="tile"><i class="icon icon--accent" data-lucide="map-pin" aria-hidden="true"></i></span>
+      <p class="footer__title">Адрес</p>
+      <p class="footer__text" data-settings="address" aria-busy="true"><span class="skeleton skeleton--line"></span></p>
+    </div>
+    <div>
+      <span class="tile"><i class="icon icon--accent" data-lucide="clock" aria-hidden="true"></i></span>
+      <p class="footer__title">Режим работы</p>
+      <p class="footer__text footer__text--hours" data-settings="hours_display" aria-busy="true"><span class="skeleton skeleton--line"></span></p>
+    </div>
+    <div>
+      <span class="tile"><i class="icon icon--accent" data-lucide="phone" aria-hidden="true"></i></span>
+      <p class="footer__title">Телефон</p>
+      <p class="footer__text" data-settings="phone" aria-busy="true"><span class="skeleton skeleton--line"></span></p>
+    </div>
+    <div>
+      <span class="tile"><i class="icon icon--accent" data-lucide="calendar" aria-hidden="true"></i></span>
+      <p class="footer__title">Запись</p>
+      <p class="footer__text">Выберите время онлайн</p>
+      <a class="btn btn--primary" href="booking-services.html">Записаться</a>
+    </div>
+  </div>
+  <p class="load-error" data-error="settings" role="status" hidden></p>
+  <div class="footer__bottom">
+    <p class="footer__copy">© 2026 <span data-settings="name">Лада</span>. Все права защищены. Политика конфиденциальности.</p>
+    <div class="footer__social" aria-hidden="true">
+      <i class="icon" data-lucide="camera"></i>
+      <i class="icon" data-lucide="send"></i>
+    </div>
+  </div>
+</footer>
+
+<!-- ─── Шаблоны для данных из API ─────────────────────────────────────── -->
+
+<template id="tpl-widget-master">
+  <a class="wm" href="booking-services.html">
+    <span class="avatar"></span>
+    <span class="wm__name"></span>
+  </a>
+</template>
+
+<template id="tpl-widget-service">
+  <a class="chip" href="booking-services.html"></a>
+</template>
+
+<template id="tpl-widget-slot">
+  <a class="slot" href="booking-services.html"></a>
+</template>
+
+<template id="tpl-service">
+  <article class="card service">
+    <div class="service__head">
+      <span class="card__num"></span>
+      <span class="tile"><i class="icon icon--accent" aria-hidden="true"></i></span>
+    </div>
+    <h3 class="service__title"></h3>
+    <p class="service__desc"></p>
+    <p class="service__meta"></p>
+    <a class="btn btn--outline" href="booking-services.html">Записаться</a>
+  </article>
+</template>
+
+<template id="tpl-master">
+  <article class="card card--flush master">
+    <div class="photo photo--portrait master__photo">фото мастера</div>
+    <div class="master__body">
+      <h3 class="master__name"></h3>
+      <p class="master__spec"></p>
+      <div class="master__chips"></div>
+      <a class="btn btn--primary btn--block" href="booking-services.html">Выбрать время</a>
+    </div>
+  </article>
+</template>
+
+<template id="tpl-chip-static">
+  <span class="chip chip--quiet"></span>
+</template>
+
+</body>
+</html>

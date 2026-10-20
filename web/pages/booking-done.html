@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Лада — вы записаны</title>
+<meta name="description" content="Запись в студию «Лада» создана: что, когда и у кого — и как её отменить или перенести.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/tokens.css">
+<link rel="stylesheet" href="/css/landing.css">
+<link rel="stylesheet" href="/css/booking.css">
+<link rel="stylesheet" href="/css/booking-time.css">
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js" defer></script>
+<script type="module" src="/js/booking-done.js"></script>
+</head>
+<body class="done-page">
+
+<main class="done container">
+  <div class="done__mark" aria-hidden="true">
+    <span class="done__mark-inner">
+      <i class="icon" data-lucide="check"></i>
+    </span>
+  </div>
+
+  <h1 class="done__title">Вы записаны</h1>
+  <p class="done__lead">Запись появилась в личном кабинете</p>
+
+  <p class="load-error done__error" data-error="page" role="status" hidden></p>
+
+  <div data-body>
+    <div class="card done__card" aria-busy="true" data-card>
+      <span class="chip done__status" data-done="status"></span>
+      <p class="done__when" data-done="when"></p>
+
+      <p class="done__master">
+        <span class="avatar done__avatar" data-done="initials"></span>
+        <span class="done__master-name" data-done="master"></span>
+      </p>
+
+      <div class="done__services" data-done="services">
+        <span class="skeleton skeleton--line skeleton--wide"></span>
+      </div>
+
+      <div class="done__total">
+        <span class="done__total-label">Итого</span>
+        <span class="done__total-value" data-done="total"></span>
+      </div>
+
+      <p class="done__place" data-done="place" hidden>
+        <i class="icon icon--accent" data-lucide="map-pin" aria-hidden="true"></i>
+        <span data-done="address"></span>
+      </p>
+    </div>
+
+    <p class="notice done__rules">
+      <i class="icon" data-lucide="info" aria-hidden="true"></i>
+      <span data-done="rules">Оплата на месте.</span>
+    </p>
+
+    <div class="done__actions">
+      <a class="btn btn--primary btn--block" href="account.html">В личный кабинет</a>
+      <a class="btn btn--ghost btn--block" href="booking-services.html">Записаться ещё раз</a>
+    </div>
+
+    <!-- Файл календаря собирается в браузере (решение 11 карты экранов):
+         эндпоинта выдачи .ics в API нет. -->
+    <a class="done__ics is-disabled" data-action="ics" aria-disabled="true">
+      <i class="icon" data-lucide="calendar-plus" aria-hidden="true"></i>Добавить в календарь
+    </a>
+  </div>
+</main>
+
+</body>
+</html>

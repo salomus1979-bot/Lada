@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Лада — время занято</title>
+<meta name="description" content="Выбранное время заняли во время оформления: выберите новое время записи в студию «Лада».">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/tokens.css">
+<link rel="stylesheet" href="/css/landing.css">
+<link rel="stylesheet" href="/css/booking.css">
+<link rel="stylesheet" href="/css/booking-time.css">
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js" defer></script>
+<script type="module" src="/js/booking-taken.js"></script>
+</head>
+<body>
+
+<!-- Шаг-индикатора здесь нет — его нет и в прототипе: экран показывается
+     поверх оформления и завершает запись сам. -->
+<header class="bk-header">
+  <div class="bk-header__inner container">
+    <a class="brand__logo" href="/">Лада</a>
+    <button class="bk-exit" type="button" data-exit>
+      <i class="icon" data-lucide="x" aria-hidden="true"></i>Выйти
+    </button>
+  </div>
+</header>
+
+<main class="bk-main container container--narrow">
+  <div class="alert" data-alert>
+    <span class="alert__tile" aria-hidden="true">
+      <i class="icon" data-lucide="refresh-cw"></i>
+    </span>
+    <div class="alert__body">
+      <p class="alert__title">Это время только что заняли</p>
+      <p class="alert__text" data-taken="text"></p>
+    </div>
+  </div>
+
+  <p class="load-error" data-error="page" role="status" hidden></p>
+
+  <div data-body>
+    <p class="bk-summary taken__summary" data-summary aria-busy="true">
+      <span class="skeleton skeleton--line skeleton--wide"></span>
+    </p>
+
+    <!-- Сервер прислал ближайшее свободное время в `details.nearest_slots`
+         ответа 409 — показываем его как быстрый выбор. -->
+    <div class="nearest" data-list="nearest" hidden></div>
+
+    <div class="taken-grid">
+      <section class="slots" aria-labelledby="slots-day">
+        <h2 class="slots__day" id="slots-day" data-slots="day"></h2>
+        <p class="notice slots__need" data-slots="need" hidden>
+          <i class="icon" data-lucide="info" aria-hidden="true"></i>
+          <span data-slots="need-text"></span>
+        </p>
+        <div class="slots__parts" data-list="slots" aria-busy="true">
+          <span class="skeleton skeleton--slot"></span>
+          <span class="skeleton skeleton--slot"></span>
+          <span class="skeleton skeleton--slot"></span>
+        </div>
+        <p class="load-error" data-error="slots" role="status" hidden></p>
+        <p class="hold" data-hold role="status" hidden></p>
+      </section>
+
+      <section class="card cal cal--compact" aria-labelledby="cal-month">
+        <div class="cal__head">
+          <button class="cal__nav" type="button" data-cal="prev" aria-label="Предыдущий месяц">
+            <i class="icon" data-lucide="chevron-left" aria-hidden="true"></i>
+          </button>
+          <h2 class="cal__month" id="cal-month" data-cal="month"></h2>
+          <button class="cal__nav" type="button" data-cal="next" aria-label="Следующий месяц">
+            <i class="icon" data-lucide="chevron-right" aria-hidden="true"></i>
+          </button>
+        </div>
+        <div class="cal__week" aria-hidden="true">
+          <span>пн</span><span>вт</span><span>ср</span><span>чт</span><span>пт</span><span>сб</span><span>вс</span>
+        </div>
+        <div class="cal__grid" data-cal="grid"></div>
+      </section>
+    </div>
+
+    <p class="load-error" data-error="confirm" role="status" hidden></p>
+
+    <div class="taken__actions">
+      <button class="btn btn--primary" type="button" data-action="confirm" disabled>
+        Подтвердить новое время
+      </button>
+      <a class="btn btn--ghost" href="booking-master.html">Выбрать другого мастера</a>
+      <button class="taken__nearest-link" type="button" data-action="nearest">
+        Ближайшая свободная дата
+      </button>
+    </div>
+  </div>
+</main>
+
+<!-- ─── Шаблоны ───────────────────────────────────────────────────────── -->
+
+<template id="tpl-cal-cell">
+  <button class="cal__cell" type="button"><span class="cal__num"></span></button>
+</template>
+
+<template id="tpl-slot-part">
+  <div class="slots__part">
+    <h3 class="slots__part-title"></h3>
+    <div class="slots__grid"></div>
+  </div>
+</template>
+
+<template id="tpl-slot">
+  <button class="slot slots__slot" type="button"></button>
+</template>
+
+</body>
+</html>

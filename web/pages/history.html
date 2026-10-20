@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Лада — история записей</title>
+<meta name="description" content="История визитов в студию «Лада»: прошедшие и отменённые записи, фильтры по периоду, мастеру и услуге.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/tokens.css">
+<!-- Общий слой вёрстки: база, кнопки, карточки, чипы, аватары, заглушки и
+     блок ошибки — те же классы, что на лендинге. -->
+<link rel="stylesheet" href="/css/landing.css">
+<!-- Сайдбар кабинета, его шапка и табы. -->
+<link rel="stylesheet" href="/css/account.css">
+<link rel="stylesheet" href="/css/cabinet.css">
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js" defer></script>
+<script type="module" src="/js/history.js"></script>
+</head>
+<body class="cab">
+
+<!-- ─── Сайдбар кабинета ────────────────────────────────────────────────── -->
+<aside class="side">
+  <a class="side__logo" href="/">Лада</a>
+  <nav class="side__nav" aria-label="Разделы кабинета">
+    <a class="side__item" href="account.html">
+      <i class="icon" data-lucide="calendar" aria-hidden="true"></i>Мои записи
+    </a>
+    <a class="side__item side__item--current" href="history.html" aria-current="page">
+      <i class="icon" data-lucide="history" aria-hidden="true"></i>История
+    </a>
+    <a class="side__item" href="notifications.html">
+      <i class="icon" data-lucide="bell" aria-hidden="true"></i>Уведомления
+    </a>
+    <a class="side__item" href="profile.html">
+      <i class="icon" data-lucide="user" aria-hidden="true"></i>Профиль
+    </a>
+    <!-- «Выйти» — не ссылка: это запрос POST /auth/logout, после него лендинг. -->
+    <button class="side__item side__item--button" type="button" data-action="logout">
+      <i class="icon" data-lucide="log-out" aria-hidden="true"></i>Выйти
+    </button>
+  </nav>
+  <a class="btn btn--primary side__new" href="booking-services.html">
+    <i class="icon" data-lucide="plus" aria-hidden="true"></i>Новая запись
+  </a>
+</aside>
+
+<div class="cab__body">
+
+  <!-- ─── Шапка кабинета ──────────────────────────────────────────────── -->
+  <header class="topbar">
+    <nav class="topbar__nav" aria-label="Разделы сайта">
+      <a class="nav__link" href="catalog.html">Услуги</a>
+      <a class="nav__link" href="/#masters">Мастера</a>
+      <a class="nav__link" href="/#steps">Как записаться</a>
+      <a class="nav__link" href="/#contacts">Контакты</a>
+    </nav>
+    <div class="topbar__actions">
+      <!-- Колокольчик без бейджа: признак «прочитано» хранить негде —
+           ни таблицы уведомлений, ни роутов в API нет (ui-map, пп. 1-2). -->
+      <a class="topbar__bell" href="notifications.html" aria-label="Уведомления">
+        <i class="icon" data-lucide="bell" aria-hidden="true"></i>
+      </a>
+      <a class="topbar__user" href="profile.html" data-user="block" aria-busy="true">
+        <span class="avatar avatar--muted topbar__initials" data-user="initials" aria-hidden="true"></span>
+        <span class="topbar__name" data-user="name"><span class="skeleton skeleton--line"></span></span>
+        <i class="icon" data-lucide="chevron-down" aria-hidden="true"></i>
+      </a>
+    </div>
+  </header>
+
+  <main class="cab__content cab__content--history">
+    <div class="cab__head">
+      <h1 class="cab__title cab__title--flush">Мои записи</h1>
+      <!-- Итог за выбранный период считается из того же ответа, что и список:
+           отдельной сводки у API нет. -->
+      <div class="hist-sum" data-sum="box" aria-busy="true">
+        <p class="hist-sum__value" data-sum="value"><span class="skeleton skeleton--line"></span></p>
+        <p class="hist-sum__label" data-sum="label"></p>
+      </div>
+    </div>
+    <p class="load-error" data-error="me" role="status" hidden></p>
+
+    <!-- ─── Табы ──────────────────────────────────────────────────────── -->
+    <!-- «Предстоящие» — ссылка на экран 7: предстоящих записей в ответе
+         `scope=past` нет вовсе. Остальные два — кнопки: они делят уже
+         загруженный список по `status` (решение 6 карты экранов). -->
+    <div class="tabs" role="group" aria-label="Какие записи показывать">
+      <a class="tabs__tab" href="account.html">Предстоящие</a>
+      <button class="tabs__tab" type="button" data-tab="past" aria-pressed="true">Прошедшие</button>
+      <button class="tabs__tab" type="button" data-tab="cancelled" aria-pressed="false">Отменённые</button>
+    </div>
+
+    <!-- ─── Фильтры ───────────────────────────────────────────────────── -->
+    <!-- Все три считаются на клиенте: `GET /appointments` принимает только
+         `scope` и `limit` (решение 5 карты экранов). Поэтому варианты
+         «Мастер» и «Услуга» собраны из самого ответа — в них ровно те, кто
+         и что в истории действительно есть. -->
+    <div class="filters" role="group" aria-label="Фильтры истории">
+      <span class="filters__field">
+        <select class="filters__select" data-filter="period" aria-label="Период">
+          <option value="all" selected>Период: за всё время</option>
+          <option value="365">Период: за год</option>
+          <option value="90">Период: за 3 месяца</option>
+          <option value="30">Период: за месяц</option>
+        </select>
+        <i class="icon filters__chevron" data-lucide="chevron-down" aria-hidden="true"></i>
+      </span>
+      <span class="filters__field">
+        <select class="filters__select" data-filter="master" aria-label="Мастер">
+          <option value="" selected>Мастер: все</option>
+        </select>
+        <i class="icon filters__chevron" data-lucide="chevron-down" aria-hidden="true"></i>
+      </span>
+      <span class="filters__field">
+        <select class="filters__select" data-filter="service" aria-label="Услуга">
+          <option value="" selected>Услуга: все</option>
+        </select>
+        <i class="icon filters__chevron" data-lucide="chevron-down" aria-hidden="true"></i>
+      </span>
+      <button class="filters__reset" type="button" data-action="reset-filters">
+        <i class="icon" data-lucide="x" aria-hidden="true"></i>Сбросить
+      </button>
+    </div>
+
+    <!-- Сколько здесь записей, известно только из ответа API: в разметке
+         стоят заглушки, их количество ничего не обещает. -->
+    <div class="hist" data-list="history" aria-busy="true">
+      <article class="hist__row skeleton-host">
+        <span class="skeleton skeleton--line"></span>
+        <span class="skeleton skeleton--avatar"></span>
+        <span class="skeleton skeleton--line skeleton--wide"></span>
+        <span class="skeleton skeleton--chip"></span>
+      </article>
+      <article class="hist__row skeleton-host">
+        <span class="skeleton skeleton--line"></span>
+        <span class="skeleton skeleton--avatar"></span>
+        <span class="skeleton skeleton--line skeleton--wide"></span>
+        <span class="skeleton skeleton--chip"></span>
+      </article>
+      <article class="hist__row skeleton-host">
+        <span class="skeleton skeleton--line"></span>
+        <span class="skeleton skeleton--avatar"></span>
+        <span class="skeleton skeleton--line skeleton--wide"></span>
+        <span class="skeleton skeleton--chip"></span>
+      </article>
+    </div>
+    <p class="load-error" data-error="history" role="status" hidden></p>
+
+    <!-- Предел ответа назван прямо: `limit` у `GET /appointments` — не больше
+         100, общего количества записей API не отдаёт, поэтому «ещё 40 где-то
+         есть» страница знать не может. -->
+    <p class="cab__note" data-note="limit" hidden>
+      Показаны последние 100 записей — больше API за один раз не отдаёт.
+    </p>
+
+    <!-- Страницы считаются на клиенте: `offset` у `GET /appointments` нет. -->
+    <nav class="pager" data-list="pages" aria-label="Страницы истории" hidden></nav>
+  </main>
+</div>
+
+<!-- ─── Шаблон строки истории ────────────────────────────────────────── -->
+
+<template id="tpl-hist-row">
+  <article class="hist__row">
+    <!-- Вся строка в прототипе ведёт на детали записи. Ссылка, а не
+         обработчик на блоке: иначе строка недоступна с клавиатуры. -->
+    <a class="hist__link" href="appointment.html">
+      <span class="hist__when">
+        <span class="hist__date"></span>
+        <span class="hist__time"></span>
+      </span>
+      <span class="avatar avatar--muted hist__initials" aria-hidden="true"></span>
+      <span class="hist__who">
+        <span class="hist__master"></span>
+        <span class="hist__services"></span>
+      </span>
+      <span class="hist__price"></span>
+      <span class="hist__state">
+        <span class="chip hist__badge"></span>
+        <span class="hist__reason" hidden></span>
+      </span>
+    </a>
+    <a class="btn btn--outline hist__repeat" href="booking-services.html">Повторить запись</a>
+  </article>
+</template>
+
+</body>
+</html>

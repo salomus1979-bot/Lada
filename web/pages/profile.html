@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Лада — профиль</title>
+<meta name="description" content="Профиль клиента студии «Лада»: личные данные и активные сессии на устройствах.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/tokens.css">
+<!-- Общий слой вёрстки: база, кнопки, карточки, чипы, аватары, заглушки и
+     блок ошибки — те же классы, что на лендинге. -->
+<link rel="stylesheet" href="/css/landing.css">
+<!-- Сайдбар кабинета и его шапка. -->
+<link rel="stylesheet" href="/css/account.css">
+<!-- Поля формы (`.field`) — те же, что на экранах входа и регистрации:
+     второй раз их верстать незачем. -->
+<link rel="stylesheet" href="/css/auth.css">
+<link rel="stylesheet" href="/css/cabinet.css">
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js" defer></script>
+<script type="module" src="/js/profile.js"></script>
+</head>
+<body class="cab">
+
+<!-- ─── Сайдбар кабинета ────────────────────────────────────────────────── -->
+<aside class="side">
+  <a class="side__logo" href="/">Лада</a>
+  <nav class="side__nav" aria-label="Разделы кабинета">
+    <a class="side__item" href="account.html">
+      <i class="icon" data-lucide="calendar" aria-hidden="true"></i>Мои записи
+    </a>
+    <a class="side__item" href="history.html">
+      <i class="icon" data-lucide="history" aria-hidden="true"></i>История
+    </a>
+    <a class="side__item" href="notifications.html">
+      <i class="icon" data-lucide="bell" aria-hidden="true"></i>Уведомления
+    </a>
+    <a class="side__item side__item--current" href="profile.html" aria-current="page">
+      <i class="icon" data-lucide="user" aria-hidden="true"></i>Профиль
+    </a>
+    <!-- «Выйти» — не ссылка: это запрос POST /auth/logout, после него лендинг. -->
+    <button class="side__item side__item--button" type="button" data-action="logout">
+      <i class="icon" data-lucide="log-out" aria-hidden="true"></i>Выйти
+    </button>
+  </nav>
+  <a class="btn btn--primary side__new" href="booking-services.html">
+    <i class="icon" data-lucide="plus" aria-hidden="true"></i>Новая запись
+  </a>
+</aside>
+
+<div class="cab__body">
+
+  <!-- ─── Шапка кабинета ──────────────────────────────────────────────── -->
+  <header class="topbar">
+    <nav class="topbar__nav" aria-label="Разделы сайта">
+      <a class="nav__link" href="catalog.html">Услуги</a>
+      <a class="nav__link" href="/#masters">Мастера</a>
+      <a class="nav__link" href="/#steps">Как записаться</a>
+      <a class="nav__link" href="/#contacts">Контакты</a>
+    </nav>
+    <div class="topbar__actions">
+      <!-- Колокольчик без бейджа: признак «прочитано» хранить негде —
+           ни таблицы уведомлений, ни роутов в API нет (ui-map, пп. 1-2). -->
+      <a class="topbar__bell" href="notifications.html" aria-label="Уведомления">
+        <i class="icon" data-lucide="bell" aria-hidden="true"></i>
+      </a>
+      <a class="topbar__user" href="profile.html" data-user="block" aria-busy="true" aria-current="page">
+        <span class="avatar avatar--muted topbar__initials" data-user="initials" aria-hidden="true"></span>
+        <span class="topbar__name" data-user="name"><span class="skeleton skeleton--line"></span></span>
+        <i class="icon" data-lucide="chevron-down" aria-hidden="true"></i>
+      </a>
+    </div>
+  </header>
+
+  <main class="cab__content">
+    <h1 class="cab__title">Профиль</h1>
+    <p class="load-error" data-error="me" role="status" hidden></p>
+
+    <!-- ─── Личные данные ─────────────────────────────────────────────── -->
+    <!-- Только на чтение: `GET /auth/me` профиль отдаёт, а сохранять его
+         нечем — обновления личных данных в API нет (решение 3 карты экранов).
+         Поэтому из блока убраны «Сохранить», «Отмена» и «Загрузить фото», а
+         поля стоят с `readonly`, как «Имя», «E-mail» и «Телефон» в самом
+         прототипе. Поля «Дата рождения» нет и в таблице `users`. -->
+    <section class="card prof">
+      <h2 class="prof__title">Личные данные</h2>
+
+      <div class="prof__id">
+        <span class="avatar avatar--muted prof__avatar" data-user="big-initials" aria-hidden="true"></span>
+        <p class="prof__note">
+          Изменить эти данные пока нельзя: сохранения профиля в API нет.
+          Что поправить — скажите в студии.
+        </p>
+      </div>
+
+      <div class="prof__fields">
+        <div class="field">
+          <label class="field__label" for="prof-name">Имя</label>
+          <input id="prof-name" type="text" value="" readonly data-me="name">
+        </div>
+        <div class="field">
+          <label class="field__label" for="prof-email">E-mail</label>
+          <input id="prof-email" type="email" value="" readonly data-me="email">
+        </div>
+        <div class="field">
+          <label class="field__label" for="prof-phone">Телефон</label>
+          <input id="prof-phone" type="tel" value="" readonly data-me="phone">
+        </div>
+      </div>
+    </section>
+
+    <!-- ─── Активные сессии ───────────────────────────────────────────── -->
+    <!-- Единственный блок экрана, который API закрывает целиком:
+         `GET /auth/sessions` и `DELETE /auth/sessions/:id`. -->
+    <section class="card prof">
+      <h2 class="prof__title">Активные сессии</h2>
+
+      <!-- Сколько здесь устройств, известно только из ответа API: в разметке
+           стоят заглушки, их количество ничего не обещает. -->
+      <div class="sessions" data-list="sessions" aria-busy="true">
+        <article class="sess skeleton-host">
+          <span class="skeleton skeleton--tile"></span>
+          <span class="skeleton skeleton--line skeleton--wide"></span>
+          <span class="skeleton skeleton--chip"></span>
+        </article>
+        <article class="sess skeleton-host">
+          <span class="skeleton skeleton--tile"></span>
+          <span class="skeleton skeleton--line skeleton--wide"></span>
+          <span class="skeleton skeleton--chip"></span>
+        </article>
+      </div>
+      <p class="load-error" data-error="sessions" role="status" hidden></p>
+
+      <p class="cab__note">
+        Завершение сессии закрывает вход на том устройстве. Города в списке нет:
+        он потребовал бы geo-IP, а внешних сервисов в проекте нет. Время входа
+        показано по часам вашего устройства.
+      </p>
+    </section>
+  </main>
+</div>
+
+<!-- ─── Шаблон строки сессии ────────────────────────────────────────── -->
+
+<template id="tpl-session">
+  <article class="sess">
+    <i class="icon sess__icon" aria-hidden="true"></i>
+    <div class="sess__body">
+      <p class="sess__device"></p>
+      <p class="sess__time"></p>
+      <p class="sess__hint" hidden></p>
+    </div>
+    <button class="btn sess__end" type="button">Завершить</button>
+  </article>
+</template>
+
+</body>
+</html>

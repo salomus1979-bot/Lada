@@ -1,0 +1,274 @@
+/*
+ * Экраны авторизации: вход (12), регистрация (13), восстановление пароля (14)
+ * и новый пароль (15). Структура, тексты и порядок блоков — из одноимённых
+ * файлов прототипа.
+ *
+ * Общий слой берётся из landing.css: база, кнопки, `.photo`, `.tile`,
+ * `.load-error` и заглушки там уже описаны так, как нужно здесь. В этом
+ * файле — только то, чего на лендинге и в каталоге не было: двухколоночная
+ * раскладка авторизации, поля формы, чекбоксы и индикатор силы пароля.
+ *
+ * Правило 4 из docs/frontend-rules.md: цвета, шрифты и размеры — только из
+ * tokens.css, либо арифметика по шкале. Расхождения с прототипом —
+ * в конце файла.
+ */
+
+/* ─── Раскладка экрана ───────────────────────────────────────────────── */
+
+.auth {
+  display: grid;
+  grid-template-columns: minmax(0, calc(var(--container-max) * 0.4)) minmax(0, 1fr);
+  min-height: 100vh;
+}
+.auth__col {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--page-x) var(--space-8);
+}
+.auth__inner { width: 100%; max-width: calc(var(--container-max) / 3); }
+
+/* Правая половина — та же полосатая заглушка под фото, что на лендинге. */
+.auth__aside {
+  position: relative;
+  align-items: flex-start;
+  justify-content: flex-start;
+  /* `.photo` центрирует свою подпись — цитата здесь прижата влево,
+     как в прототипе. */
+  text-align: left;
+  border-radius: 0;
+  padding: var(--page-x);
+}
+.auth__quote {
+  font-family: var(--font-display);
+  font-size: var(--text-h2);
+  line-height: var(--text-h3-lh);
+  font-weight: var(--text-h4-weight);
+  color: var(--text-primary);
+  max-width: calc(var(--container-max) / 3);
+  margin-top: calc(var(--space-8) * 2);
+}
+
+.auth__logo { display: block; margin-bottom: var(--space-8); }
+.auth__title {
+  font-family: var(--font-display);
+  font-size: var(--text-h3);
+  line-height: var(--text-h3-lh);
+  font-weight: var(--text-h1-weight);
+  text-transform: var(--text-display-l-case);
+  margin-bottom: var(--space-4);
+}
+.auth__lead {
+  font-size: var(--text-body-s);
+  line-height: var(--text-body-s-lh);
+  color: var(--text-muted);
+  margin-top: calc(var(--space-4) * -1 + var(--space-2));
+  margin-bottom: var(--space-6);
+}
+
+.auth__divider {
+  height: 1px;
+  background: var(--border-default);
+  border: none;
+  margin-block: var(--space-6);
+}
+.auth__switch {
+  text-align: center;
+  font-size: var(--text-body-s);
+  line-height: var(--text-body-s-lh);
+  color: var(--text-muted);
+}
+.auth__switch a { font-weight: var(--text-label-weight); }
+.auth__back {
+  display: block;
+  text-align: center;
+  margin-top: var(--space-4);
+  font-size: var(--text-body-s);
+  font-weight: var(--text-h4-weight);
+  color: var(--text-muted);
+}
+.auth__back:hover { color: var(--accent-primary); }
+
+/* ─── Поля формы ─────────────────────────────────────────────────────── */
+
+.field { margin-bottom: var(--space-4); }
+.field__label {
+  display: block;
+  font-size: var(--text-caption);
+  line-height: var(--text-caption-lh);
+  font-weight: var(--text-h4-weight);
+  color: var(--text-secondary);
+  margin-bottom: var(--space-1);
+}
+.field__control { position: relative; }
+
+.field input[type="text"],
+.field input[type="email"],
+.field input[type="tel"],
+.field input[type="password"] {
+  width: 100%;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm);
+  padding: calc(var(--space-2) + var(--space-1)) var(--space-4);
+  font-family: var(--font-text);
+  font-size: var(--text-body-m);
+  line-height: var(--text-body-m-lh);
+  color: var(--text-primary);
+}
+.field input::placeholder { color: var(--text-muted); }
+/* Выключенное поле — экраны 14 и 15, где отправлять пока некуда. */
+.field input:disabled { color: var(--text-muted); background: var(--slot-past); cursor: not-allowed; }
+.field input:focus-visible { outline: none; border-color: var(--border-focus); }
+
+/* Поле с глазком: место справа под кнопку. */
+.field--with-toggle input { padding-right: calc(var(--space-8) + var(--space-2)); }
+.field__toggle {
+  position: absolute;
+  right: calc(var(--space-2) + var(--space-1));
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+.field__toggle:hover { color: var(--accent-primary); }
+
+/* Ошибка по полю: рамка и подпись под ним. */
+.field--invalid input { border-color: var(--feedback-error); }
+.field__hint {
+  display: block;
+  margin-top: var(--space-1);
+  font-size: var(--text-caption);
+  line-height: var(--text-caption-lh);
+  color: var(--feedback-error);
+}
+.field__hint[hidden] { display: none; }
+
+.field__note {
+  display: block;
+  margin-top: var(--space-1);
+  font-size: var(--text-caption);
+  line-height: var(--text-caption-lh);
+  color: var(--text-muted);
+}
+
+/* ─── Чекбоксы: «Запомнить меня» и согласие ──────────────────────────── */
+
+.check {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  font-size: var(--text-body-s);
+  line-height: var(--text-body-s-lh);
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+.check input[type="checkbox"] {
+  width: calc(var(--space-4) + var(--space-1));
+  height: calc(var(--space-4) + var(--space-1));
+  flex: none;
+  accent-color: var(--accent-primary);
+  cursor: pointer;
+}
+.check--invalid { color: var(--feedback-error); }
+
+/* В прототипе в этой строке слева стоял чекбокс «Запомнить меня», справа —
+   «Забыли пароль?». Чекбокса здесь нет (API не принимает такого параметра),
+   ссылка осталась на своём месте. */
+.form-row {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-4);
+  margin-bottom: var(--space-6);
+}
+.form-row a {
+  font-size: var(--text-body-s);
+  font-weight: var(--text-label-weight);
+}
+.form-consent { margin-bottom: var(--space-6); }
+
+/* ─── Сила пароля ────────────────────────────────────────────────────── */
+
+.strength { margin-top: var(--space-1); }
+.strength__bars { display: flex; gap: var(--space-1); }
+.strength__bar {
+  height: var(--space-1);
+  flex: 1;
+  border-radius: var(--radius-full);
+  background: var(--border-default);
+}
+.strength__bar--on { background: var(--feedback-success); }
+.strength__bar--weak { background: var(--feedback-warning); }
+.strength__note {
+  display: block;
+  margin-top: var(--space-1);
+  font-size: var(--text-caption);
+  line-height: var(--text-caption-lh);
+  color: var(--text-muted);
+}
+
+/* ─── Сообщения формы ────────────────────────────────────────────────── */
+
+/* Общая ошибка от сервера: тот же блок, что `.load-error` на лендинге,
+   только над кнопкой отправки и без кнопки «Повторить». */
+.form-error { margin-bottom: var(--space-4); align-items: flex-start; }
+.form-error[hidden] { display: none; }
+
+/* Состояние, для которого в API пока нет эндпоинта (экраны 14 и 15). */
+.notice {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  padding: var(--space-4);
+  margin-bottom: var(--space-4);
+  border: 1px solid var(--feedback-info);
+  border-radius: var(--radius-md);
+  background: var(--feedback-info-subtle);
+  font-size: var(--text-body-s);
+  line-height: var(--text-body-s-lh);
+  color: var(--text-secondary);
+}
+.notice .icon svg, .notice svg.icon { color: var(--feedback-info); }
+
+/* Кнопка во время запроса: «Входим…». */
+.btn--loading { opacity: 0.85; cursor: progress; }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* ─── Узкие экраны ───────────────────────────────────────────────────── */
+
+@media (max-width: 900px) {
+  .auth { grid-template-columns: 1fr; min-height: auto; }
+  /* Правая половина — только фон с подписью «фото интерьера студии»:
+     на телефоне она занимала бы экран, не добавляя ничего к форме. */
+  .auth__aside { display: none; }
+  .auth__col { padding: var(--space-8) var(--space-4); }
+}
+
+/*
+ * ЧТО ИЗ ПРОТОТИПА НЕ ЛЕГЛО НА ТОКЕНЫ (значение прототипа → что взято):
+ *
+ * 1. Заголовки экранов 24–26px → ступень h3 (24px). Цитата справа 28px →
+ *    h2 (32px) с начертанием h4 (600), как в макете.
+ * 2. Размеры текста 11, 12.5, 13.5, 14, 14.5px → ближайшие ступени:
+ *    caption (12), body-s (13), body-m (15).
+ * 3. Отступы 6, 10, 12, 14, 18, 20, 22, 26, 28, 36, 40, 80px → шаги шкалы
+ *    и кратные им через calc.
+ * 4. Поля ввода: 14px шрифт → body-m (15), паддинг 12×14 → 12×16
+ *    (space-2+space-1 и space-4), рамка 1.5px → 1px (толщин в токенах нет).
+ * 5. Чекбоксы 18×18 со скруглением 5px → 20×20 (space-4+space-1), форма
+ *    системная с `accent-color: --accent-primary`: своих размеров и
+ *    скруглений для чекбокса в дизайн-системе нет.
+ * 6. Полоски силы пароля: высота 4px = --space-1, скругление 2px →
+ *    --radius-full (на полоске 4px разницы не видно).
+ * 7. Ширины 480 и 380px и полоса 300px у демо-панелей: сетки в
+ *    дизайн-системе нет, поэтому 480 = --container-max × 0.4,
+ *    форма = --container-max / 3 (400px).
+ * 8. Тени `text-shadow` под подписями демо-панелей и `rgba(0,0,0,.4)`
+ *    у цитаты: теней и чёрного в токенах нет — не переносил.
+ */

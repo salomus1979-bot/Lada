@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Лада — регистрация</title>
+<meta name="description" content="Регистрация в студии «Лада»: займёт меньше минуты.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/tokens.css">
+<link rel="stylesheet" href="/css/landing.css">
+<link rel="stylesheet" href="/css/auth.css">
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js" defer></script>
+<script type="module" src="/js/register.js"></script>
+</head>
+<body>
+
+<main class="auth">
+  <div class="auth__col">
+    <div class="auth__inner">
+      <a class="brand__logo auth__logo" href="/">Лада</a>
+      <h1 class="auth__title">Регистрация</h1>
+      <p class="auth__lead">Займёт меньше минуты</p>
+
+      <form id="register-form" novalidate>
+        <p class="load-error form-error" data-form-error role="alert" hidden>
+          <i class="icon" data-lucide="x-circle" aria-hidden="true"></i>
+          <span data-form-error-text></span>
+        </p>
+
+        <div class="field">
+          <label class="field__label" for="name">Имя</label>
+          <div class="field__control">
+            <input id="name" name="name" type="text" autocomplete="name" placeholder="Анна Соколова">
+          </div>
+          <span class="field__hint" data-error-for="name" hidden></span>
+        </div>
+
+        <div class="field">
+          <label class="field__label" for="email">E-mail</label>
+          <div class="field__control">
+            <input id="email" name="email" type="email" autocomplete="email" placeholder="anna@mail.ru">
+          </div>
+          <span class="field__hint" data-error-for="email" hidden></span>
+        </div>
+
+        <div class="field">
+          <label class="field__label" for="phone">Телефон</label>
+          <div class="field__control">
+            <input id="phone" name="phone" type="tel" autocomplete="tel" placeholder="+7 (___) ___-__-__">
+          </div>
+          <span class="field__hint" data-error-for="phone" hidden></span>
+        </div>
+
+        <div class="field field--with-toggle">
+          <label class="field__label" for="password">Пароль</label>
+          <div class="field__control">
+            <input id="password" name="password" type="password" autocomplete="new-password" placeholder="••••••••">
+            <button class="field__toggle" type="button" data-toggle-password="password" aria-label="Показать пароль" aria-pressed="false">
+              <i class="icon" data-lucide="eye" aria-hidden="true"></i>
+            </button>
+          </div>
+          <div class="strength" id="password-strength">
+            <div class="strength__bars" aria-hidden="true">
+              <span class="strength__bar"></span>
+              <span class="strength__bar"></span>
+              <span class="strength__bar"></span>
+              <span class="strength__bar"></span>
+            </div>
+            <span class="strength__note">Минимум 8 символов, буквы и цифры</span>
+          </div>
+          <span class="field__hint" data-error-for="password" hidden></span>
+        </div>
+
+        <div class="field">
+          <label class="field__label" for="password_confirm">Повторите пароль</label>
+          <div class="field__control">
+            <input id="password_confirm" name="password_confirm" type="password" autocomplete="new-password" placeholder="••••••••">
+          </div>
+          <span class="field__hint" data-error-for="password_confirm" hidden></span>
+        </div>
+
+        <div class="form-consent">
+          <label class="check" id="consent-row">
+            <input id="consent" name="consent" type="checkbox">
+            <span>Согласен(на) на обработку персональных данных</span>
+          </label>
+          <span class="field__hint" data-error-for="consent" hidden></span>
+        </div>
+
+        <button class="btn btn--primary btn--block" type="submit">Зарегистрироваться</button>
+      </form>
+
+      <hr class="auth__divider">
+
+      <p class="auth__switch">Уже есть аккаунт? <a href="login.html">Войти</a></p>
+      <a class="auth__back" href="/">← Вернуться на сайт</a>
+    </div>
+  </div>
+
+  <aside class="auth__col photo auth__aside">
+    <span class="photo__caption">фото интерьера студии</span>
+  </aside>
+</main>
+
+</body>
+</html>

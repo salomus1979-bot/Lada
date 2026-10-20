@@ -1,0 +1,435 @@
+/*
+ * Личный кабинет клиента: экраны 7 «Предстоящие записи» и 8 «Пустое
+ * состояние». Структура, тексты и порядок блоков — из
+ * «7. Кабинет - Предстоящие записи.dc.html» и
+ * «8. Кабинет - Пустое состояние.dc.html».
+ *
+ * Общий слой страницы берут из landing.css: база, кнопки, `.card`, `.chip`,
+ * `.tile`, `.avatar`, `.nav__link`, заглушки `.skeleton`, блок `.load-error`
+ * и `.empty-note`. Поэтому здесь только то, чего на лендинге и в каталоге не
+ * было: сайдбар кабинета, его шапка, табы, карточка визита, пустое состояние
+ * и блок «Популярные услуги».
+ *
+ * Правило 4 из docs/frontend-rules.md: цвета, шрифты и размеры — только из
+ * tokens.css. Ни одного подобранного значения: либо переменная, либо
+ * арифметика по шкале (`calc` на --space-*). Чем значения прототипа
+ * отличаются от токенов — перечислено в конце файла.
+ */
+
+:root {
+  /* Ширина сайдбара (в прототипе 232px). Сетки в дизайн-системе нет, поэтому
+     считается от колонки макета из landing.css: 1200/5 = 240px — та же
+     величина, которой в каталоге мерится карточка услуги. */
+  --sidebar-w: calc(var(--container-max) / 5);
+  /* Поля кабинета: в прототипе 40px. */
+  --cab-x: calc(var(--space-8) + var(--space-2));
+}
+
+/* ─── Раскладка ──────────────────────────────────────────────────────── */
+
+.cab { display: flex; min-height: 100vh; }
+.cab__body { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.cab__content {
+  flex: 1;
+  padding: var(--cab-x);
+  /* Текстовая колонка кабинета (в прототипе 920px): 0.75 от колонки макета. */
+  max-width: calc(var(--container-max) * 0.75);
+}
+.cab__title {
+  font-family: var(--text-h2-font);
+  font-size: var(--text-h2);
+  line-height: var(--text-h2-lh);
+  font-weight: var(--text-h2-weight);
+  text-transform: var(--text-display-l-case);
+  margin-bottom: var(--block-gap);
+}
+
+/* ─── Сайдбар ────────────────────────────────────────────────────────── */
+
+.side {
+  width: var(--sidebar-w);
+  flex: none;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding: var(--space-6) var(--space-4);
+  background: var(--bg-surface);
+  border-right: 1px solid var(--border-default);
+}
+.side__logo {
+  font-family: var(--font-display);
+  font-size: var(--text-h4);
+  line-height: var(--text-h4-lh);
+  font-weight: var(--text-display-xl-weight);
+  letter-spacing: var(--text-display-xl-tracking);
+  text-transform: var(--text-display-xl-case);
+  color: var(--accent-primary);
+  padding-inline: var(--space-2);
+  margin-bottom: var(--space-2);
+}
+.side__nav { display: flex; flex-direction: column; gap: var(--space-1); flex: 1; }
+.side__item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) calc(var(--space-2) + var(--space-1)); /* 8/12px */
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  font-family: var(--font-text);
+  font-size: var(--text-body-s);
+  line-height: var(--text-body-s-lh);
+  font-weight: var(--text-h4-weight);
+}
+.side__item:hover { color: var(--text-primary); background: var(--bg-elevated); }
+/* «Выйти» — кнопка (это запрос), а выглядит как остальные пункты. */
+.side__item--button {
+  background: none;
+  border: none;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+}
+.side__item--button:disabled { color: var(--text-muted); cursor: progress; }
+.side__item--current, .side__item--current:hover {
+  background: var(--accent-subtle);
+  color: var(--accent-primary);
+}
+.side__new { flex: none; }
+
+/* ─── Шапка кабинета ─────────────────────────────────────────────────── */
+
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-6);
+  flex-wrap: wrap;
+  padding: var(--space-4) var(--cab-x);
+  background: var(--bg-base);
+  border-bottom: 1px solid var(--border-default);
+}
+.topbar__nav { display: flex; gap: var(--space-6); flex-wrap: wrap; }
+.topbar__actions { display: flex; align-items: center; gap: var(--space-4); }
+.topbar__bell { color: var(--text-secondary); display: inline-flex; }
+.topbar__bell:hover { color: var(--accent-primary); }
+.topbar__user { display: flex; align-items: center; gap: var(--space-2); color: var(--text-primary); }
+.topbar__user:hover { color: var(--accent-primary); }
+.topbar__name {
+  font-size: var(--text-body-s);
+  line-height: var(--text-body-s-lh);
+  font-weight: var(--text-h4-weight);
+}
+.topbar__name .skeleton--line { display: inline-block; vertical-align: middle; }
+.topbar__user .icon svg, .topbar__user svg.icon { color: var(--text-muted); }
+/* Кружок с инициалами в шапке и в карточке меньше аватара лендинга. */
+.topbar__initials, .appt__initials {
+  width: var(--space-8);
+  height: var(--space-8);
+  font-size: var(--text-caption);
+  font-weight: var(--text-h3-weight);
+}
+
+/* ─── Табы ───────────────────────────────────────────────────────────── */
+
+.tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+  width: fit-content;
+  max-width: 100%;
+  padding: var(--space-1);
+  background: var(--bg-surface);
+  border-radius: var(--radius-full);
+  margin-bottom: calc(var(--space-6) + var(--space-1)); /* 28px */
+}
+.tabs__tab {
+  padding: var(--space-2) var(--space-4);
+  border: none;
+  border-radius: var(--radius-full);
+  background: transparent;
+  color: var(--text-muted);
+  font-family: var(--font-text);
+  font-size: var(--text-body-s);
+  line-height: var(--text-body-s-lh);
+  font-weight: var(--text-label-weight);
+  cursor: pointer;
+}
+.tabs__tab:hover { color: var(--text-primary); }
+.tabs__tab[aria-selected="true"] {
+  background: var(--accent-primary);
+  color: var(--text-on-accent);
+}
+
+/* ─── Карточка визита ────────────────────────────────────────────────── */
+
+.appts { display: flex; flex-direction: column; gap: var(--space-4); }
+.appt {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-6);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
+}
+/* Ближайший визит выделен акцентной рамкой: подсветки в токенах нет. */
+.appt--next { border-color: var(--accent-primary); }
+.appt__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+.appt__badge {
+  background: var(--accent-primary);
+  border-color: var(--accent-primary);
+  color: var(--text-on-accent);
+  padding: var(--space-1) var(--space-2);
+  font-size: var(--text-caption);
+  font-weight: var(--text-label-weight);
+}
+.appt__until {
+  margin-left: auto;
+  font-size: var(--text-caption);
+  line-height: var(--text-caption-lh);
+  color: var(--text-muted);
+}
+.appt__when {
+  font-size: var(--text-body-l);
+  line-height: var(--text-body-l-lh);
+  font-weight: var(--text-h3-weight);
+  font-variant-numeric: tabular-nums;
+}
+/* API отдаёт день недели строчными («пятница, 23 октября») — как режим
+   работы в подвале лендинга, первая буква поднимается в CSS. */
+.appt__when::first-letter { text-transform: uppercase; }
+.appt__master { display: flex; align-items: center; gap: var(--space-2); }
+.appt__master-name {
+  font-size: var(--text-body-s);
+  line-height: var(--text-body-s-lh);
+  font-weight: var(--text-h4-weight);
+}
+.appt__services {
+  font-size: var(--text-body-s);
+  line-height: var(--text-body-s-lh);
+  color: var(--text-secondary);
+}
+.appt__foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+  margin-top: var(--space-2);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--border-default);
+}
+.appt__total {
+  font-size: var(--text-body-m);
+  line-height: var(--text-body-m-lh);
+  font-weight: var(--text-h3-weight);
+  font-variant-numeric: tabular-nums;
+}
+.appt__actions, .appt__confirm {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+.appt__actions[hidden], .appt__confirm[hidden] { display: none; }
+/* Кнопки в карточке мельче кнопок страницы — так же в прототипе. */
+.appt__actions .btn, .appt__confirm .btn {
+  padding: var(--space-2) var(--space-4);
+  font-size: var(--text-caption);
+}
+.appt__more {
+  font-size: var(--text-caption);
+  line-height: var(--text-caption-lh);
+  font-weight: var(--text-button-weight);
+}
+/* «Отменить» — единственное необратимое действие на экране, поэтому цветом
+   статуса ошибки, как в прототипе. */
+.appt__cancel {
+  background: transparent;
+  color: var(--feedback-error);
+  border-color: var(--feedback-error);
+}
+.appt__cancel:hover { background: var(--feedback-error-subtle); }
+.appt__confirm-text {
+  font-size: var(--text-body-s);
+  line-height: var(--text-body-s-lh);
+  color: var(--text-secondary);
+}
+.appt__confirm-yes {
+  background: var(--feedback-error);
+  border-color: var(--feedback-error);
+  color: var(--text-on-accent);
+}
+.appt__confirm-yes:hover { background: var(--feedback-error-subtle); color: var(--feedback-error); }
+/* Запрещённое сервером действие: `can_cancel` / `can_reschedule` = false. */
+.is-disabled, .appt__cancel.is-disabled {
+  color: var(--text-muted);
+  border-color: var(--border-default);
+  background: transparent;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+/* Причина, по которой кнопка погасла, и ошибка отмены. В прототипе это
+   тултип над кнопкой; здесь строка под ними — её видно и с клавиатуры,
+   и на узком экране. */
+.appt__hint {
+  font-size: var(--text-caption);
+  line-height: var(--text-caption-lh);
+  color: var(--text-muted);
+}
+.appt__hint[hidden] { display: none; }
+.appt__hint--error { color: var(--feedback-error); }
+
+/* ─── Пустое состояние (экран 8) ─────────────────────────────────────── */
+
+.empty-state {
+  padding: calc(var(--space-8) + var(--space-6)) var(--cab-x); /* 56/40px */
+  background: var(--bg-surface);
+  border: 1px dashed var(--border-default);
+  border-radius: var(--radius-lg);
+  text-align: center;
+  margin-bottom: var(--space-8);
+}
+.empty-state__tile {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: calc(var(--space-8) + var(--space-6)); /* 56px */
+  height: calc(var(--space-8) + var(--space-6));
+  border-radius: var(--radius-md);
+  background: var(--accent-subtle);
+  margin-bottom: var(--block-gap);
+}
+.empty-state__tile .icon svg, .empty-state__tile svg.icon {
+  width: var(--space-6);
+  height: var(--space-6);
+  color: var(--text-muted);
+}
+.empty-state__title {
+  font-size: var(--text-h4);
+  line-height: var(--text-h4-lh);
+  font-weight: var(--text-h3-weight);
+  margin-bottom: var(--space-2);
+}
+.empty-state__text {
+  font-size: var(--text-body-s);
+  line-height: var(--text-body-s-lh);
+  color: var(--text-muted);
+  margin-bottom: var(--space-6);
+}
+.empty-state__actions { display: flex; gap: var(--space-2); justify-content: center; flex-wrap: wrap; }
+
+/* ─── Популярные услуги (экран 8) ────────────────────────────────────── */
+
+.popular__title {
+  font-family: var(--text-label-font);
+  font-size: var(--text-label);
+  line-height: var(--text-label-lh);
+  font-weight: var(--text-label-weight);
+  letter-spacing: var(--text-label-tracking);
+  text-transform: var(--text-label-case);
+  color: var(--text-muted);
+  margin-bottom: var(--space-4);
+}
+.popular__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(calc(var(--container-max) / 6), 1fr));
+  gap: var(--space-4);
+}
+.pop { gap: var(--space-1); }
+.pop .tile { margin-bottom: var(--space-2); }
+.pop__name {
+  font-size: var(--text-body-s);
+  line-height: var(--text-body-s-lh);
+  font-weight: var(--text-h3-weight);
+}
+.pop__meta {
+  font-size: var(--text-caption);
+  line-height: var(--text-caption-lh);
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+  margin-bottom: var(--space-2);
+}
+
+/* ─── Узкие экраны ───────────────────────────────────────────────────── */
+/* Мобильных макетов в прототипе нет. Сайдбар на узком экране съел бы
+   половину ширины, поэтому он разворачивается в полосу над содержимым и
+   перестаёт быть липким — тем же приёмом, которым на лендинге отлипает
+   шапка. */
+
+@media (max-width: 900px) {
+  :root { --cab-x: var(--space-4); }
+
+  .cab { flex-direction: column; }
+  .side {
+    width: auto;
+    height: auto;
+    position: static;
+    flex-direction: row;
+    align-items: center;
+    flex-wrap: wrap;
+    border-right: none;
+    border-bottom: 1px solid var(--border-default);
+  }
+  /* Логотип занимает свою строку: иначе он стоит сбоку от меню, которое
+     на телефоне переносится на три строки, и выглядит случайным. */
+  .side__logo { width: 100%; margin-bottom: var(--space-2); }
+  .side__nav { flex-direction: row; flex-wrap: wrap; }
+  .topbar { position: static; }
+}
+
+@media (max-width: 600px) {
+  .cab__title { font-size: var(--text-h2-mobile); }
+  .appt__when { font-size: var(--text-body-l-mobile); }
+  .appt__total { font-size: var(--text-body-m-mobile); }
+  .empty-state { padding: var(--space-8) var(--space-4); }
+  .empty-state__title { font-size: var(--text-h4-mobile); }
+}
+
+/*
+ * ЧТО ИЗ ПРОТОТИПА НЕ ЛЕГЛО НА ТОКЕНЫ (значения прототипа → что взято).
+ * Общая часть — кнопки, прозрачности, тени, толщина рамок — уже разобрана
+ * в конце landing.css; здесь только новое для этих двух экранов.
+ *
+ * 1. Размеры текста 9.5, 11, 11.5, 12.5, 13.5, 14, 16, 18, 19, 30 px — мимо
+ *    двенадцати ступеней шкалы. Подняты/опущены до ближайшей, тем же выбором,
+ *    что на лендинге и в каталоге: 11/11.5/12.5 → caption (12), 13.5 → body-s
+ *    (13), 14/16 → body-m (15), 18 → body-l (18, совпало), 19 → h4 (20),
+ *    30 → h2 (32). Бейдж «2» с размером 9.5px не верстается вовсе — см. п. 6.
+ * 2. Отступы 2, 6, 7, 9, 10, 12, 14, 18, 20, 22, 28, 40, 56 px. В шкале
+ *    токенов только 4/8/16/24/32 — взяты её шаги и кратные им через calc:
+ *    40 = 32+8 (--cab-x), 56 = 32+24, 28 = 24+4, 12 = 8+4, 20 = --block-gap
+ *    из landing.css; 2, 6, 7, 9, 10, 14, 18 и 22 округлены до ближайшего шага.
+ * 3. Ширины: сайдбар 232px, колонка содержимого 920px, карточки «Популярных
+ *    услуг» minmax(220px, …), тултип 230px. Сетки в дизайн-системе нет,
+ *    поэтому ширины считаются от --container-max из landing.css:
+ *    1200/5 = 240px (--sidebar-w), 1200*0.75 = 900px, 1200/6 = 200px.
+ * 4. Цвет фона сайдбара и карточек #2B201D — это --slot-past, состояние
+ *    слота, а не цвет панели. Как и на лендинге, взят --bg-surface, который
+ *    в дизайн-системе назван «карточки, панели».
+ * 5. Цвет погашенной кнопки #6B5852 и подписей «Состояние: …» в палитре нет
+ *    вовсе — взят --text-muted (так же поступил лендинг с копирайтом).
+ * 6. Подсветка ближайшей записи box-shadow 0 0 0 3px rgba(242,194,192,.12),
+ *    тень тултипа 0 6px 16px rgba(36,26,24,.3) и backdrop-filter:blur(8px)
+ *    в шапке: ни теней, ни прозрачностей, ни размытия в токенах нет.
+ *    Ближайшая запись отмечена акцентной рамкой, шапка — сплошным --bg-base.
+ * 7. Радиусы 9, 10, 12, 16, 20 px → ближайшие токены: --radius-sm (8) у
+ *    пунктов сайдбара, --radius-md (16) у плитки пустого состояния,
+ *    --radius-lg (24) у карточек (класс .card из landing.css).
+ * 8. Иконки 16-28 px: своей шкалы у иконок в дизайн-системе нет, поэтому они
+ *    1.25em от соседнего текста (правило из landing.css). Исключение —
+ *    плитка пустого состояния: там иконка задана шагом шкалы (--space-6),
+ *    иначе она была бы вдвое меньше нарисованной.
+ */

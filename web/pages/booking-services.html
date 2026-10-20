@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Лада — выбор услуг</title>
+<meta name="description" content="Шаг 1 из 4: выберите услуги для записи в студию «Лада».">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/tokens.css">
+<link rel="stylesheet" href="/css/landing.css">
+<link rel="stylesheet" href="/css/booking.css">
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js" defer></script>
+<script type="module" src="/js/booking-services.js"></script>
+</head>
+<body>
+
+<header class="bk-header">
+  <div class="bk-header__inner container">
+    <a class="brand__logo" href="/">Лада</a>
+
+    <!-- Шаг-индикатор: пройденные шаги — ссылки, будущие приглушены. -->
+    <nav class="stepper" aria-label="Шаги записи">
+      <div class="stepper__item stepper__item--current">
+        <span class="stepper__link" aria-current="step">
+          <span class="stepper__num">01</span>
+          <span class="stepper__label">Услуги</span>
+        </span>
+        <span class="stepper__line"></span>
+      </div>
+      <div class="stepper__item">
+        <span class="stepper__link">
+          <span class="stepper__num">02</span>
+          <span class="stepper__label">Мастер</span>
+        </span>
+        <span class="stepper__line"></span>
+      </div>
+      <div class="stepper__item">
+        <span class="stepper__link">
+          <span class="stepper__num">03</span>
+          <span class="stepper__label">Дата и время</span>
+        </span>
+        <span class="stepper__line"></span>
+      </div>
+      <div class="stepper__item">
+        <span class="stepper__link">
+          <span class="stepper__num">04</span>
+          <span class="stepper__label">Подтверждение</span>
+        </span>
+      </div>
+    </nav>
+
+    <button class="bk-exit" type="button" data-exit>
+      <i class="icon" data-lucide="x" aria-hidden="true"></i>Выйти
+    </button>
+  </div>
+</header>
+
+<main class="bk-main container">
+  <div class="bk-grid">
+
+    <section>
+      <h1 class="bk-title">Выберите услуги</h1>
+      <p class="bk-lead">Можно выбрать несколько — все услуги визита выполнит один мастер.</p>
+
+      <div class="cat-tabs" data-list="categories" aria-busy="true" role="group" aria-label="Категории услуг">
+        <span class="skeleton skeleton--chip"></span>
+        <span class="skeleton skeleton--chip"></span>
+        <span class="skeleton skeleton--chip"></span>
+        <span class="skeleton skeleton--chip"></span>
+      </div>
+
+      <div data-list="services" aria-busy="true">
+        <div class="srv-group">
+          <span class="skeleton skeleton--line"></span>
+          <div class="srv-list">
+            <div class="srv-row"><span class="skeleton skeleton--tile"></span><span class="skeleton skeleton--line skeleton--wide"></span></div>
+            <div class="srv-row"><span class="skeleton skeleton--tile"></span><span class="skeleton skeleton--line skeleton--wide"></span></div>
+            <div class="srv-row"><span class="skeleton skeleton--tile"></span><span class="skeleton skeleton--line skeleton--wide"></span></div>
+          </div>
+        </div>
+      </div>
+      <p class="load-error" data-error="services" role="status" hidden></p>
+    </section>
+
+    <aside class="cart" data-cart aria-label="Ваш визит">
+      <p class="cart__title">Ваш визит</p>
+
+      <div class="cart__list" data-list="cart"></div>
+
+      <p class="bk-hint" data-cart-empty>Услуги не выбраны</p>
+
+      <div class="cart__totals" data-cart-totals hidden>
+        <div class="cart__total-row"><span>Итого</span><span data-cart="price">—</span></div>
+        <div class="cart__total-row cart__total-row--quiet"><span>Длительность</span><span data-cart="duration">—</span></div>
+      </div>
+
+      <a class="btn btn--primary btn--block" href="booking-master.html" data-next>Выбрать мастера</a>
+      <p class="cart__note">Оплата на месте, предоплата не нужна</p>
+    </aside>
+
+  </div>
+</main>
+
+<template id="tpl-service-row">
+  <button class="srv-row" type="button">
+    <span class="srv-check"><i class="icon" data-lucide="check" aria-hidden="true"></i></span>
+    <span class="srv-row__body">
+      <span class="srv-row__name"></span>
+      <span class="srv-row__desc"></span>
+    </span>
+    <span class="srv-row__time"></span>
+    <span class="srv-row__price"></span>
+  </button>
+</template>
+
+<template id="tpl-service-group">
+  <div class="srv-group">
+    <p class="srv-group__title"></p>
+    <div class="srv-list"></div>
+  </div>
+</template>
+
+<template id="tpl-cart-row">
+  <div class="cart__row">
+    <span class="cart__row-body">
+      <span class="cart__row-name"></span>
+      <span class="cart__row-time"></span>
+    </span>
+    <span class="cart__row-price"></span>
+    <button class="cart__drop" type="button" aria-label="Убрать услугу">
+      <i class="icon" data-lucide="x" aria-hidden="true"></i>
+    </button>
+  </div>
+</template>
+
+<template id="tpl-cat-tab">
+  <button class="chip cat-tab" type="button"></button>
+</template>
+
+</body>
+</html>

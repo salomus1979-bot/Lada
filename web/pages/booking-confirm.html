@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Лада — подтверждение записи</title>
+<meta name="description" content="Шаг 4 из 4: проверьте состав визита, мастера и время — и подтвердите запись в студию «Лада».">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/tokens.css">
+<link rel="stylesheet" href="/css/landing.css">
+<link rel="stylesheet" href="/css/booking.css">
+<link rel="stylesheet" href="/css/booking-time.css">
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js" defer></script>
+<script type="module" src="/js/booking-confirm.js"></script>
+</head>
+<body>
+
+<header class="bk-header">
+  <div class="bk-header__inner container">
+    <a class="brand__logo" href="/">Лада</a>
+
+    <nav class="stepper" aria-label="Шаги записи">
+      <div class="stepper__item stepper__item--done">
+        <a class="stepper__link" href="booking-services.html">
+          <span class="stepper__num"><i class="icon" data-lucide="check" aria-hidden="true"></i></span>
+          <span class="stepper__label">Услуги</span>
+        </a>
+        <span class="stepper__line"></span>
+      </div>
+      <div class="stepper__item stepper__item--done">
+        <a class="stepper__link" href="booking-master.html">
+          <span class="stepper__num"><i class="icon" data-lucide="check" aria-hidden="true"></i></span>
+          <span class="stepper__label">Мастер</span>
+        </a>
+        <span class="stepper__line"></span>
+      </div>
+      <div class="stepper__item stepper__item--done">
+        <a class="stepper__link" href="booking-time.html">
+          <span class="stepper__num"><i class="icon" data-lucide="check" aria-hidden="true"></i></span>
+          <span class="stepper__label">Дата и время</span>
+        </a>
+        <span class="stepper__line"></span>
+      </div>
+      <div class="stepper__item stepper__item--current">
+        <span class="stepper__link" aria-current="step">
+          <span class="stepper__num">04</span>
+          <span class="stepper__label">Подтверждение</span>
+        </span>
+      </div>
+    </nav>
+
+    <button class="bk-exit" type="button" data-exit>
+      <i class="icon" data-lucide="x" aria-hidden="true"></i>Выйти
+    </button>
+  </div>
+</header>
+
+<main class="bk-main container confirm">
+  <div class="confirm__main">
+    <h1 class="bk-title">Проверьте запись</h1>
+
+    <p class="load-error" data-error="page" role="status" hidden></p>
+
+    <div data-body>
+      <!-- ─── Сводка визита ─────────────────────────────────────────────── -->
+      <div class="card sum" aria-busy="true" data-sum>
+        <div class="sum__row">
+          <div class="sum__body">
+            <h2 class="sum__label">Услуги</h2>
+            <div class="sum__services" data-sum="services">
+              <span class="skeleton skeleton--line skeleton--wide"></span>
+            </div>
+          </div>
+          <a href="booking-services.html">Изменить</a>
+        </div>
+        <div class="sum__row">
+          <div class="sum__body">
+            <h2 class="sum__label">Мастер</h2>
+            <p class="sum__master">
+              <span class="avatar sum__avatar" data-sum="initials"></span>
+              <span class="sum__master-name" data-sum="master"></span>
+            </p>
+          </div>
+          <a href="booking-master.html">Изменить</a>
+        </div>
+        <div class="sum__row">
+          <div class="sum__body">
+            <h2 class="sum__label">Дата и время</h2>
+            <p class="sum__plain" data-sum="when"></p>
+          </div>
+          <a href="booking-time.html">Изменить</a>
+        </div>
+        <div class="sum__total">
+          <span class="sum__total-label">Итого к оплате</span>
+          <span class="sum__total-value" data-sum="total"></span>
+        </div>
+      </div>
+
+      <!-- Остаток удержания слота: решение 8 карты экранов, в прототипе его
+           нет. Без входа время не держится вовсе — об этом здесь же. -->
+      <p class="hold" data-hold role="status" hidden></p>
+
+      <!-- ─── Комментарий, согласие, правила ───────────────────────────── -->
+      <label class="confirm__label" for="comment">Комментарий мастеру (необязательно)</label>
+      <textarea class="confirm__textarea" id="comment" name="comment" maxlength="1000"
+        placeholder="Например: аллергия на определённые составы"></textarea>
+
+      <div class="consent" data-consent-row>
+        <input class="consent__box" type="checkbox" id="consent" name="consent">
+        <!-- В прототипе «обработку персональных данных» — ссылка в никуда
+             (href="#"); страницы с текстом согласия в проекте нет, поэтому
+             здесь она осталась обычным текстом — как и на экране 13. -->
+        <label class="consent__text" for="consent">
+          Я согласен(на) на обработку персональных данных
+        </label>
+      </div>
+      <p class="consent__error" data-error="consent" role="alert" hidden></p>
+
+      <p class="notice confirm__rules">
+        <i class="icon" data-lucide="info" aria-hidden="true"></i>
+        <span data-rules>Оплата на месте.</span>
+      </p>
+
+      <p class="load-error" data-error="confirm" role="status" hidden></p>
+
+      <div class="confirm__actions">
+        <a class="btn btn--ghost" href="booking-time.html">Назад</a>
+        <button class="btn btn--primary confirm__submit" type="button" data-action="confirm">
+          Подтвердить запись
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── Кто записывается ─────────────────────────────────────────────── -->
+  <aside class="confirm__side">
+    <div class="card who" data-who aria-busy="true">
+      <span class="skeleton skeleton--line skeleton--wide"></span>
+    </div>
+
+    <!-- Гость: `GET /auth/me` ответил 401. Выбор остаётся в sessionStorage,
+         поэтому после входа человек возвращается на этот же шаг. -->
+    <div class="guest" data-guest hidden>
+      <div class="card guest__visit">
+        <p class="guest__visit-when" data-guest="when"></p>
+        <p class="guest__visit-total" data-guest="total"></p>
+      </div>
+      <div class="card guest__panel">
+        <p class="guest__title">Войдите, чтобы завершить запись</p>
+        <p class="guest__note">Ваш выбор сохранится</p>
+        <div class="guest__actions">
+          <a class="btn btn--primary btn--block" data-guest="login">Войти</a>
+          <a class="btn btn--ghost btn--block" data-guest="register">Зарегистрироваться</a>
+        </div>
+      </div>
+    </div>
+  </aside>
+</main>
+
+</body>
+</html>

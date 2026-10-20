@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Лада — перенос записи</title>
+<meta name="description" content="Перенос записи в студии «Лада»: новое время у того же мастера, состав услуг сохраняется.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/tokens.css">
+<!-- Общий слой вёрстки: база, кнопки, карточки, чипы, слоты, заглушки и блок
+     ошибки — те же классы, что на лендинге. -->
+<link rel="stylesheet" href="/css/landing.css">
+<!-- Поля кабинета (--cab-x) и его узкий экран. -->
+<link rel="stylesheet" href="/css/account.css">
+<link rel="stylesheet" href="/css/appointment.css">
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js" defer></script>
+<script type="module" src="/js/appointment-reschedule.js"></script>
+</head>
+<body class="resched">
+
+<!-- Сайдбара кабинета здесь нет — его нет и в прототипе: экран открывается
+     поверх записи и закрывается обратно в неё. -->
+
+<!-- ─── Шапка переноса ──────────────────────────────────────────────────── -->
+<header class="rhead">
+  <div class="rhead__top">
+    <h1 class="rhead__title">Перенос записи</h1>
+    <a class="rhead__close" data-link="close" href="account.html">
+      <i class="icon" data-lucide="x" aria-hidden="true"></i>Закрыть
+    </a>
+  </div>
+  <!-- Что переносом не меняется: состав услуг и мастер — так же в прототипе. -->
+  <p class="rhead__locked">
+    <i class="icon" data-lucide="lock" aria-hidden="true"></i>
+    <span class="rhead__summary" data-appt="summary" aria-busy="true"><span class="skeleton skeleton--line skeleton--wide"></span></span>
+    <span class="rhead__note">Состав услуг и мастер сохраняются. Чтобы изменить их, отмените запись и создайте новую</span>
+  </p>
+  <p class="rhead__current" data-appt="current"></p>
+</header>
+
+<p class="load-error rhead__error" data-error="appointment" role="status" hidden></p>
+
+<div class="resched__body" data-resched="body">
+  <main class="resched__main">
+
+    <!-- ─── Календарь ─────────────────────────────────────────────────── -->
+    <section class="card cal" aria-labelledby="cal-month">
+      <div class="cal__head">
+        <button class="cal__nav" type="button" data-cal="prev" aria-label="Предыдущий месяц">
+          <i class="icon" data-lucide="chevron-left" aria-hidden="true"></i>
+        </button>
+        <h2 class="cal__month" id="cal-month" data-cal="month"></h2>
+        <button class="cal__nav" type="button" data-cal="next" aria-label="Следующий месяц">
+          <i class="icon" data-lucide="chevron-right" aria-hidden="true"></i>
+        </button>
+      </div>
+      <div class="cal__week" aria-hidden="true">
+        <span>пн</span><span>вт</span><span>ср</span><span>чт</span><span>пт</span><span>сб</span><span>вс</span>
+      </div>
+      <div class="cal__grid" data-cal="grid"></div>
+      <!-- Точек «сколько окон в этот день» нет: это был бы запрос
+           доступности на каждый день месяца — см. конец appointment.css. -->
+      <p class="cal__legend">Выходные студии показаны заливкой, свободное время показывается по дню.</p>
+    </section>
+
+    <!-- ─── Слоты выбранного дня ──────────────────────────────────────── -->
+    <section class="slots" aria-labelledby="slots-day">
+      <h2 class="slots__day" id="slots-day" data-slots="day"></h2>
+      <p class="notice slots__need" data-slots="need" hidden>
+        <i class="icon" data-lucide="info" aria-hidden="true"></i>
+        <span data-slots="need-text"></span>
+      </p>
+      <div class="slots__parts" data-list="slots" aria-busy="true">
+        <span class="skeleton skeleton--slot"></span>
+        <span class="skeleton skeleton--slot"></span>
+        <span class="skeleton skeleton--slot"></span>
+        <span class="skeleton skeleton--slot"></span>
+      </div>
+      <p class="load-error" data-error="slots" role="status" hidden></p>
+    </section>
+  </main>
+
+  <!-- ─── Что получится и подтверждение ───────────────────────────────── -->
+  <div class="rfoot">
+    <p class="rfoot__change">
+      <span class="rfoot__old" data-appt="old"></span>
+      <i class="icon" data-lucide="arrow-right" aria-hidden="true"></i>
+      <span class="rfoot__new" data-resched="new">Станет: выберите новое время</span>
+    </p>
+    <!-- Выбранный слот удержан за человеком на `hold_ttl_min` минут: об этом
+         в прототипе не было, но удержание настоящее (POST /holds). -->
+    <p class="rfoot__hold" data-resched="hold" hidden></p>
+    <p class="notice notice--warn">
+      <i class="icon" data-lucide="triangle-alert" aria-hidden="true"></i>
+      <span>Старое время освободится только после успешного переноса.</span>
+    </p>
+    <p class="load-error" data-error="reschedule" role="status" hidden></p>
+    <!-- Ближайшие свободные слоты из `details.nearest_slots` ответа 409. -->
+    <div class="rfoot__nearest" data-list="nearest" hidden></div>
+    <div class="rfoot__actions">
+      <a class="btn btn--ghost" data-link="cancel" href="account.html">Отмена</a>
+      <button class="btn btn--primary" type="button" data-action="reschedule" disabled>Перенести запись</button>
+    </div>
+  </div>
+</div>
+
+<!-- ─── Шаблоны ───────────────────────────────────────────────────────── -->
+
+<template id="tpl-cal-cell">
+  <button class="cal__cell" type="button"><span class="cal__num"></span></button>
+</template>
+
+<template id="tpl-slot-part">
+  <div class="slots__part">
+    <h3 class="slots__part-title"></h3>
+    <div class="slots__grid"></div>
+  </div>
+</template>
+
+<template id="tpl-slot">
+  <button class="slot slots__slot" type="button"></button>
+</template>
+
+</body>
+</html>

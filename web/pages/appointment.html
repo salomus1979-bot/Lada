@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Лада — детали записи</title>
+<meta name="description" content="Запись в студию «Лада»: состав услуг, мастер, дата, правила отмены и переноса.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/tokens.css">
+<!-- Общий слой вёрстки: база, кнопки, карточки, чипы, аватары, заглушки и
+     блок ошибки — те же классы, что на лендинге. -->
+<link rel="stylesheet" href="/css/landing.css">
+<!-- Сайдбар кабинета, его шапка и карточка визита. -->
+<link rel="stylesheet" href="/css/account.css">
+<link rel="stylesheet" href="/css/appointment.css">
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js" defer></script>
+<script type="module" src="/js/appointment.js"></script>
+</head>
+<body class="cab">
+
+<!-- ─── Сайдбар кабинета ────────────────────────────────────────────────── -->
+<aside class="side">
+  <a class="side__logo" href="/">Лада</a>
+  <nav class="side__nav" aria-label="Разделы кабинета">
+    <a class="side__item side__item--current" href="account.html" aria-current="page">
+      <i class="icon" data-lucide="calendar" aria-hidden="true"></i>Мои записи
+    </a>
+    <a class="side__item" href="history.html">
+      <i class="icon" data-lucide="history" aria-hidden="true"></i>История
+    </a>
+    <a class="side__item" href="notifications.html">
+      <i class="icon" data-lucide="bell" aria-hidden="true"></i>Уведомления
+    </a>
+    <a class="side__item" href="profile.html">
+      <i class="icon" data-lucide="user" aria-hidden="true"></i>Профиль
+    </a>
+    <!-- «Выйти» — не ссылка: это запрос POST /auth/logout, после него лендинг. -->
+    <button class="side__item side__item--button" type="button" data-action="logout">
+      <i class="icon" data-lucide="log-out" aria-hidden="true"></i>Выйти
+    </button>
+  </nav>
+  <a class="btn btn--primary side__new" href="booking-services.html">
+    <i class="icon" data-lucide="plus" aria-hidden="true"></i>Новая запись
+  </a>
+</aside>
+
+<div class="cab__body">
+
+  <!-- ─── Шапка кабинета ──────────────────────────────────────────────── -->
+  <header class="topbar">
+    <nav class="topbar__nav" aria-label="Разделы сайта">
+      <a class="nav__link" href="catalog.html">Услуги</a>
+      <a class="nav__link" href="/#masters">Мастера</a>
+      <a class="nav__link" href="/#steps">Как записаться</a>
+      <a class="nav__link" href="/#contacts">Контакты</a>
+    </nav>
+    <div class="topbar__actions">
+      <!-- Колокольчик без бейджа: признак «прочитано» хранить негде —
+           ни таблицы уведомлений, ни роутов в API нет (ui-map, пп. 1-2). -->
+      <a class="topbar__bell" href="notifications.html" aria-label="Уведомления">
+        <i class="icon" data-lucide="bell" aria-hidden="true"></i>
+      </a>
+      <a class="topbar__user" href="profile.html" data-user="block" aria-busy="true">
+        <span class="avatar avatar--muted topbar__initials" data-user="initials" aria-hidden="true"></span>
+        <span class="topbar__name" data-user="name"><span class="skeleton skeleton--line"></span></span>
+        <i class="icon" data-lucide="chevron-down" aria-hidden="true"></i>
+      </a>
+    </div>
+  </header>
+
+  <main class="cab__content cab__content--wide">
+
+    <!-- Крошка: «Запись от 23 октября» — дата из ответа API, не из макета. -->
+    <nav class="crumbs" aria-label="Хлебные крошки">
+      <a href="account.html">Мои записи</a>
+      <i class="icon" data-lucide="chevron-right" aria-hidden="true"></i>
+      <span class="crumbs__current" data-appt="crumb">Запись</span>
+    </nav>
+
+    <p class="load-error" data-error="me" role="status" hidden></p>
+    <p class="load-error" data-error="appointment" role="status" hidden></p>
+    <p class="load-error" data-error="settings" role="status" hidden></p>
+
+    <div class="detail" data-detail="body">
+
+      <div class="detail__main">
+
+        <!-- ─── Когда и в каком статусе ─────────────────────────────── -->
+        <section class="card detail__head" aria-busy="true">
+          <span class="chip chip--quiet detail__status" data-appt="status"></span>
+          <h1 class="detail__when" data-appt="when"><span class="skeleton skeleton--line skeleton--wide"></span></h1>
+          <p class="detail__created" data-appt="created"><span class="skeleton skeleton--line"></span></p>
+        </section>
+
+        <!-- ─── Мастер ──────────────────────────────────────────────── -->
+        <!-- Ссылки «Профиль мастера →» нет: публичной страницы мастера нет ни
+             в API, ни в прототипе (решение 7 карты экранов). Специализации и
+             рейтинга в `GET /appointments/:id` тоже нет — см. конец
+             appointment.css. -->
+        <section class="card">
+          <h2 class="detail__label">Мастер</h2>
+          <div class="detail__master">
+            <span class="avatar avatar--muted detail__initials" data-appt="master-initials" aria-hidden="true"></span>
+            <span class="detail__master-name" data-appt="master"><span class="skeleton skeleton--line"></span></span>
+          </div>
+        </section>
+
+        <!-- ─── Состав услуг ────────────────────────────────────────── -->
+        <!-- Сколько здесь строк, известно только из ответа: в разметке стоят
+             заглушки, их количество ничего не обещает. -->
+        <section class="card">
+          <h2 class="detail__label">Услуги</h2>
+          <div class="detail__services" data-list="services" aria-busy="true">
+            <div class="detail__service skeleton-host"><span class="skeleton skeleton--line skeleton--wide"></span></div>
+            <div class="detail__service skeleton-host"><span class="skeleton skeleton--line skeleton--wide"></span></div>
+          </div>
+          <p class="detail__total">
+            <span class="detail__total-label">Итого</span>
+            <span class="detail__total-value" data-appt="total"></span>
+          </p>
+        </section>
+
+        <!-- ─── Комментарий мастеру ─────────────────────────────────── -->
+        <section class="card">
+          <h2 class="detail__label">Комментарий мастеру</h2>
+          <p class="detail__comment" data-appt="comment">—</p>
+        </section>
+
+        <!-- ─── Адрес и время работы ────────────────────────────────── -->
+        <!-- Часы работы — из `GET /settings` (`hours_display`), п. 14 карты
+             экранов: в прототипе здесь стоял режим, которого у студии нет. -->
+        <section class="card">
+          <h2 class="detail__label">Адрес и время работы</h2>
+          <ul class="detail__contacts">
+            <li class="detail__contact">
+              <i class="icon icon--accent" data-lucide="map-pin" aria-hidden="true"></i>
+              <span data-settings="address" aria-busy="true"><span class="skeleton skeleton--line skeleton--wide"></span></span>
+            </li>
+            <li class="detail__contact">
+              <i class="icon icon--accent" data-lucide="clock" aria-hidden="true"></i>
+              <span class="detail__hours" data-settings="hours_display" aria-busy="true"><span class="skeleton skeleton--line"></span></span>
+            </li>
+            <li class="detail__contact">
+              <i class="icon icon--accent" data-lucide="phone" aria-hidden="true"></i>
+              <span data-settings="phone" aria-busy="true"><span class="skeleton skeleton--line"></span></span>
+            </li>
+          </ul>
+        </section>
+      </div>
+
+      <!-- ─── Что можно сделать с записью ───────────────────────────── -->
+      <!-- Кнопки включаются по правам из ответа API (`can_reschedule`,
+           `can_cancel`), а не по виду экрана. -->
+      <aside class="detail__aside">
+        <div class="detail__actions">
+          <a class="btn btn--primary is-disabled" data-action="reschedule" aria-disabled="true">Перенести запись</a>
+          <button class="btn detail__cancel" type="button" data-action="cancel" disabled>Отменить запись</button>
+          <!-- Файл .ics собирается в браузере из ответа API (решение 11
+               карты): эндпоинта выдачи календаря в API нет. Ссылка получает
+               href, когда данные пришли. -->
+          <a class="btn btn--ghost is-disabled" data-action="ics" aria-disabled="true" download>
+            <i class="icon" data-lucide="calendar-plus" aria-hidden="true"></i>Добавить в календарь
+          </a>
+        </div>
+        <p class="notice detail__rules" data-appt="rules">
+          <i class="icon" data-lucide="info" aria-hidden="true"></i>
+          <span data-appt="rules-text"><span class="skeleton skeleton--line skeleton--wide"></span></span>
+        </p>
+      </aside>
+
+    </div>
+  </main>
+</div>
+
+<!-- ─── Модалка подтверждения отмены ──────────────────────────────────── -->
+<!-- Отмена необратима, поэтому подтверждение с причиной — как в прототипе. -->
+
+<div class="modal" data-modal hidden>
+  <div class="modal__backdrop" data-modal-close></div>
+  <div class="modal__card" role="dialog" aria-modal="true" aria-labelledby="cancel-title">
+    <span class="modal__tile">
+      <i class="icon" data-lucide="triangle-alert" aria-hidden="true"></i>
+    </span>
+    <h2 class="modal__title" id="cancel-title">Отменить запись?</h2>
+    <p class="modal__text" data-modal="text"></p>
+    <label class="modal__label" for="cancel-reason">Причина отмены (необязательно)</label>
+    <select class="modal__select" id="cancel-reason">
+      <!-- Пустой вариант первым: причина необязательна, а предвыбранный
+           «Не смогу прийти» из прототипа отправлялся бы за человека. -->
+      <option value="">Не указывать</option>
+      <option>Не смогу прийти</option>
+      <option>Изменились планы</option>
+      <option>Выбрал другое время</option>
+      <option>Другое</option>
+    </select>
+    <p class="load-error" data-error="cancel" role="status" hidden></p>
+    <div class="modal__actions">
+      <button class="btn btn--ghost" type="button" data-modal-close>Оставить запись</button>
+      <button class="btn detail__cancel-yes" type="button" data-action="cancel-confirm">Да, отменить</button>
+    </div>
+  </div>
+</div>
+
+<!-- ─── Шаблон строки услуги ──────────────────────────────────────────── -->
+
+<template id="tpl-service-row">
+  <p class="detail__service">
+    <span class="detail__service-name"></span>
+    <span class="detail__service-duration"></span>
+    <span class="detail__service-price"></span>
+  </p>
+</template>
+
+</body>
+</html>

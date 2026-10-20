@@ -178,6 +178,15 @@ async function main() {
   check('настройки студии отдаются', settings.timezone === 'Europe/Moscow'
     && settings.slot_step_min === 30 && settings.cancel_window_hours === 4);
 
+  // Сид заводит режим вт–сб, 10:00–20:00: воскресенье и понедельник закрыты.
+  check('часы работы студии отдаются по дням',
+    Array.isArray(settings.hours) && settings.hours.length === 7
+    && settings.hours[0].weekday === 1 && settings.hours[0].is_closed === true
+    && settings.hours[1].start_min === 600 && settings.hours[1].end_min === 1200,
+    settings.hours);
+  check('режим работы собран одной строкой',
+    settings.hours_display === 'вт–сб 10:00–20:00', settings.hours_display);
+
   const badDate = await call('GET', `/api/masters/${master.id}/availability?date=2026-13-45&service_ids=${bothServices}`);
   check('неверная дата -> 400', badDate.status === 400, badDate.json);
 
