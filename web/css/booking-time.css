@@ -608,10 +608,21 @@
 /* ─── Узкие экраны ───────────────────────────────────────────────────── */
 
 @media (max-width: 900px) {
+  /* Одна колонка: календарь сверху, сетка слотов под ним — в этом порядке
+     они идут и в разметке. */
   .time-grid, .confirm, .taken-grid { grid-template-columns: 1fr; }
-  /* Календарь на узком экране уходит под слоты — выбор дня важнее сетки. */
+  /* Исключение — экран «время занято»: там разговор начинается с ближайших
+     свободных слотов, а календарь нужен, только если ни один не подошёл. */
   .taken-grid .cal { order: 2; }
   .confirm__side { order: -1; }
+
+  /* Стрелки месяца размером с палец: 25×25 по ним не попасть. */
+  .cal__nav {
+    min-width: var(--tap-target);
+    min-height: var(--tap-target);
+    align-items: center;
+    justify-content: center;
+  }
 }
 
 @media (max-width: 600px) {
@@ -620,8 +631,17 @@
     font-size: var(--text-h4-mobile);
   }
   .confirm__actions { flex-direction: column; }
-  .confirm__actions .btn { width: 100%; justify-content: center; }
+  .confirm__actions .btn, .done__actions .btn, .taken__actions .btn {
+    width: 100%;
+    justify-content: center;
+    min-height: var(--tap-target);
+  }
   .sum__row, .sum__total { padding-inline: var(--space-4); }
+
+  /* Слоты в две колонки: в три они становятся узкими полосками, по которым
+     трудно попасть. Высота — размер цели для пальца. */
+  .slots__grid { grid-template-columns: repeat(2, 1fr); }
+  .slots__slot { min-height: var(--tap-target); min-width: 0; }
 }
 
 /*

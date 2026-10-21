@@ -23,7 +23,7 @@ import { getAppointments } from './api.js';
 import {
   $, listNode, tpl, refreshIcons, fill, fillEmpty, showError, rubles, dateDisplay,
 } from './ui.js';
-import { loadMe, setupLogout, handledAsUnauthorized, initials } from './account-shell.js';
+import { loadMe, setupLogout, setupSideNav, handledAsUnauthorized, initials } from './account-shell.js';
 
 /** Сколько записей просит экран: это и есть предел `limit` у API. */
 const LIMIT = 100;
@@ -305,6 +305,7 @@ function setupFilters() {
 function start() {
   refreshIcons();
   setupLogout();
+  setupSideNav();
   setupTabs();
   setupFilters();
   // Профиль и история друг от друга не зависят — грузятся разом.

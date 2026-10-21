@@ -28,7 +28,7 @@
 
 import { getSessions, endSession } from './api.js';
 import { $, listNode, tpl, refreshIcons, fill, showError } from './ui.js';
-import { loadMe, setupLogout, handledAsUnauthorized, initials } from './account-shell.js';
+import { loadMe, setupLogout, setupSideNav, handledAsUnauthorized, initials } from './account-shell.js';
 
 /** Куда уходим, когда завершили ту сессию, из которой смотрим. */
 const LOGIN_PAGE = 'login.html';
@@ -138,6 +138,7 @@ async function loadSessions() {
 function start() {
   refreshIcons();
   setupLogout();
+  setupSideNav();
   // Личные данные приходят тем же ответом, что имя в шапке: один запрос на
   // оба места (см. loadMe в account-shell.js).
   loadMe(fillPersonal);

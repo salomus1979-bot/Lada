@@ -13,7 +13,7 @@
  */
 
 import { getMe, logout } from './api.js';
-import { $, showError, dayDisplay } from './ui.js';
+import { $, showError, dayDisplay, setupCollapsibleNav } from './ui.js';
 import { isAdmin } from './roles.js';
 
 /* ------------------------------------------------------------- сессия */
@@ -136,6 +136,17 @@ export function setupLogout() {
       showError(box, null, err);
     }
   });
+}
+
+/**
+ * Сайдбар кабинета на узком экране: разделы сворачиваются за кнопку
+ * «Разделы», логотип и «Новая запись» остаются на виду. Весь механизм —
+ * общий (`setupCollapsibleNav` в ui.js), здесь только кнопка кабинета:
+ * страницы вызывают эту функцию рядом с `setupLogout()`, как и всё
+ * остальное из общего слоя.
+ */
+export function setupSideNav() {
+  setupCollapsibleNav('[data-nav-toggle]');
 }
 
 /* ---------------------------------------------------------- форматы */

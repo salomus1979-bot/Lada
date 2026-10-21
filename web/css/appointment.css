@@ -488,8 +488,22 @@
   .detail, .resched__main { grid-template-columns: 1fr; }
   .detail__aside { position: static; }
   .rhead__note { margin-left: 0; }
-  /* Липкая панель на телефоне заняла бы половину экрана. */
-  .rfoot { position: static; }
+
+  /* Панель подтверждения остаётся внизу и на телефоне: «Перенести запись»
+     больше нигде нет, и искать её прокруткой после выбора слота не нужно.
+     Содержимое она не закрывает — панель в потоке (`sticky`), поэтому в
+     конце страницы встаёт на своё место. Чтобы она не съедала экран,
+     строки в ней идут плотнее, а плашка-предупреждение — мельче. */
+  .rfoot { gap: var(--space-1); padding: var(--space-2) var(--cab-x); }
+  .rfoot .notice {
+    padding: var(--space-2);
+    font-size: var(--text-caption);
+    line-height: var(--text-caption-lh);
+  }
+  .rfoot__actions .btn { flex: 1 1 0; min-height: var(--tap-target); padding-inline: var(--space-4); }
+  .rfoot__nearest-slot { min-height: var(--tap-target); }
+  /* Кнопки действий на экране 9 — во всю ширину карточки. */
+  .detail__actions .btn { min-height: var(--tap-target); }
 }
 
 @media (max-width: 600px) {

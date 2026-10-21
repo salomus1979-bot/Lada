@@ -22,6 +22,7 @@
 import { getSettings, getServiceCategories, getServices, getMasters } from './api.js';
 import {
   $, listNode, tpl, refreshIcons, fill, fillEmpty, showError, rubles, minutesLong,
+  setupCollapsibleNav,
 } from './ui.js';
 
 /* --------------------------------------------------------------- форматы */
@@ -205,6 +206,7 @@ async function loadCatalog() {
 
 /** Прайс и настройки студии друг от друга не зависят — грузятся разом. */
 function start() {
+  setupCollapsibleNav();
   refreshIcons();
   loadSettings();
   loadCatalog();

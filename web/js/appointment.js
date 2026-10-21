@@ -26,7 +26,7 @@ import {
   dayDisplay, dateDisplay, minutesLong,
 } from './ui.js';
 import {
-  loadMe, setupLogout, handledAsUnauthorized, appointmentIdFromUrl,
+  loadMe, setupLogout, setupSideNav, handledAsUnauthorized, appointmentIdFromUrl,
   initials, whenDisplay,
 } from './account-shell.js';
 import { setupIcsLink } from './ics.js';
@@ -282,6 +282,7 @@ async function loadAppointment() {
 function start() {
   refreshIcons();
   setupLogout();
+  setupSideNav();
   // Профиль, запись и настройки студии друг от друга не зависят — грузятся разом.
   loadMe();
   loadAppointment();

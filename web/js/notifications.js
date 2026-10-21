@@ -37,7 +37,7 @@ import { getAppointments } from './api.js';
 import {
   $, listNode, tpl, refreshIcons, fill, showError, dateDisplay, dayDisplay,
 } from './ui.js';
-import { loadMe, setupLogout, handledAsUnauthorized, untilDisplay } from './account-shell.js';
+import { loadMe, setupLogout, setupSideNav, handledAsUnauthorized, untilDisplay } from './account-shell.js';
 
 /** Предел ответа API. Ленту строим из того же набора, что и история. */
 const LIMIT = 100;
@@ -276,6 +276,7 @@ async function loadFeed() {
 function start() {
   refreshIcons();
   setupLogout();
+  setupSideNav();
   // Профиль и лента друг от друга не зависят — грузятся разом.
   loadMe();
   loadFeed();

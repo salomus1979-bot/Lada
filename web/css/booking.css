@@ -485,10 +485,31 @@
 @media (max-width: 900px) {
   .bk-grid { grid-template-columns: 1fr; }
   .cart { position: static; }
-  /* Шаг-индикатор целиком не помещается: остаются кружки с номерами. */
-  .stepper { max-width: none; }
-  .stepper__label { display: none; }
-  .bk-header__inner { gap: var(--space-4); }
+
+  /* Шаг-индикатор целиком не помещается в строку с логотипом и «Выйти»,
+     поэтому он занимает свою строку под ними, а подпись каждого шага встаёт
+     под его кружок. Подписи не пропадают и не наезжают друг на друга:
+     каждая живёт в своей колонке и переносится по словам. */
+  .bk-header__inner { gap: var(--space-2); flex-wrap: wrap; }
+  .stepper { max-width: none; flex: 1 1 100%; order: 3; }
+  .stepper__item, .stepper__item:last-child { flex: 1 1 0; min-width: 0; align-items: flex-start; }
+  .stepper__link { flex: 1 1 auto; min-width: 0; flex-direction: column; gap: var(--space-1); }
+  .stepper__label {
+    white-space: normal;
+    overflow-wrap: break-word;
+    hyphens: auto;
+    text-align: center;
+    font-size: var(--text-caption-mobile);
+  }
+  /* Линия идёт между кружками, а не между колонками целиком: её сдвигает
+     половина высоты кружка. */
+  .stepper__line {
+    margin-top: calc((var(--space-6) + var(--space-1)) / 2);
+    margin-inline: var(--space-1);
+    /* Длинная подпись («Подтверждение») иначе сжимает свою линию в точку. */
+    min-width: var(--space-4);
+  }
+  .bk-exit { min-height: var(--tap-target); }
 }
 
 @media (max-width: 600px) {
@@ -497,7 +518,29 @@
   /* Название вперёд, длительность и цена — строкой ниже. */
   .srv-row__body { flex: 1 1 100%; order: -1; }
   .srv-row__price { min-width: 0; }
-  .bk-foot__inner { flex-wrap: wrap; }
+  /* Нижняя панель остаётся липкой и на телефоне: «Далее» — единственный
+     выход со страницы, и искать его прокруткой не нужно. Содержимое она не
+     закрывает: панель в потоке (`sticky`), поэтому внизу страницы она
+     встаёт на своё место, а не поверх последней карточки.
+     Подсказка уходит на свою строку, кнопки делят вторую пополам —
+     «Назад» и «Далее» одинаково широкие и попадаются пальцем. */
+  .bk-foot__inner { flex-wrap: wrap; row-gap: var(--space-2); }
+  .bk-foot__right { display: contents; }
+  .bk-hint { flex: 1 1 100%; order: -1; }
+  .bk-foot__inner .btn { flex: 1 1 0; min-height: var(--tap-target); padding-inline: var(--space-4); }
+
+  /* Мелкие цели шагов 1-2: вкладки категорий, крестик услуги в карточке
+     визита и кнопка под ней. Размер цели, а не размер шрифта — вид строк
+     от этого не меняется. */
+  .cat-tab { min-height: var(--tap-target); }
+  .cart__drop {
+    min-width: var(--tap-target);
+    min-height: var(--tap-target);
+    align-items: center;
+    justify-content: center;
+    margin-right: calc(var(--space-2) * -1);
+  }
+  .cart .btn { min-height: var(--tap-target); }
 }
 
 /*

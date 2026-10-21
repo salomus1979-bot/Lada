@@ -19,7 +19,7 @@ import { getAppointments, getServices } from './api.js';
 import {
   $, listNode, tpl, refreshIcons, fill, showError,
 } from './ui.js';
-import { loadMe, setupLogout, handledAsUnauthorized } from './account-shell.js';
+import { loadMe, setupLogout, setupSideNav, handledAsUnauthorized } from './account-shell.js';
 
 /** Экран 7: тот же кабинет, когда предстоящие записи есть. */
 const LIST_PAGE = 'account.html';
@@ -94,6 +94,7 @@ async function loadPopular() {
 function start() {
   refreshIcons();
   setupLogout();
+  setupSideNav();
   // Профиль, записи и витрина друг от друга не зависят — грузятся разом.
   loadMe();
   loadUpcoming();

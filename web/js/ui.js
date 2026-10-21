@@ -123,6 +123,51 @@ export function pageFailure(box, body, message, retry) {
   box.hidden = false;
 }
 
+/* ------------------------------------------------- свёрнутое меню */
+
+/**
+ * Меню, свёрнутое на узком экране: кнопка разворачивает тот же список
+ * ссылок, что на широком экране виден целиком. Ничего не пропадает —
+ * меняется только то, развёрнут список или нет.
+ *
+ * Где экран «узкий», решает CSS: кнопка там показана, а на широком у неё
+ * `display: none`. Поэтому здесь нет ни одной ширины в пикселях — модуль
+ * смотрит, видно ли кнопку, и этим совпадает с медиазапросом, какой бы тот
+ * ни был. Если скрипт не выполнится вовсе, меню останется развёрнутым: это
+ * хуже видом, но не прячет ссылки.
+ *
+ * @param {string} [selector] кнопка-переключатель; `aria-controls` на ней
+ *   называет id списка
+ */
+export function setupCollapsibleNav(selector = '[data-nav-toggle]') {
+  const toggle = $(selector);
+  if (!toggle) return;
+  const nav = document.getElementById(toggle.getAttribute('aria-controls'));
+  if (!nav) return;
+
+  const collapsible = () => getComputedStyle(toggle).display !== 'none';
+  const expanded = () => toggle.getAttribute('aria-expanded') === 'true';
+  const sync = () => {
+    nav.hidden = collapsible() && !expanded();
+  };
+
+  toggle.addEventListener('click', () => {
+    toggle.setAttribute('aria-expanded', String(!expanded()));
+    sync();
+  });
+  // Переход по ссылке меню сворачивает его: на якорях лендинга страница не
+  // перезагружается, и развёрнутый список остался бы поверх того, к чему
+  // человек только что перешёл.
+  nav.addEventListener('click', (event) => {
+    if (!event.target.closest('a')) return;
+    toggle.setAttribute('aria-expanded', 'false');
+    sync();
+  });
+  // Поворот телефона и смена ширины окна: список возвращается на место сам.
+  window.addEventListener('resize', sync);
+  sync();
+}
+
 /* --------------------------------------------------------------- форматы */
 
 /** «2 600 ₽» — так же, как это делает API в своих `*_display`. */

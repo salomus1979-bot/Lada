@@ -23,7 +23,7 @@ import {
   $, listNode, tpl, refreshIcons, fill, fillEmpty, showError, minutesLong,
 } from './ui.js';
 import {
-  loadMe, setupLogout, handledAsUnauthorized,
+  loadMe, setupLogout, setupSideNav, handledAsUnauthorized,
   initials, whenDisplay, untilDisplay,
 } from './account-shell.js';
 
@@ -267,6 +267,7 @@ function initialTab() {
 function start() {
   refreshIcons();
   setupLogout();
+  setupSideNav();
   for (const button of document.querySelectorAll('[data-tab]')) {
     button.addEventListener('click', () => openTab(button.dataset.tab));
   }

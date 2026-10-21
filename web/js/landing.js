@@ -16,6 +16,7 @@
 import { getSettings, getServices, getMasters, getAvailability } from './api.js';
 import {
   $, listNode, errorBox, tpl, refreshIcons, fill, fillEmpty, showError,
+  setupCollapsibleNav,
 } from './ui.js';
 
 /** Сколько слотов показывает виджет и как далеко ищет ближайший день. */
@@ -328,6 +329,7 @@ function setupFaq() {
 
 async function start() {
   setupFaq();
+  setupCollapsibleNav();
   refreshIcons();
   const settings = await loadSettings();
   await loadCatalog(settings);

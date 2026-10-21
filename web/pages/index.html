@@ -21,7 +21,15 @@
       <a class="brand__logo" href="#top" data-settings="name">Лада</a>
       <span class="brand__tagline">студия маникюра и бровей</span>
     </div>
-    <nav class="nav" aria-label="Разделы страницы">
+    <!-- На узком экране меню сворачивается за эту кнопку: логотип, «Войти»
+         и «Записаться» остаются в строке, а ссылки разворачиваются под ней.
+         На широком экране кнопки нет (`display: none` в landing.css), и
+         меню видно целиком. -->
+    <button class="nav-toggle" type="button" data-nav-toggle
+            aria-expanded="false" aria-controls="site-nav">
+      <i class="icon" data-lucide="menu" aria-hidden="true"></i>Меню
+    </button>
+    <nav class="nav" id="site-nav" aria-label="Разделы страницы">
       <a class="nav__link" href="#services">Услуги</a>
       <a class="nav__link" href="#masters">Мастера</a>
       <a class="nav__link" href="#steps">Как записаться</a>

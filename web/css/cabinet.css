@@ -504,12 +504,29 @@
   .hist__state { align-items: flex-start; }
   .hist__reason { text-align: left; }
   .hist__repeat { width: 100%; justify-content: center; }
+
+  /* Размер цели для пальца у всего, по чему здесь нажимают: табы, фильтры,
+     «Сбросить», «Повторить запись», страницы и ссылки в ленте. Меняется
+     только высота области нажатия — ни шрифт, ни цвет, ни рамки. */
+  .filters__select,
+  .filters__reset,
+  .hist__repeat,
+  .sess__end {
+    min-height: var(--tap-target);
+  }
+  .pager__page { width: var(--tap-target); height: var(--tap-target); }
+  .feed__link, .hist__link { min-height: var(--tap-target); }
+  .feed__link { display: inline-flex; align-items: center; }
 }
 
 @media (max-width: 600px) {
   .hist-sum__value { font-size: var(--text-body-m-mobile); }
   .prof__title { font-size: var(--text-body-m-mobile); }
   .sess__end { width: 100%; justify-content: center; }
+  /* Фильтры истории во всю ширину: три селекта в строку на телефоне
+     превращаются в три узких огрызка. */
+  .filters__field { flex: 1 1 100%; }
+  .filters__select { width: 100%; }
 }
 
 /*

@@ -244,10 +244,21 @@
 
 @media (max-width: 900px) {
   .auth { grid-template-columns: 1fr; min-height: auto; }
-  /* Правая половина — только фон с подписью «фото интерьера студии»:
-     на телефоне она занимала бы экран, не добавляя ничего к форме. */
-  .auth__aside { display: none; }
   .auth__col { padding: var(--space-8) var(--space-4); }
+  /* Правая половина встаёт под форму. Раньше она на телефоне пропадала
+     целиком, а в ней не только заглушка под фото, но и цитата студии —
+     прятать её незачем: она просто становится короткой полосой под формой,
+     а не половиной экрана. */
+  .auth__aside { padding: var(--space-8) var(--space-4); }
+  .auth__quote { font-size: var(--text-h4); margin-top: var(--space-6); }
+
+  /* Цели для пальца: глазок пароля и кнопка отправки. */
+  .field__toggle {
+    min-width: var(--tap-target);
+    min-height: var(--tap-target);
+    justify-content: center;
+  }
+  .auth .btn { min-height: var(--tap-target); }
 }
 
 /*

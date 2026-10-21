@@ -23,7 +23,14 @@
 <!-- ─── Сайдбар кабинета ────────────────────────────────────────────────── -->
 <aside class="side">
   <a class="side__logo" href="/">Лада</a>
-  <nav class="side__nav" aria-label="Разделы кабинета">
+  <!-- На узком экране разделы кабинета сворачиваются за эту кнопку: логотип
+       и «Новая запись» остаются на виду. На широком экране кнопки нет
+       (`display: none` в account.css), и список виден целиком. -->
+  <button class="side__toggle" type="button" data-nav-toggle
+          aria-expanded="false" aria-controls="cab-nav">
+    <i class="icon" data-lucide="menu" aria-hidden="true"></i>Разделы
+  </button>
+  <nav class="side__nav" id="cab-nav" aria-label="Разделы кабинета">
     <a class="side__item" href="account.html">
       <i class="icon" data-lucide="calendar" aria-hidden="true"></i>Мои записи
     </a>

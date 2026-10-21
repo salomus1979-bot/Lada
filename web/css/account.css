@@ -71,6 +71,10 @@
   margin-bottom: var(--space-2);
 }
 .side__nav { display: flex; flex-direction: column; gap: var(--space-1); flex: 1; }
+/* Кнопка «Разделы» нужна только там, где сайдбар свёрнут, — на узком
+   экране. На широком её нет вовсе, и по ней же ui.js понимает, сворачивать
+   список или нет. */
+.side__toggle { display: none; }
 .side__item {
   display: flex;
   align-items: center;
@@ -369,9 +373,10 @@
 
 /* ─── Узкие экраны ───────────────────────────────────────────────────── */
 /* Мобильных макетов в прототипе нет. Сайдбар на узком экране съел бы
-   половину ширины, поэтому он разворачивается в полосу над содержимым и
-   перестаёт быть липким — тем же приёмом, которым на лендинге отлипает
-   шапка. */
+   половину ширины, поэтому он разворачивается в полосу над содержимым, а
+   список разделов сворачивается за кнопку «Разделы» — тем же приёмом, что
+   меню шапки на лендинге. Ничего не пропадает: развёрнутый список — те же
+   пункты, что на широком экране, вместе с «Выйти». */
 
 @media (max-width: 900px) {
   :root { --cab-x: var(--space-4); }
@@ -383,15 +388,51 @@
     position: static;
     flex-direction: row;
     align-items: center;
+    justify-content: space-between;
     flex-wrap: wrap;
+    gap: var(--space-2);
+    padding: var(--space-4);
     border-right: none;
     border-bottom: 1px solid var(--border-default);
   }
-  /* Логотип занимает свою строку: иначе он стоит сбоку от меню, которое
-     на телефоне переносится на три строки, и выглядит случайным. */
-  .side__logo { width: 100%; margin-bottom: var(--space-2); }
-  .side__nav { flex-direction: row; flex-wrap: wrap; }
+  /* Логотип и «Новая запись» остаются на виду в одной строке с кнопкой
+     «Разделы»; сам список разделов разворачивается под ними. */
+  .side__logo { width: auto; margin-bottom: 0; }
+  .side__toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    flex: none;
+    min-height: var(--tap-target);
+    padding-inline: var(--space-2);
+    background: none;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-family: var(--font-text);
+    font-size: var(--text-body-s);
+    line-height: var(--text-body-s-lh);
+    font-weight: var(--text-h4-weight);
+    color: var(--text-secondary);
+    cursor: pointer;
+  }
+  .side__toggle:hover, .side__toggle[aria-expanded="true"] { color: var(--accent-primary); }
+  /* `hidden` на списке ставит ui.js, а `display: flex` выше перебил бы этот
+     атрибут — поэтому вторая строка. */
+  /* `flex: 1` из базового правила задаёт основу 0% — список встал бы сбоку
+     от «Новой записи». Здесь основа — вся ширина, то есть своя строка. */
+  .side__nav { order: 4; flex: 1 1 100%; gap: var(--space-1); }
+  .side__nav[hidden] { display: none; }
+  .side__item { min-height: var(--tap-target); }
+  .side__new { order: 3; }
   .topbar { position: static; }
+  /* Табы и ссылки шапки кабинета — размером с палец. Общие для всех экранов
+     кабинета, поэтому правило здесь, а не в cabinet.css. */
+  .tabs__tab, .topbar__bell, .topbar__user {
+    min-height: var(--tap-target);
+    display: inline-flex;
+    align-items: center;
+  }
+  .topbar__nav .nav__link { display: inline-flex; align-items: center; min-height: var(--tap-target); }
 }
 
 @media (max-width: 600px) {
@@ -400,6 +441,16 @@
   .appt__total { font-size: var(--text-body-m-mobile); }
   .empty-state { padding: var(--space-8) var(--space-4); }
   .empty-state__title { font-size: var(--text-h4-mobile); }
+  /* Кнопки в карточке визита на телефоне идут в строку по всей ширине:
+     так по ним попадают пальцем, а не целятся в мелкие пилюли. */
+  .appt__actions, .appt__confirm { width: 100%; }
+  .appt__actions .btn, .appt__confirm .btn {
+    flex: 1 1 0;
+    min-height: var(--tap-target);
+    padding-inline: var(--space-2);
+  }
+  .appt__more { min-height: var(--tap-target); display: inline-flex; align-items: center; }
+  .empty-state__actions .btn { width: 100%; min-height: var(--tap-target); }
 }
 
 /*
