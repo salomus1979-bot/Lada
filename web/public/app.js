@@ -185,14 +185,11 @@ function todayInputValue() {
 
 /* ----------------------------------------------------------- навигация */
 
+// Клиентские черновики удалены — их заменили свёрстанные экраны в web/pages,
+// и ссылки на них вели бы в 404. Остались страница состояния API и админка.
 const PAGES = [
   ['index.html', 'Главная'],
-  ['login.html', '1. Вход'],
-  ['catalog.html', '2. Услуги и мастера'],
-  ['availability.html', '3. Свободное время'],
-  ['book.html', '4. Создание записи'],
-  ['account.html', '5. Личный кабинет'],
-  ['admin.html', '6. Администрирование'],
+  ['admin.html', 'Администрирование'],
 ];
 
 /**
@@ -229,7 +226,8 @@ async function renderNav() {
   } catch (err) {
     if (err instanceof ApiError && err.status === 401) {
       who.textContent = 'не вошли · ';
-      who.append(el('a', { href: 'login.html', textContent: 'войти' }));
+      // Своей формы входа у черновика больше нет — ведём на настоящий экран.
+      who.append(el('a', { href: '/login.html', textContent: 'войти' }));
       return null;
     }
     who.textContent = `профиль недоступен: ${err.message}`;

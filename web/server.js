@@ -184,7 +184,8 @@ app.use('/js', express.static(path.join(__dirname, 'js')));
 app.get('/tokens.css', (_req, res) => res.sendFile(path.join(__dirname, 'tokens.css')));
 
 // Черновой фронт из web/public — тот самый, которым проверяли API руками.
-// Он никуда не делся, просто уступил корень вёрстке: /draft/catalog.html.
+// От него остались только страница состояния API и админка: /draft/admin.html.
+// Клиентские черновики удалены, их заменили экраны из web/pages.
 app.use('/draft', express.static(path.join(__dirname, 'public'), { extensions: ['html'] }));
 
 /** Отвечает ли на этом порту именно API «Лады». */
