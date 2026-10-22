@@ -502,6 +502,12 @@
   }
   .rfoot__actions .btn { flex: 1 1 0; min-height: var(--tap-target); padding-inline: var(--space-4); }
   .rfoot__nearest-slot { min-height: var(--tap-target); }
+
+  /* Сетка слотов — как на шаге 3 воронки: две колонки вместо трёх, кнопка
+     высотой в палец. Три колонки по 109px на телефоне дают 37px высоты —
+     мимо такой кнопки попадают чаще, чем по ней. */
+  .slots__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .slots__slot { min-height: var(--tap-target); }
   /* Кнопки действий на экране 9 — во всю ширину карточки. */
   .detail__actions .btn { min-height: var(--tap-target); }
 }

@@ -184,6 +184,9 @@
 @media (max-width: 900px) {
   .page-head { padding-block: var(--space-8); }
   .cart__panel { padding: var(--space-2) var(--space-4); border-radius: var(--radius-lg); }
+  /* «Выбрать мастера» в плавающей панели — такой же высоты под палец,
+     как кнопки на остальных экранах. */
+  .cart__go { min-height: var(--tap-target); }
 }
 
 @media (max-width: 600px) {
