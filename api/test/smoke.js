@@ -510,13 +510,66 @@ async function main() {
   });
   check('пустой PATCH -> 400', emptyPatch.status === 400);
 
+  const emptyName = await call('POST', '/api/admin/services', {
+    token: ownerToken,
+    body: { category_id: manicure.category.id, name: '   ', duration_min: 30, price_kopecks: 1000 },
+  });
+  check('пустое название услуги -> 400', emptyName.status === 400, emptyName.json);
+
+  const zeroPrice = await call('POST', '/api/admin/services', {
+    token: ownerToken,
+    body: { category_id: manicure.category.id, name: 'Бесплатно', duration_min: 30, price_kopecks: 0 },
+  });
+  check('цена 0 -> 400', zeroPrice.status === 400, zeroPrice.json);
+
+  const negativeDuration = await call('POST', '/api/admin/services', {
+    token: ownerToken,
+    body: { category_id: manicure.category.id, name: 'Минус', duration_min: -30, price_kopecks: 1000 },
+  });
+  check('отрицательная длительность -> 400', negativeDuration.status === 400, negativeDuration.json);
+
+  const noPriceByAdmin = await call('POST', '/api/admin/services', {
+    token: adminToken,
+    body: { category_id: manicure.category.id, name: 'Без цены', duration_min: 30 },
+  });
+  check('админ заводит услугу без цены -> 201, цена 0',
+    noPriceByAdmin.status === 201 && noPriceByAdmin.json.service.price_kopecks === 0,
+    noPriceByAdmin.json);
+  await call('DELETE', `/api/admin/services/${noPriceByAdmin.json.service.id}`, { token: adminToken });
+
+  // Удалять или отключать — решает сервер, по ссылкам на строку.
   const deleteService = await call('DELETE', `/api/admin/services/${newServiceId}`, { token: adminToken });
-  check('мягкое удаление услуги -> 200', deleteService.status === 200);
-  check('услуга скрыта из каталога',
-    !(await call('GET', '/api/services')).json.services.some((s) => s.id === newServiceId));
+  check('услуга без записей удаляется из базы -> deleted: true',
+    deleteService.status === 200 && deleteService.json.deleted === true, deleteService.json);
+  check('строки услуги в базе не осталось',
+    db.one('SELECT id FROM services WHERE id = ?', [newServiceId]) === undefined
+    || db.one('SELECT id FROM services WHERE id = ?', [newServiceId]) === null);
 
   const busyService = await call('DELETE', `/api/admin/services/${manicure.id}`, { token: adminToken });
-  check('удаление услуги с активной записью -> 409', busyService.status === 409, busyService.json);
+  check('услуга с записями не удаляется, а отключается -> deleted: false',
+    busyService.status === 200 && busyService.json.deleted === false
+    && busyService.json.appointments > 0, busyService.json);
+  check('ответ объясняет, почему услуга отключена, а не удалена',
+    /есть записи/.test(busyService.json.message || '')
+    && /отключена, а не удалена/.test(busyService.json.message || ''), busyService.json.message);
+  check('отключённая услуга осталась в базе со снимками записей',
+    db.one('SELECT is_active FROM services WHERE id = ?', [manicure.id]).is_active === 0
+    && db.one('SELECT COUNT(*) AS n FROM appointment_services WHERE service_id = ?',
+      [manicure.id]).n > 0);
+  check('клиенту отключённая услуга не показывается',
+    !(await call('GET', '/api/services')).json.services.some((s) => s.id === manicure.id));
+  check('администратор отключённую услугу видит, с пометкой',
+    (await call('GET', '/api/admin/services?include_inactive=1', { token: adminToken }))
+      .json.services.some((s) => s.id === manicure.id && s.is_active === false));
+
+  const restoreService = await call('PATCH', `/api/admin/services/${manicure.id}`, {
+    token: adminToken, body: { is_active: true, is_visible: true },
+  });
+  check('отключённую услугу можно включить обратно -> 200',
+    restoreService.status === 200 && restoreService.json.service.is_active === true,
+    restoreService.json);
+  check('включённая услуга снова в каталоге',
+    (await call('GET', '/api/services')).json.services.some((s) => s.id === manicure.id));
 
   const newMaster = await call('POST', '/api/admin/masters', {
     token: adminToken,
@@ -625,10 +678,23 @@ async function main() {
   check('неизвестный статус -> 400', badStatus.status === 400);
 
   const busyMaster = await call('DELETE', `/api/admin/masters/${master.id}`, { token: adminToken });
-  check('удаление мастера с активной записью -> 409', busyMaster.status === 409, busyMaster.json);
+  check('мастер с записями не удаляется, а отключается -> deleted: false',
+    busyMaster.status === 200 && busyMaster.json.deleted === false
+    && busyMaster.json.appointments > 0, busyMaster.json);
+  check('клиенту отключённый мастер не показывается',
+    !(await call('GET', '/api/masters')).json.masters.some((m) => m.id === master.id));
+  const restoreMaster = await call('PATCH', `/api/admin/masters/${master.id}`, {
+    token: adminToken, body: { is_active: true, is_visible: true },
+  });
+  check('отключённого мастера можно включить обратно -> 200',
+    restoreMaster.status === 200 && restoreMaster.json.master.is_active === true,
+    restoreMaster.json);
 
   const deleteMaster = await call('DELETE', `/api/admin/masters/${newMasterId}`, { token: adminToken });
-  check('мягкое удаление свободного мастера -> 200', deleteMaster.status === 200);
+  check('мастер без записей удаляется из базы -> deleted: true',
+    deleteMaster.status === 200 && deleteMaster.json.deleted === true, deleteMaster.json);
+  check('строки мастера в базе не осталось',
+    !db.one('SELECT id FROM masters WHERE id = ?', [newMasterId]));
 
   console.log('');
   console.log('— Защита от двойной записи —');
@@ -1066,6 +1132,147 @@ async function main() {
   });
   check('hold_token вместе с client_user_id -> 400',
     withHold.status === 400 && !!withHold.json.error.details.hold_token, withHold.json);
+
+  console.log('');
+  console.log('— История визита: отмена, перенос, наложение —');
+
+  // Отмена не удаляет строку, перенос не создаёт новую. Проверяем это на
+  // записи, которую выше перенёс и отменил сам клиент.
+  const marinaHistory = await call('GET', `/api/appointments/${forMarinaId}`, { token: adminToken });
+  const history = marinaHistory.json.appointment.history || [];
+  check('персоналу отдаётся история визита', Array.isArray(history) && history.length >= 3,
+    history.map((e) => e.type));
+  check('в истории есть создание администратором',
+    history.some((e) => e.type === 'created' && e.actor_role === 'admin'), history);
+
+  const moveEvent = history.find((e) => e.type === 'rescheduled');
+  check('перенос сохранил откуда, куда и кем',
+    !!moveEvent && moveEvent.from.at_utc === slotForMarina.at_utc
+    && moveEvent.to.at_utc === moveTarget.at_utc && moveEvent.actor_role === 'client',
+    moveEvent);
+
+  const cancelEvent = history.find((e) => e.type === 'cancelled');
+  check('отмена сохранила, кто отменил и почему',
+    !!cancelEvent && cancelEvent.actor_role === 'client'
+    && cancelEvent.reason === 'Не смогу прийти'
+    && cancelEvent.status === 'cancelled_by_client', cancelEvent);
+
+  check('перенос не создал вторую запись: визит тот же',
+    db.one('SELECT COUNT(*) AS n FROM appointments WHERE id = ?', [forMarinaId]).n === 1
+    && db.one('SELECT reschedule_count FROM appointments WHERE id = ?',
+      [forMarinaId]).reschedule_count === 1);
+
+  check('отменённая запись осталась строкой в базе, а не исчезла',
+    db.one('SELECT status FROM appointments WHERE id = ?',
+      [forMarinaId]).status === 'cancelled_by_client');
+
+  const marinaPast = await call('GET', '/api/appointments?scope=past', { token: marinaToken });
+  const marinaCancelled = marinaPast.json.appointments.find((a) => a.id === forMarinaId);
+  check('в кабинете клиента она видна как отменённая, а не пропала',
+    !!marinaCancelled && marinaCancelled.status === 'cancelled_by_client'
+    && marinaCancelled.status_label === 'Отменена клиентом'
+    && marinaCancelled.cancel_reason === 'Не смогу прийти', marinaCancelled);
+
+  // Дальше — отдельный сценарий на свежем слоте: предыдущие проверки успевают
+  // занять сетку, и опираться на их остатки нельзя.
+  const pairSlot = await findFreeSlot();
+  const firstVisit = await bookFor(adminToken, {
+    starts_at: pairSlot.at_utc, client_user_id: annaUserId,
+  });
+  const overBusy = await bookFor(adminToken, {
+    starts_at: pairSlot.at_utc, client_user_id: marinaId,
+  });
+  check('запись поверх занятого без подтверждения -> 409 с ближайшими слотами',
+    overBusy.status === 409 && overBusy.json.error.details.reason === 'overlap'
+    && Array.isArray(overBusy.json.error.details.nearest_slots), overBusy.json);
+
+  const confirmed = await bookFor(adminToken, {
+    starts_at: pairSlot.at_utc, client_user_id: marinaId, is_override: true,
+  });
+  check('подтверждённое наложение -> 201', confirmed.status === 201, confirmed.json);
+
+  const dayList = await call('GET',
+    `/api/admin/appointments?date_from=${pairSlot.local_date}&date_to=${pairSlot.local_date}`,
+    { token: adminToken });
+  check('список за день отдаёт время в поясе салона, а не только UTC',
+    dayList.status === 200 && dayList.json.appointments.every(
+      (a) => a.starts_at.local_time && a.starts_at.timezone === 'Europe/Moscow'), dayList.json);
+  const overlapped = dayList.json.appointments.filter(
+    (a) => a.starts_at.at_utc === pairSlot.at_utc);
+  check('на одно время в списке видны оба визита, и наложенный помечен',
+    overlapped.length === 2 && overlapped.some((a) => a.is_override === true),
+    overlapped.map((a) => ({ id: a.id, override: a.is_override })));
+
+  // Отмена студией: строка остаётся, причина и автор сохраняются, время
+  // освобождается — проверяем всё это на той же паре.
+  const studioCancel = await call('POST', `/api/appointments/${confirmed.json.appointment.id}/cancel`, {
+    token: adminToken, body: { cancel_reason: 'Мастер заболел' },
+  });
+  check('студия отменяет чужую запись -> cancelled_by_studio',
+    studioCancel.status === 200
+    && studioCancel.json.appointment.status === 'cancelled_by_studio', studioCancel.json);
+
+  const clientSeesCancelled = await call('GET', '/api/appointments?scope=past', { token: marinaToken });
+  const clientCancelledRow = clientSeesCancelled.json.appointments
+    .find((a) => a.id === confirmed.json.appointment.id);
+  check('клиент видит её в кабинете как отменённую студией, с причиной',
+    !!clientCancelledRow && clientCancelledRow.status_label === 'Отменена студией'
+    && clientCancelledRow.cancel_reason === 'Мастер заболел', clientCancelledRow);
+
+  const studioHistory = (await call('GET',
+    `/api/appointments/${confirmed.json.appointment.id}`, { token: adminToken }))
+    .json.appointment.history;
+  check('в истории отмены записан администратор и причина',
+    studioHistory.some((e) => e.type === 'cancelled' && e.actor_role === 'admin'
+      && e.reason === 'Мастер заболел'), studioHistory);
+  check('в истории наложенного визита видно, что он поставлен поверх занятого',
+    studioHistory.some((e) => e.type === 'created' && /поверх занятого/.test(e.reason || '')),
+    studioHistory);
+
+  await call('POST', `/api/appointments/${firstVisit.json.appointment.id}/cancel`, {
+    token: adminToken, body: { cancel_reason: 'Проверка освобождения времени' },
+  });
+  const freedAgain = await call('GET',
+    `/api/masters/${master.id}/availability?date=${pairSlot.local_date}&service_ids=${manicure.id}`);
+  check('после отмены обеих записей время снова свободно',
+    freedAgain.json.slots.some((s) => s.at_utc === pairSlot.at_utc), { looked: pairSlot.at_utc });
+  check('а сами записи из базы никуда не делись',
+    db.one('SELECT COUNT(*) AS n FROM appointments WHERE id IN (?, ?)',
+      [firstVisit.json.appointment.id, confirmed.json.appointment.id]).n === 2);
+
+  console.log('');
+  console.log('— Блокировка времени администратором —');
+
+  const breakSlot = await findFreeSlot();
+  const breakStart = breakSlot.at_utc;
+  const breakEnd = new Date(new Date(breakStart).getTime() + 3600_000).toISOString()
+    .replace('.000', '');
+  const madeBlock = await call('POST', `/api/admin/masters/${master.id}/time-blocks`, {
+    token: adminToken,
+    body: { type: 'break', starts_at: breakStart, ends_at: breakEnd, comment: 'Обед' },
+  });
+  check('администратор блокирует время -> 201', madeBlock.status === 201, madeBlock.json);
+
+  const blockList = await call('GET',
+    `/api/admin/time-blocks?date=${breakSlot.local_date}`, { token: adminToken });
+  const listedBreak = blockList.json.time_blocks.find((b) => b.id === madeBlock.json.time_block.id);
+  check('администратор видит заблокированное время за день',
+    blockList.status === 200 && !!listedBreak && listedBreak.type_label === 'Перерыв'
+    && listedBreak.master_name === master.display_name
+    && listedBreak.starts_at.timezone === 'Europe/Moscow', listedBreak);
+
+  const afterBlock = await call('GET',
+    `/api/masters/${master.id}/availability?date=${breakSlot.local_date}&service_ids=${manicure.id}`);
+  check('заблокированное время клиенту больше не предлагается',
+    !afterBlock.json.slots.some((s) => s.at_utc === breakStart), breakStart);
+
+  const masterStillVisible = await call('GET', '/api/masters');
+  check('мастер при этом остался в списке: закрыты часы, а не он сам',
+    masterStillVisible.json.masters.some((m) => m.id === master.id));
+
+  await call('DELETE',
+    `/api/admin/masters/${master.id}/time-blocks/${madeBlock.json.time_block.id}`,
+    { token: adminToken });
 
   const selfNoConsent = await bookFor(marinaToken, { starts_at: selfSlot.at_utc });
   check('клиент без consent по-прежнему -> 400',
@@ -1656,6 +1863,41 @@ async function main() {
   // Роль берётся из базы по user_id — подставить её запросом некуда.
   check('клиент админским разделом не становится -> 403',
     (await call('GET', '/api/admin/clients', { token: clientToken })).status === 403);
+
+  // Ворота административного раздела одни на все его эндпоинты — requireStaff
+  // (lib/auth.js), на префиксе в app.js и первой строкой в самом роутере.
+  // Проверяется это не выборочно: перебираем ВСЕ маршруты роутера и требуем с
+  // каждого 401 без сессии и 403 у клиента. Эндпоинт, добавленный мимо ворот,
+  // уронит эту проверку сам — ради этого она и перебирает маршруты, а не
+  // перечисляет их списком, который пришлось бы дополнять руками.
+  const adminRouter = require('../src/routes/admin');
+  const adminEndpoints = adminRouter.stack
+    .filter((layer) => layer.route)
+    .flatMap((layer) => Object.keys(layer.route.methods).map((method) => ({
+      method: method.toUpperCase(),
+      // Значения параметров пути на права не влияют: ворота стоят до обработчика.
+      url: `/api/admin${layer.route.path.replace(/:[A-Za-z]+/g, '1')}`,
+    })));
+
+  check('маршруты админского раздела перечислены', adminEndpoints.length >= 19,
+    adminEndpoints.length);
+
+  const anonResults = [];
+  const clientResults = [];
+  for (const endpoint of adminEndpoints) {
+    anonResults.push({
+      ...endpoint, status: (await call(endpoint.method, endpoint.url)).status,
+    });
+    clientResults.push({
+      ...endpoint, status: (await call(endpoint.method, endpoint.url, { token: clientToken })).status,
+    });
+  }
+  check(`без сессии все ${adminEndpoints.length} административных маршрутов -> 401`,
+    anonResults.every((r) => r.status === 401),
+    anonResults.filter((r) => r.status !== 401));
+  check(`клиенту все ${adminEndpoints.length} административных маршрутов -> 403`,
+    clientResults.every((r) => r.status === 403),
+    clientResults.filter((r) => r.status !== 403));
   const forgedRegister = await call('POST', '/api/auth/register', {
     body: {
       name: 'Самозванец', email: 'impostor@example.com', phone: '+79990000777',

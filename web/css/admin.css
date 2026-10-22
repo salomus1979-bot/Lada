@@ -287,6 +287,549 @@ body.adm {
 }
 .adm-btn:hover { background: var(--text-secondary-light); color: var(--accent-primary); text-decoration: none; }
 
+/* ─── Панель над списком ─────────────────────────────────────────────── */
+
+.adm-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+}
+
+.adm-tabs { display: flex; gap: var(--space-1); flex-wrap: wrap; }
+
+.adm-tabs__tab {
+  padding: var(--space-2) var(--space-4);
+  border: 1px solid var(--border-default-light);
+  border-radius: var(--radius-full);
+  background: transparent;
+  color: var(--text-secondary-light);
+  font-family: var(--font-text);
+  font-size: var(--text-body-s);
+  line-height: var(--text-body-s-lh);
+  font-weight: var(--text-h4-weight);
+  cursor: pointer;
+}
+.adm-tabs__tab[aria-selected="true"] {
+  background: var(--text-primary-light);
+  border-color: var(--text-primary-light);
+  color: var(--bg-surface-light);
+}
+
+.adm-count {
+  color: var(--text-muted-light);
+  font-size: var(--text-body-s);
+  line-height: var(--text-body-s-lh);
+}
+
+/* ─── Группы и строки списка ─────────────────────────────────────────── */
+
+.adm-groups { display: flex; flex-direction: column; gap: var(--space-6); }
+
+.adm-group__title {
+  font-family: var(--text-h4-font);
+  font-size: var(--text-h4);
+  line-height: var(--text-h4-lh);
+  font-weight: var(--text-h4-weight);
+  margin-bottom: var(--space-2);
+}
+
+.adm-table {
+  background: var(--bg-surface-light);
+  border: 1px solid var(--border-default-light);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.adm-row {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-4);
+  border-top: 1px solid var(--border-default-light);
+}
+.adm-row:first-child { border-top: none; }
+
+/* Шапка таблицы — та же сетка, подписи колонок. */
+.adm-row--head {
+  background: var(--bg-base-light);
+  color: var(--text-muted-light);
+  font-size: var(--text-label);
+  line-height: var(--text-label-lh);
+  font-weight: var(--text-label-weight);
+  letter-spacing: var(--text-label-tracking);
+  text-transform: var(--text-label-case);
+}
+
+/* Отключённая строка гаснет, но остаётся читаемой: администратор должен
+   видеть её целиком, а не догадываться о ней по пустому месту. */
+.adm-row--off { background: var(--bg-base-light); }
+.adm-row--off .adm-row__name, .adm-row--off .adm-cell { color: var(--text-muted-light); }
+
+.adm-row__name {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+  font-size: var(--text-body-m);
+  line-height: var(--text-body-m-lh);
+  font-weight: var(--text-h4-weight);
+}
+
+.adm-row__note {
+  display: block;
+  margin-top: var(--space-1);
+  color: var(--text-muted-light);
+  font-size: var(--text-body-s);
+  line-height: var(--text-body-s-lh);
+}
+
+.adm-cell {
+  min-width: 0;
+  color: var(--text-secondary-light);
+  font-size: var(--text-body-s);
+  line-height: var(--text-body-s-lh);
+}
+.adm-cell--num { font-variant-numeric: tabular-nums; }
+
+.adm-row__actions { display: flex; align-items: center; gap: var(--space-2); flex-wrap: wrap; }
+
+/* ─── Строка записи за день ──────────────────────────────────────────── */
+
+.adm-row--appt {
+  grid-template-columns:
+    minmax(0, 0.7fr) minmax(0, 1.2fr) minmax(0, 1fr)
+    minmax(0, 1.3fr) minmax(0, 1fr) auto;
+  align-items: start;
+}
+
+/* Отменённая запись остаётся в списке — гаснет, но не исчезает. */
+.adm-row--cancelled { background: var(--bg-base-light); }
+.adm-row--cancelled .adm-row__name, .adm-row--cancelled .adm-cell {
+  color: var(--text-muted-light);
+}
+
+/* Заблокированное время — строка того же списка, но не визит. */
+.adm-row--block { background: var(--bg-base-light); }
+.adm-row--block .adm-cell { color: var(--text-secondary-light); }
+
+/* Наложение: на это время назначено два визита. */
+.adm-row--overlap { box-shadow: inset var(--space-1) 0 0 0 var(--feedback-warning-light); }
+
+/* ─── Переключение дат ───────────────────────────────────────────────── */
+
+.adm-daybar { display: flex; align-items: center; gap: var(--space-2); flex-wrap: wrap; }
+
+.adm-daybar__date {
+  padding: var(--space-2) var(--space-4);
+  border: 1px solid var(--border-default-light);
+  border-radius: var(--radius-sm);
+  background: var(--bg-surface-light);
+  color: var(--text-primary-light);
+  font-family: var(--font-text);
+  font-size: var(--text-body-m);
+  line-height: var(--text-body-m-lh);
+}
+
+.adm-daybar__weekday {
+  color: var(--text-muted-light);
+  font-size: var(--text-body-s);
+  line-height: var(--text-body-s-lh);
+}
+/* Первая буква дня недели — заглавная; `Intl` отдаёт его строчными. */
+.adm-daybar__weekday::first-letter { text-transform: uppercase; }
+
+.adm-toolbar__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+.adm-toolbar__actions select {
+  padding: var(--space-2) var(--space-4);
+  border: 1px solid var(--border-default-light);
+  border-radius: var(--radius-sm);
+  background: var(--bg-surface-light);
+  color: var(--text-primary-light);
+  font-family: var(--font-text);
+  font-size: var(--text-body-s);
+}
+
+/* ─── Действие прямо в строке ────────────────────────────────────────── */
+/* Перенос и отмена спрашивают недостающее здесь же, без модалки: так же
+   сделана отмена записи в кабинете клиента (экран 7). */
+
+.adm-inline {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+  margin-top: var(--space-2);
+  padding-top: var(--space-2);
+  border-top: 1px solid var(--border-default-light);
+}
+.adm-inline[hidden] { display: none; }
+
+.adm-inline__input {
+  padding: var(--space-2) var(--space-4);
+  border: 1px solid var(--border-default-light);
+  border-radius: var(--radius-sm);
+  background: var(--bg-surface-light);
+  color: var(--text-primary-light);
+  font-family: var(--font-text);
+  font-size: var(--text-body-s);
+}
+.adm-inline__input--wide { flex: 1; min-width: calc(var(--space-8) * 6); }
+
+/* ─── Предупреждение о занятом времени ───────────────────────────────── */
+
+.adm-warn {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  align-items: start;
+  padding: var(--space-4);
+  border-radius: var(--radius-md);
+  background: var(--feedback-warning-subtle);
+  border: 1px solid var(--feedback-warning-light);
+  color: var(--feedback-warning-light);
+  font-size: var(--text-body-s);
+  line-height: var(--text-body-s-lh);
+}
+.adm-warn[hidden] { display: none; }
+.adm-warn__slots { color: var(--text-secondary-light); }
+
+.adm-btn--danger { background: var(--feedback-error-light); color: var(--bg-surface-light); }
+.adm-btn--danger:hover { background: var(--text-primary-light); color: var(--accent-primary); }
+
+/* ─── Поиск клиента ──────────────────────────────────────────────────── */
+
+.adm-results { display: flex; flex-direction: column; gap: var(--space-1); }
+
+.adm-results__item {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-4);
+  border: 1px solid var(--border-default-light);
+  border-radius: var(--radius-sm);
+  background: var(--bg-surface-light);
+  color: var(--text-primary-light);
+  font-family: var(--font-text);
+  font-size: var(--text-body-s);
+  text-align: left;
+  cursor: pointer;
+}
+.adm-results__item:hover { background: var(--bg-base-light); }
+.adm-results__note { color: var(--text-muted-light); }
+
+/* ─── Бейджи состояния ───────────────────────────────────────────────── */
+
+.adm-badge {
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-full);
+  font-size: var(--text-caption-mobile);
+  line-height: var(--text-caption-lh);
+  font-weight: var(--text-label-weight);
+  white-space: nowrap;
+}
+.adm-badge--on { background: var(--feedback-success-subtle); color: var(--feedback-success-light); }
+.adm-badge--off { background: var(--feedback-warning-subtle); color: var(--feedback-warning-light); }
+.adm-badge--archived { background: var(--feedback-error-subtle); color: var(--feedback-error-light); }
+.adm-badge--quiet { background: var(--bg-base-light); color: var(--text-muted-light); }
+
+/* ─── Кнопки строки ──────────────────────────────────────────────────── */
+
+.adm-link {
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--accent-text-light);
+  font-family: var(--font-text);
+  font-size: var(--text-body-s);
+  line-height: var(--text-body-s-lh);
+  font-weight: var(--text-h4-weight);
+  cursor: pointer;
+}
+.adm-link:hover { text-decoration: underline; }
+.adm-link--danger { color: var(--feedback-error-light); }
+.adm-link:disabled { color: var(--text-muted-light); cursor: progress; text-decoration: none; }
+
+/* Переключатель «показывать клиентам». Роль switch — настоящая, поэтому
+   состояние читается и с клавиатуры, и скринридером. */
+.adm-switch {
+  width: calc(var(--space-8) + var(--space-2));
+  height: var(--space-6);
+  flex: none;
+  padding: 0;
+  border: 1px solid var(--border-default-light);
+  border-radius: var(--radius-full);
+  background: var(--bg-base-light);
+  cursor: pointer;
+  position: relative;
+}
+.adm-switch::after {
+  content: '';
+  position: absolute;
+  top: var(--space-1);
+  left: var(--space-1);
+  width: var(--space-4);
+  height: var(--space-4);
+  border-radius: var(--radius-full);
+  background: var(--text-muted-light);
+}
+.adm-switch[aria-checked="true"] { background: var(--accent-text-light); border-color: var(--accent-text-light); }
+.adm-switch[aria-checked="true"]::after { left: auto; right: var(--space-1); background: var(--bg-surface-light); }
+.adm-switch:disabled { cursor: progress; }
+
+/* ─── Карточки мастеров ──────────────────────────────────────────────── */
+
+.adm-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(calc(var(--space-8) * 9), 1fr));
+  gap: var(--space-4);
+}
+
+.adm-card--master { display: flex; flex-direction: column; gap: var(--space-2); }
+.adm-card--off { background: var(--bg-base-light); }
+
+.adm-master__head { display: flex; align-items: center; gap: var(--space-2); }
+
+.adm-master__avatar {
+  width: var(--space-8);
+  height: var(--space-8);
+  flex: none;
+  border-radius: var(--radius-full);
+  background: var(--accent-subtle);
+  color: var(--accent-text-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--text-caption);
+  font-weight: var(--text-label-weight);
+}
+
+.adm-master__name {
+  font-family: var(--text-h4-font);
+  font-size: var(--text-h4-mobile);
+  line-height: var(--text-h4-lh);
+  font-weight: var(--text-h4-weight);
+}
+
+.adm-master__spec, .adm-master__bio {
+  color: var(--text-secondary-light);
+  font-size: var(--text-body-s);
+  line-height: var(--text-body-s-lh);
+}
+
+/* Услуги мастера: отметки, что он выполняет. По ним клиенту и подбирается
+   мастер — `GET /masters?service_ids=…` оставляет тех, кто делает все. */
+.adm-chips { display: flex; flex-wrap: wrap; gap: var(--space-1); }
+
+.adm-chip {
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-full);
+  background: var(--bg-base-light);
+  border: 1px solid var(--border-default-light);
+  color: var(--text-secondary-light);
+  font-size: var(--text-caption-mobile);
+  line-height: var(--text-caption-lh);
+}
+.adm-chip--empty { background: var(--feedback-warning-subtle); border-color: var(--feedback-warning-light); color: var(--feedback-warning-light); }
+
+.adm-master__foot {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+  margin-top: auto;
+  padding-top: var(--space-2);
+  border-top: 1px solid var(--border-default-light);
+}
+
+/* ─── Модалка формы ──────────────────────────────────────────────────── */
+
+.adm-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 2;
+  display: flex;
+  align-items: start;
+  justify-content: center;
+  padding: var(--space-8) var(--space-4);
+  background: var(--accent-subtle);
+  overflow: auto;
+}
+.adm-modal[hidden] { display: none; }
+
+.adm-modal__box {
+  width: 100%;
+  max-width: calc(var(--space-8) * 17);
+  background: var(--bg-surface-light);
+  border: 1px solid var(--border-default-light);
+  border-radius: var(--radius-lg);
+  padding: var(--space-6);
+}
+
+.adm-modal__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  margin-bottom: var(--space-4);
+}
+
+.adm-modal__title {
+  font-family: var(--text-h3-font);
+  font-size: var(--text-h3);
+  line-height: var(--text-h3-lh);
+  font-weight: var(--text-h3-weight);
+}
+
+.adm-modal__foot {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-2);
+  margin-top: var(--space-6);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--border-default-light);
+}
+
+.adm-btn--ghost {
+  background: transparent;
+  border: 1px solid var(--border-default-light);
+  color: var(--text-secondary-light);
+}
+.adm-btn--ghost:hover { background: var(--bg-base-light); color: var(--text-primary-light); }
+
+/* ─── Поля формы ─────────────────────────────────────────────────────── */
+
+.adm-form { display: flex; flex-direction: column; gap: var(--space-4); }
+.adm-form__row { display: flex; gap: var(--space-4); flex-wrap: wrap; }
+.adm-form__row > .field { flex: 1; min-width: calc(var(--space-8) * 5); }
+
+.adm-form .field { display: flex; flex-direction: column; gap: var(--space-1); }
+
+.adm-form .field__label {
+  color: var(--text-secondary-light);
+  font-size: var(--text-body-s);
+  line-height: var(--text-body-s-lh);
+  font-weight: var(--text-h4-weight);
+}
+
+.adm-form input[type="text"],
+.adm-form input[type="number"],
+.adm-form textarea,
+.adm-form select {
+  width: 100%;
+  padding: calc(var(--space-2) + var(--space-1)) var(--space-4);
+  border: 1px solid var(--border-default-light);
+  border-radius: var(--radius-sm);
+  background: var(--bg-surface-light);
+  color: var(--text-primary-light);
+  font-family: var(--font-text);
+  font-size: var(--text-body-m);
+  line-height: var(--text-body-m-lh);
+}
+.adm-form textarea { resize: vertical; min-height: calc(var(--space-8) * 2); }
+.adm-form input:disabled, .adm-form textarea:disabled {
+  background: var(--bg-base-light);
+  color: var(--text-muted-light);
+}
+
+.adm-form .field--invalid input,
+.adm-form .field--invalid textarea,
+.adm-form .field--invalid select { border-color: var(--feedback-error-light); }
+
+.adm-form .field__hint {
+  color: var(--feedback-error-light);
+  font-size: var(--text-caption);
+  line-height: var(--text-caption-lh);
+}
+.adm-form .field__hint[hidden] { display: none; }
+
+.adm-form .field__note {
+  color: var(--text-muted-light);
+  font-size: var(--text-caption);
+  line-height: var(--text-caption-lh);
+}
+
+/* Чекбоксы: услуги мастера и «показывать клиентам». */
+.adm-check {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--text-primary-light);
+  font-size: var(--text-body-s);
+  line-height: var(--text-body-s-lh);
+}
+.adm-check input { accent-color: var(--accent-text-light); }
+
+.adm-checks { display: flex; flex-direction: column; gap: var(--space-2); }
+.adm-checks__group { display: flex; flex-direction: column; gap: var(--space-1); }
+.adm-checks__title {
+  color: var(--text-muted-light);
+  font-size: var(--text-label);
+  line-height: var(--text-label-lh);
+  font-weight: var(--text-label-weight);
+  letter-spacing: var(--text-label-tracking);
+  text-transform: var(--text-label-case);
+}
+
+/* Общая ошибка формы — ответ сервера целиком. */
+.adm-form .form-error {
+  padding: calc(var(--space-2) + var(--space-1)) var(--space-4);
+  border-radius: var(--radius-md);
+  background: var(--feedback-error-subtle);
+  border: 1px solid var(--feedback-error-light);
+  color: var(--feedback-error-light);
+  font-size: var(--text-body-s);
+  line-height: var(--text-body-s-lh);
+}
+.adm-form .form-error[hidden] { display: none; }
+
+/* ─── Сообщение о результате действия ────────────────────────────────── */
+/* Сюда уходит ответ сервера на «Удалить»: что именно он сделал и почему. */
+
+.adm-note {
+  padding: calc(var(--space-2) + var(--space-1)) var(--space-4);
+  border-radius: var(--radius-md);
+  background: var(--feedback-info-subtle);
+  border: 1px solid var(--feedback-info-light);
+  color: var(--feedback-info-light);
+  font-size: var(--text-body-s);
+  line-height: var(--text-body-s-lh);
+}
+.adm-note[hidden] { display: none; }
+.adm-note--done { background: var(--feedback-success-subtle); border-color: var(--feedback-success-light); color: var(--feedback-success-light); }
+
+/* ─── Заглушки на время загрузки ─────────────────────────────────────── */
+
+.adm-skeleton {
+  display: block;
+  height: var(--space-4);
+  border-radius: var(--radius-sm);
+  background: var(--border-default-light);
+}
+
+/* Пустой ответ: строка вместо списка — её рисует общий fillEmpty из ui.js. */
+.adm .empty-note {
+  margin: 0;
+  padding: var(--space-6);
+  background: var(--bg-surface-light);
+  border: 1px solid var(--border-default-light);
+  border-radius: var(--radius-lg);
+  color: var(--text-secondary-light);
+  font-size: var(--text-body-m);
+  line-height: var(--text-body-m-lh);
+}
+
+/* Кнопка на время запроса — состояние из общего submitting (auth-form.js). */
+.adm-btn:disabled, .adm-btn--loading { cursor: progress; }
+
 /* ─── Ошибка на экране ───────────────────────────────────────────────── */
 /* Классы те же, что в landing.css: сообщение об ошибке на любой странице
    рисует общий showError из js/ui.js (правило 7). Здесь они в светлой теме. */
@@ -396,6 +939,11 @@ body.adm--plain { display: block; }
   .adm-side__role { margin: 0; }
   .adm-nav { flex-direction: row; flex-wrap: wrap; flex-basis: 100%; }
   .adm-user { border-top: none; padding: 0; }
+  /* Строки списков на узком экране становятся карточками: шесть колонок
+     туда не помещаются, а горизонтальной прокрутки в прототипе нет. */
+  .adm-row, .adm-row--appt { grid-template-columns: 1fr; gap: var(--space-1); }
+  .adm-row--head { display: none; }
+  .adm-row__actions { margin-top: var(--space-2); }
   .adm-top { position: static; padding: var(--space-4); }
   .adm-top__title { font-size: var(--text-h2-mobile); }
   .adm__content { padding: var(--space-4); }

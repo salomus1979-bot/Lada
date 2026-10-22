@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Лада — админ: записи</title>
+<meta name="description" content="Админ-панель студии «Лада»: записи студии за день.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/tokens.css">
+<!-- Админка — светлая тема дизайн-системы, поэтому landing.css (тёмная база)
+     здесь не подключается. Почему — в начале css/admin.css. -->
+<link rel="stylesheet" href="/css/admin.css">
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js" defer></script>
+<script type="module" src="/js/admin-appointments.js"></script>
+</head>
+<body class="adm">
+
+<!-- ─── Сайдбар админ-панели ───────────────────────────────────────────────
+     Образец — `23. Админ - Записи.dc.html`; сайдбар тот же, что на остальных
+     административных экранах прототипа.
+──────────────────────────────────────────────────────────────────────────── -->
+<aside class="adm-side">
+  <a class="adm-side__logo" href="/admin/appointments">Лада</a>
+  <span class="adm-side__role">Администратор</span>
+
+  <nav class="adm-nav" aria-label="Разделы админ-панели">
+    <a class="adm-nav__item adm-nav__item--current" href="/admin/appointments" aria-current="page">
+      <i class="icon" data-lucide="list" aria-hidden="true"></i>Записи
+    </a>
+    <a class="adm-nav__item" href="/admin/services">
+      <i class="icon" data-lucide="droplet" aria-hidden="true"></i>Услуги
+    </a>
+    <a class="adm-nav__item" href="/admin/masters">
+      <i class="icon" data-lucide="user-cog" aria-hidden="true"></i>Мастера
+    </a>
+  </nav>
+
+  <div class="adm-user" data-user="block" aria-busy="true">
+    <span class="adm-user__avatar" data-user="initials" aria-hidden="true"></span>
+    <div class="adm-user__text">
+      <span class="adm-user__name" data-user="name"></span>
+      <!-- «Выйти» — не ссылка: это запрос POST /auth/logout, после него лендинг. -->
+      <button class="adm-user__logout" type="button" data-action="logout">Выйти</button>
+    </div>
+  </div>
+</aside>
+
+<div class="adm__body">
+
+  <header class="adm-top">
+    <h1 class="adm-top__title">Записи</h1>
+    <a class="adm-top__site" href="/">На сайт →</a>
+  </header>
+
+  <main class="adm__content">
+    <p class="load-error" data-error="me" role="status" hidden></p>
+
+    <!-- ─── Переключение дат и фильтр по мастеру ────────────────────────── -->
+    <div class="adm-toolbar">
+      <div class="adm-daybar">
+        <button class="adm-link" type="button" data-action="prev-day" aria-label="Предыдущий день">‹</button>
+        <!-- Дата — календарная, в поясе студии: её же понимает API
+             (`date_from` / `date_to`). -->
+        <input class="adm-daybar__date" type="date" data-date aria-label="Дата">
+        <button class="adm-link" type="button" data-action="next-day" aria-label="Следующий день">›</button>
+        <button class="adm-link" type="button" data-action="today">Сегодня</button>
+        <span class="adm-daybar__weekday" data-weekday></span>
+      </div>
+
+      <div class="adm-toolbar__actions">
+        <label class="adm-check">
+          <span class="field__label">Мастер</span>
+          <select data-master-filter aria-label="Фильтр по мастеру">
+            <option value="">Все мастера</option>
+          </select>
+        </label>
+        <button class="adm-btn adm-btn--ghost" type="button" data-action="block">
+          <i class="icon" data-lucide="ban" aria-hidden="true"></i>Заблокировать время
+        </button>
+        <button class="adm-btn" type="button" data-action="new">
+          <i class="icon" data-lucide="plus" aria-hidden="true"></i>Новая запись
+        </button>
+      </div>
+    </div>
+
+    <p class="adm-note" data-note role="status" hidden></p>
+    <p class="load-error" data-error="day" role="status" hidden></p>
+
+    <div class="adm-table" data-list="day" aria-busy="true">
+      <div class="adm-row adm-row--appt adm-row--head">
+        <span>Время</span><span>Клиент</span><span>Мастер</span>
+        <span>Услуги</span><span>Состояние</span><span>Действия</span>
+      </div>
+      <div class="adm-row adm-row--appt"><span class="adm-skeleton"></span></div>
+      <div class="adm-row adm-row--appt"><span class="adm-skeleton"></span></div>
+    </div>
+  </main>
+</div>
+
+<!-- ─── Блокировка времени ───────────────────────────────────────────────
+     Перерыв, выходной, отпуск или больничный. Это не отключение мастера: он
+     остаётся на сайте, недоступны только эти часы — расчёт доступности
+     вычитает блокировки, и клиенту такие слоты не показываются.
+──────────────────────────────────────────────────────────────────────────── -->
+<div class="adm-modal" data-modal="block" hidden>
+  <div class="adm-modal__box" role="dialog" aria-modal="true" aria-labelledby="block-title">
+    <div class="adm-modal__head">
+      <h2 class="adm-modal__title" id="block-title">Заблокировать время</h2>
+      <button class="adm-link" type="button" data-action="close" aria-label="Закрыть">✕</button>
+    </div>
+
+    <form class="adm-form" id="block-form" novalidate>
+      <p class="form-error" data-form-error role="alert" hidden><span data-form-error-text></span></p>
+
+      <div class="adm-form__row">
+        <div class="field">
+          <label class="field__label" for="block_master">Мастер</label>
+          <select id="block_master" name="master_id"></select>
+          <span class="field__hint" data-error-for="master_id" hidden></span>
+        </div>
+        <div class="field">
+          <label class="field__label" for="block_type">Причина</label>
+          <select id="block_type" name="type">
+            <option value="break">Перерыв</option>
+            <option value="time_off">Выходной</option>
+            <option value="vacation">Отпуск</option>
+            <option value="sick_leave">Больничный</option>
+          </select>
+          <span class="field__hint" data-error-for="type" hidden></span>
+        </div>
+      </div>
+
+      <div class="adm-form__row">
+        <div class="field">
+          <label class="field__label" for="block_from">С</label>
+          <input id="block_from" name="from" type="time" step="300" value="10:00">
+          <span class="field__hint" data-error-for="starts_at" hidden></span>
+        </div>
+        <div class="field">
+          <label class="field__label" for="block_to">До</label>
+          <input id="block_to" name="to" type="time" step="300" value="20:00">
+          <span class="field__hint" data-error-for="ends_at" hidden></span>
+        </div>
+      </div>
+
+      <label class="adm-check">
+        <input id="block_whole_day" name="whole_day" type="checkbox">
+        Весь день
+      </label>
+
+      <div class="field">
+        <label class="field__label" for="block_comment">Комментарий</label>
+        <input id="block_comment" name="comment" type="text" maxlength="500" placeholder="Обед">
+        <span class="field__hint" data-error-for="comment" hidden></span>
+      </div>
+
+      <p class="field__note" data-block-day></p>
+
+      <div class="adm-modal__foot">
+        <button class="adm-btn adm-btn--ghost" type="button" data-action="close">Отмена</button>
+        <button class="adm-btn" type="submit">Заблокировать</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ─── Новая запись за клиента ─────────────────────────────────────────
+     Образец — `24. Админ - Новая запись за клиента.dc.html`. Проверку
+     занятости форма не обходит: сначала запрос уходит как обычный, и только
+     если сервер ответил 409, администратору показывается предупреждение с
+     кнопкой подтверждения.
+──────────────────────────────────────────────────────────────────────────── -->
+<div class="adm-modal" data-modal="new" hidden>
+  <div class="adm-modal__box" role="dialog" aria-modal="true" aria-labelledby="new-title">
+    <div class="adm-modal__head">
+      <h2 class="adm-modal__title" id="new-title">Новая запись</h2>
+      <button class="adm-link" type="button" data-action="close" aria-label="Закрыть">✕</button>
+    </div>
+
+    <form class="adm-form" id="new-form" novalidate>
+      <p class="form-error" data-form-error role="alert" hidden><span data-form-error-text></span></p>
+
+      <div class="field">
+        <label class="field__label" for="client_query">Клиент</label>
+        <input id="client_query" name="client_query" type="text"
+               placeholder="Имя, телефон или e-mail" autocomplete="off">
+        <div class="adm-results" data-client-results></div>
+        <span class="field__note" data-client-chosen>Клиент не выбран</span>
+        <span class="field__hint" data-error-for="client_user_id" hidden></span>
+      </div>
+
+      <div class="field">
+        <span class="field__label">Услуги</span>
+        <div class="adm-checks" data-services></div>
+        <span class="field__hint" data-error-for="service_ids" hidden></span>
+      </div>
+
+      <div class="adm-form__row">
+        <div class="field">
+          <label class="field__label" for="new_master">Мастер</label>
+          <select id="new_master" name="master_id"></select>
+          <span class="field__note" data-master-note></span>
+          <span class="field__hint" data-error-for="master_id" hidden></span>
+        </div>
+        <div class="field">
+          <label class="field__label" for="new_time">Время</label>
+          <input id="new_time" name="time" type="time" step="300">
+          <span class="field__note" data-new-day></span>
+          <span class="field__hint" data-error-for="starts_at" hidden></span>
+        </div>
+      </div>
+
+      <div class="adm-form__row">
+        <div class="field">
+          <label class="field__label" for="new_source">Источник</label>
+          <select id="new_source" name="source">
+            <option value="phone">Телефон</option>
+            <option value="in_person">Лично</option>
+            <option value="whatsapp">WhatsApp</option>
+          </select>
+        </div>
+        <div class="field">
+          <label class="field__label" for="new_comment">Комментарий мастеру</label>
+          <input id="new_comment" name="client_comment" type="text" maxlength="1000">
+        </div>
+      </div>
+
+      <!-- Предупреждение о занятом времени: его текст приходит от сервера
+           вместе с ближайшими свободными началами. Пока администратор не
+           подтвердил, запись не создаётся. -->
+      <div class="adm-warn" data-overlap hidden>
+        <p class="adm-warn__text" data-overlap-text></p>
+        <p class="adm-warn__slots" data-overlap-slots></p>
+        <button class="adm-btn adm-btn--danger" type="button" data-action="force">
+          Да, записать поверх занятого
+        </button>
+      </div>
+
+      <div class="adm-modal__foot">
+        <button class="adm-btn adm-btn--ghost" type="button" data-action="close">Отмена</button>
+        <button class="adm-btn" type="submit">Создать запись</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ─── Шаблоны строк ─────────────────────────────────────────────────── -->
+
+<template id="tpl-appt">
+  <div class="adm-row adm-row--appt">
+    <span class="adm-cell adm-cell--num adm-row__name" data-cell="time"></span>
+    <span class="adm-cell">
+      <span class="adm-row__name" data-cell="client"></span>
+      <span class="adm-row__note" data-cell="phone"></span>
+    </span>
+    <span class="adm-cell" data-cell="master"></span>
+    <span class="adm-cell" data-cell="services"></span>
+    <span class="adm-cell">
+      <span class="adm-badge" data-cell="state"></span>
+      <span class="adm-row__note" data-cell="marks"></span>
+    </span>
+    <span class="adm-row__actions">
+      <button class="adm-link" type="button" data-action="move">Перенести</button>
+      <button class="adm-link adm-link--danger" type="button" data-action="cancel">Отменить</button>
+    </span>
+
+    <!-- Перенос: время меняется у той же записи, новая не создаётся. -->
+    <form class="adm-inline" data-form="move" hidden>
+      <label class="field__label" for="">Новое время</label>
+      <input class="adm-inline__input" type="time" step="300" data-move-time>
+      <input class="adm-inline__input" type="date" data-move-date>
+      <button class="adm-btn" type="submit">Перенести</button>
+      <button class="adm-link" type="button" data-action="move-cancel">Отмена</button>
+    </form>
+
+    <!-- Отмена: строка останется в списке с пометкой, время освободится. -->
+    <form class="adm-inline" data-form="cancel" hidden>
+      <label class="field__label" for="">Причина отмены</label>
+      <input class="adm-inline__input adm-inline__input--wide" type="text" maxlength="500"
+             placeholder="Мастер заболел" data-cancel-reason>
+      <button class="adm-btn adm-btn--danger" type="submit">Отменить запись</button>
+      <button class="adm-link" type="button" data-action="cancel-cancel">Нет</button>
+    </form>
+  </div>
+</template>
+
+<template id="tpl-block">
+  <div class="adm-row adm-row--appt adm-row--block">
+    <span class="adm-cell adm-cell--num adm-row__name" data-cell="time"></span>
+    <span class="adm-cell" data-cell="type"></span>
+    <span class="adm-cell" data-cell="master"></span>
+    <span class="adm-cell" data-cell="comment"></span>
+    <span class="adm-cell"><span class="adm-badge adm-badge--quiet">Время закрыто</span></span>
+    <span class="adm-row__actions">
+      <button class="adm-link" type="button" data-action="unblock">Снять</button>
+    </span>
+  </div>
+</template>
+
+<template id="tpl-client-result">
+  <button class="adm-results__item" type="button">
+    <span class="adm-results__name"></span>
+    <span class="adm-results__note"></span>
+  </button>
+</template>
+
+</body>
+</html>

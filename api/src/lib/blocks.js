@@ -22,6 +22,14 @@ const { nowUtc, utcToZoned } = require('./time');
 /** Типы блокировок со страницы 39: перерыв, отгул, отпуск, больничный. */
 const BLOCK_TYPES = ['break', 'time_off', 'vacation', 'sick_leave'];
 
+/** Подписи типов — одни на кабинет мастера и на админский раздел. */
+const BLOCK_LABELS = {
+  break: 'Перерыв',
+  time_off: 'Выходной',
+  vacation: 'Отпуск',
+  sick_leave: 'Больничный',
+};
+
 /**
  * Поставить блокировку времени.
  *
@@ -113,4 +121,32 @@ function listTimeBlocks(masterId, fromUtc, toUtc) {
   );
 }
 
-module.exports = { BLOCK_TYPES, createTimeBlock, deleteTimeBlock, listTimeBlocks };
+/**
+ * Блокировки всех мастеров (или одного) в диапазоне — сетка дня у
+ * администратора.
+ *
+ * До этой функции прочитать блокировки мог только сам мастер
+ * (`GET /api/master/time-blocks`), и администратор ставил их вслепую: в его
+ * разделе чтения не было вовсе (пробел 4 списка в docs/ui-map.md).
+ */
+function listTimeBlocksInRange(fromUtc, toUtc, masterId = null) {
+  const where = ['b.starts_at_utc < ?', 'b.ends_at_utc > ?'];
+  const params = [toUtc, fromUtc];
+  if (masterId) {
+    where.push('b.master_id = ?');
+    params.push(masterId);
+  }
+  return db.all(
+    `SELECT b.id, b.master_id, b.type, b.starts_at_utc, b.ends_at_utc, b.comment,
+            m.first_name AS master_first_name, m.last_name AS master_last_name
+       FROM time_blocks b
+       JOIN masters m ON m.id = b.master_id
+      WHERE ${where.join(' AND ')}
+      ORDER BY b.starts_at_utc, b.id`,
+    params,
+  );
+}
+
+module.exports = {
+  BLOCK_TYPES, BLOCK_LABELS, createTimeBlock, deleteTimeBlock, listTimeBlocks, listTimeBlocksInRange,
+};

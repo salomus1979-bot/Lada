@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Лада — админ: мастера</title>
+<meta name="description" content="Админ-панель студии «Лада»: мастера студии.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/tokens.css">
+<!-- Админка — светлая тема дизайн-системы, поэтому landing.css (тёмная база)
+     здесь не подключается. Почему — в начале css/admin.css. -->
+<link rel="stylesheet" href="/css/admin.css">
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js" defer></script>
+<script type="module" src="/js/admin-masters.js"></script>
+</head>
+<body class="adm">
+
+<!-- ─── Сайдбар админ-панели ───────────────────────────────────────────────
+     Образец — `28. Админ - Мастера.dc.html`; сайдбар тот же, что на остальных
+     административных экранах прототипа.
+──────────────────────────────────────────────────────────────────────────── -->
+<aside class="adm-side">
+  <a class="adm-side__logo" href="/admin/appointments">Лада</a>
+  <span class="adm-side__role">Администратор</span>
+
+  <nav class="adm-nav" aria-label="Разделы админ-панели">
+    <a class="adm-nav__item" href="/admin/appointments">
+      <i class="icon" data-lucide="list" aria-hidden="true"></i>Записи
+    </a>
+    <a class="adm-nav__item" href="/admin/services">
+      <i class="icon" data-lucide="droplet" aria-hidden="true"></i>Услуги
+    </a>
+    <a class="adm-nav__item adm-nav__item--current" href="/admin/masters" aria-current="page">
+      <i class="icon" data-lucide="user-cog" aria-hidden="true"></i>Мастера
+    </a>
+  </nav>
+
+  <div class="adm-user" data-user="block" aria-busy="true">
+    <span class="adm-user__avatar" data-user="initials" aria-hidden="true"></span>
+    <div class="adm-user__text">
+      <span class="adm-user__name" data-user="name"></span>
+      <!-- «Выйти» — не ссылка: это запрос POST /auth/logout, после него лендинг. -->
+      <button class="adm-user__logout" type="button" data-action="logout">Выйти</button>
+    </div>
+  </div>
+</aside>
+
+<div class="adm__body">
+
+  <header class="adm-top">
+    <h1 class="adm-top__title">Мастера</h1>
+    <a class="adm-top__site" href="/">На сайт →</a>
+  </header>
+
+  <main class="adm__content">
+    <p class="load-error" data-error="me" role="status" hidden></p>
+
+    <div class="adm-toolbar">
+      <!-- Отключённых мастеров администратор видит наравне с работающими. -->
+      <div class="adm-tabs" role="tablist" aria-label="Каких мастеров показывать">
+        <button class="adm-tabs__tab" type="button" role="tab" data-tab="all" aria-selected="true">Все</button>
+        <button class="adm-tabs__tab" type="button" role="tab" data-tab="on" aria-selected="false">Работают</button>
+        <button class="adm-tabs__tab" type="button" role="tab" data-tab="off" aria-selected="false">Отключённые</button>
+      </div>
+      <button class="adm-btn" type="button" data-action="new">
+        <i class="icon" data-lucide="plus" aria-hidden="true"></i>Добавить мастера
+      </button>
+    </div>
+
+    <!-- Ответ сервера на «Удалить»: удалил он строку или отключил и почему. -->
+    <p class="adm-note" data-note role="status" hidden></p>
+    <p class="load-error" data-error="masters" role="status" hidden></p>
+
+    <div class="adm-cards" data-list="masters" aria-busy="true">
+      <article class="adm-card adm-card--master"><span class="adm-skeleton"></span></article>
+      <article class="adm-card adm-card--master"><span class="adm-skeleton"></span></article>
+      <article class="adm-card adm-card--master"><span class="adm-skeleton"></span></article>
+    </div>
+  </main>
+</div>
+
+<!-- ─── Форма мастера ────────────────────────────────────────────────────
+     Образец — `29. Админ - Карточка мастера (форма).dc.html`. Из блоков
+     экрана здесь только те, что обеспечены API: «Основное», «Услуги» и
+     «Отображение на сайте». Доступа в систему, модерации и статистики в API
+     нет — см. список пробелов в docs/ui-map.md.
+──────────────────────────────────────────────────────────────────────────── -->
+<div class="adm-modal" data-modal hidden>
+  <div class="adm-modal__box" role="dialog" aria-modal="true" aria-labelledby="form-title">
+    <div class="adm-modal__head">
+      <h2 class="adm-modal__title" id="form-title" data-form-title>Новый мастер</h2>
+      <button class="adm-link" type="button" data-action="close" aria-label="Закрыть">✕</button>
+    </div>
+
+    <form class="adm-form" id="master-form" novalidate>
+      <p class="form-error" data-form-error role="alert" hidden>
+        <span data-form-error-text></span>
+      </p>
+
+      <div class="adm-form__row">
+        <div class="field">
+          <label class="field__label" for="first_name">Имя</label>
+          <input id="first_name" name="first_name" type="text" maxlength="100" placeholder="Ольга">
+          <span class="field__hint" data-error-for="first_name" hidden></span>
+        </div>
+        <div class="field">
+          <label class="field__label" for="last_name">Фамилия</label>
+          <input id="last_name" name="last_name" type="text" maxlength="100" placeholder="Белова">
+          <span class="field__hint" data-error-for="last_name" hidden></span>
+        </div>
+      </div>
+
+      <div class="adm-form__row">
+        <div class="field">
+          <label class="field__label" for="specialization">Специализация</label>
+          <input id="specialization" name="specialization" type="text" maxlength="200" placeholder="Маникюр, брови">
+          <span class="field__hint" data-error-for="specialization" hidden></span>
+        </div>
+        <div class="field">
+          <label class="field__label" for="experience_years">Стаж, лет</label>
+          <input id="experience_years" name="experience_years" type="number" min="0" max="80" placeholder="6">
+          <span class="field__hint" data-error-for="experience_years" hidden></span>
+        </div>
+      </div>
+
+      <div class="field">
+        <label class="field__label" for="bio">Описание для сайта</label>
+        <textarea id="bio" name="bio" maxlength="300" rows="2"></textarea>
+        <span class="field__hint" data-error-for="bio" hidden></span>
+      </div>
+
+      <!-- Отметки услуг: по ним клиенту и подбирается мастер. На шаге 2
+           воронки `GET /masters?service_ids=…` оставляет только тех, кто
+           выполняет ВСЕ выбранные услуги визита. -->
+      <div class="field">
+        <span class="field__label">Какие услуги выполняет</span>
+        <span class="field__note">
+          Клиент увидит мастера, только если тот выполняет все услуги его визита.
+        </span>
+        <div class="adm-checks" data-services></div>
+        <span class="field__hint" data-error-for="service_ids" hidden></span>
+      </div>
+
+      <div class="adm-form__row">
+        <div class="field">
+          <label class="field__label" for="sort_order">Порядок в списке</label>
+          <input id="sort_order" name="sort_order" type="number" min="0" max="9999" placeholder="0">
+          <span class="field__hint" data-error-for="sort_order" hidden></span>
+        </div>
+      </div>
+
+      <label class="adm-check">
+        <input id="is_visible" name="is_visible" type="checkbox" checked>
+        Показывать клиентам на сайте и при записи
+      </label>
+
+      <div class="adm-modal__foot">
+        <button class="adm-btn adm-btn--ghost" type="button" data-action="close">Отмена</button>
+        <button class="adm-btn" type="submit">Сохранить</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ─── Шаблоны ───────────────────────────────────────────────────────── -->
+
+<template id="tpl-master">
+  <article class="adm-card adm-card--master">
+    <div class="adm-master__head">
+      <span class="adm-master__avatar" data-cell="initials" aria-hidden="true"></span>
+      <div>
+        <span class="adm-master__name" data-cell="name"></span>
+        <span class="adm-badge" data-cell="state"></span>
+      </div>
+    </div>
+    <p class="adm-master__spec" data-cell="spec"></p>
+    <p class="adm-master__bio" data-cell="bio"></p>
+    <div class="adm-chips" data-cell="services"></div>
+    <div class="adm-master__foot">
+      <button class="adm-switch" type="button" role="switch" data-action="toggle"></button>
+      <button class="adm-link" type="button" data-action="edit">Изменить</button>
+      <button class="adm-link adm-link--danger" type="button" data-action="delete">Удалить</button>
+    </div>
+  </article>
+</template>
+
+<template id="tpl-check-group">
+  <div class="adm-checks__group">
+    <span class="adm-checks__title"></span>
+  </div>
+</template>
+
+<template id="tpl-check">
+  <label class="adm-check">
+    <input type="checkbox" name="service">
+    <span></span>
+  </label>
+</template>
+
+</body>
+</html>

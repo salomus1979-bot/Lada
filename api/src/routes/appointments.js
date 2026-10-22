@@ -13,7 +13,7 @@ const { ACTIVE_STATUSES } = require('../lib/availability');
 const { nowUtc, diffMinutes } = require('../lib/time');
 const { appointmentView, appointmentAdminView } = require('../lib/presenters');
 const {
-  APPOINTMENT_COLUMNS, fetchAppointment, fetchServices, assertMayModify,
+  APPOINTMENT_COLUMNS, fetchAppointment, fetchServices, fetchEvents, assertMayModify,
   createAppointment, rescheduleAppointment, cancelAppointment,
 } = require('../lib/booking');
 
@@ -45,9 +45,15 @@ const ownerResponse = (row, services, settings) => ({
   }),
 });
 
-/** Запись в том виде, в котором её видит персонал: с данными клиента. */
+/**
+ * Запись в том виде, в котором её видит персонал: с данными клиента и
+ * историей — кто создал, кто переносил откуда и куда, кто отменил и почему.
+ */
 const staffResponse = (row, services, settings) => ({
-  appointment: appointmentAdminView(row, services, { timezone: settings.timezone }),
+  appointment: appointmentAdminView(row, services, {
+    timezone: settings.timezone,
+    events: fetchEvents(row.id),
+  }),
 });
 
 /**

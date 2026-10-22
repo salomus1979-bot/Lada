@@ -2,21 +2,26 @@
 
 const express = require('express');
 const db = require('../lib/db');
-const { requireRole, noLoginHash, grantRole, isOwner, PASSWORD_SCHEME } = require('../lib/auth');
+const { requireStaff, noLoginHash, grantRole, isOwner, PASSWORD_SCHEME } = require('../lib/auth');
 const { Validator, requireIdParam } = require('../lib/validate');
 const { badRequest, conflict, forbidden, notFound } = require('../lib/errors');
 const { ACTIVE_STATUSES } = require('../lib/availability');
-const { nowUtc, zonedToUtc, toUtcIso, addDays } = require('../lib/time');
+const { nowUtc, zonedToUtc, toUtcIso, addDays, presentInstant } = require('../lib/time');
 const {
   serviceAdminView, masterAdminView, appointmentAdminView, clientAdminView, STATUS_LABELS,
 } = require('../lib/presenters');
-const { changeAppointmentStatus } = require('../lib/booking');
-const { createTimeBlock, deleteTimeBlock } = require('../lib/blocks');
+const { changeAppointmentStatus, fetchEventsFor } = require('../lib/booking');
+const {
+  createTimeBlock, deleteTimeBlock, listTimeBlocksInRange, BLOCK_LABELS,
+} = require('../lib/blocks');
 
 const router = express.Router();
 
-// Весь раздел доступен только персоналу студии.
-router.use(requireRole('admin', 'owner'));
+// ВОРОТА РАЗДЕЛА. Одна общая функция на все административные запросы —
+// requireStaff из lib/auth.js; там же описано, почему она стоит и здесь, и на
+// префиксе в app.js. Своей проверки роли у эндпоинтов ниже нет: любой новый
+// маршрут этого роутера получает защиту тем, что он в нём.
+router.use(requireStaff);
 
 const STATUSES = Object.keys(STATUS_LABELS);
 
@@ -104,12 +109,18 @@ router.get('/appointments', (req, res) => {
     }
   }
 
+  // История визитов: кто перенёс и откуда, кто отменил и почему. Список за
+  // день показывает это прямо в строке, поэтому события приходят вместе с
+  // записями — одним запросом на всю страницу, а не по одному на строку.
+  const events = fetchEventsFor(rows.map((r) => r.id));
+
   res.json({
     total,
     limit,
     offset,
     appointments: rows.map((row) => appointmentAdminView(
-      row, services.get(row.id) || [], { timezone: settings.timezone },
+      row, services.get(row.id) || [],
+      { timezone: settings.timezone, events: events.get(row.id) || [] },
     )),
   });
 });
@@ -393,6 +404,24 @@ router.get('/services', (req, res) => {
   res.json({ services: rows.map(serviceAdminView) });
 });
 
+/**
+ * Цена услуги. Проверок две, и они о разном:
+ *   - положительность: услуга за ноль рублей — это не цена, а незаполненное
+ *     поле, и клиенту её показывать нельзя. Поэтому присланная цена должна
+ *     быть больше нуля;
+ *   - право: назначает её только владелец. Администратор цену не присылает
+ *     вовсе — услуга заводится без цены (0), и список показывает это прямо.
+ */
+function assertPriceAllowed(user, priceKopecks) {
+  if (priceKopecks === undefined) return;
+  if (priceKopecks <= 0) {
+    throw badRequest('Неверные входные данные', { price_kopecks: 'цена должна быть больше нуля' });
+  }
+  if (!isOwner(user)) {
+    throw forbidden('Цену услуги назначает владелец: создайте услугу без цены, он её проставит');
+  }
+}
+
 /** POST /api/admin/services — создать услугу. Цену задаёт только владелец. */
 router.post('/services', (req, res) => {
   const input = new Validator(req.body)
@@ -401,16 +430,14 @@ router.post('/services', (req, res) => {
     .string('description', { required: false, max: 160 })
     .int('duration_min', { min: 5, max: 600 })
     .int('buffer_after_min', { required: false, min: 0, max: 120 })
-    .kopecks('price_kopecks')
+    .kopecks('price_kopecks', { required: false })
     .bool('is_visible', { required: false, def: true })
     .done();
 
   if (input.duration_min % 5 !== 0) {
     throw badRequest('Неверные входные данные', { duration_min: 'кратно 5 минутам' });
   }
-  if (!isOwner(req.user) && input.price_kopecks > 0) {
-    throw forbidden('Цену услуги задаёт владелец: создайте услугу с price_kopecks = 0');
-  }
+  assertPriceAllowed(req.user, input.price_kopecks);
 
   const category = db.one('SELECT id FROM service_categories WHERE id = ?', [input.category_id]);
   if (!category) throw badRequest('Неверные входные данные', { category_id: 'категория не найдена' });
@@ -421,7 +448,7 @@ router.post('/services', (req, res) => {
         price_kopecks, is_visible, is_active, created_at_utc)
      VALUES (?, ?, ?, ?, ?, ?, ?, 1, ?)`,
     [input.category_id, input.name, input.description || null, input.duration_min,
-      input.buffer_after_min || 0, input.price_kopecks, input.is_visible ? 1 : 0, nowUtc()],
+      input.buffer_after_min || 0, input.price_kopecks ?? 0, input.is_visible ? 1 : 0, nowUtc()],
   );
 
   const row = db.one(
@@ -446,6 +473,7 @@ router.patch('/services/:id', (req, res) => {
     .int('buffer_after_min', { required: false, min: 0, max: 120 })
     .kopecks('price_kopecks', { required: false })
     .bool('is_visible', { required: false })
+    .bool('is_active', { required: false })
     .done();
 
   if (Object.keys(input).length === 0) {
@@ -454,11 +482,11 @@ router.patch('/services/:id', (req, res) => {
   if (input.duration_min !== undefined && input.duration_min % 5 !== 0) {
     throw badRequest('Неверные входные данные', { duration_min: 'кратно 5 минутам' });
   }
-  if (input.price_kopecks !== undefined && !isOwner(req.user)) {
-    throw forbidden('Цену услуги может менять только владелец');
-  }
+  assertPriceAllowed(req.user, input.price_kopecks);
 
-  const existing = db.one('SELECT id FROM services WHERE id = ? AND is_active = 1', [id]);
+  // Отключённая услуга тоже правится: иначе её нельзя было бы вернуть в
+  // работу — а отключает её сервер сам, когда на услугу ссылаются записи.
+  const existing = db.one('SELECT id FROM services WHERE id = ?', [id]);
   if (!existing) throw notFound('Услуга не найдена');
 
   if (input.category_id !== undefined) {
@@ -481,6 +509,7 @@ router.patch('/services/:id', (req, res) => {
   assign('buffer_after_min', input.buffer_after_min);
   assign('price_kopecks', input.price_kopecks);
   assign('is_visible', input.is_visible === undefined ? undefined : (input.is_visible ? 1 : 0));
+  assign('is_active', input.is_active === undefined ? undefined : (input.is_active ? 1 : 0));
 
   db.run(`UPDATE services SET ${fields.join(', ')} WHERE id = ?`, [...params, id]);
 
@@ -493,30 +522,61 @@ router.patch('/services/:id', (req, res) => {
 });
 
 /**
- * DELETE /api/admin/services/:id — мягкое удаление.
- * Физически не удаляем: на услугу ссылается история записей.
- * Пока есть активные записи с этой услугой — 409.
+ * DELETE /api/admin/services/:id — удалить услугу.
+ *
+ * Решает сервер, а не кнопка: на услугу может ссылаться история записей, и
+ * физическое удаление стёрло бы состав уже оказанных визитов.
+ *
+ *   - на услугу никто не ссылается → строка удаляется из базы совсем;
+ *   - есть записи (любые, хоть прошлогодние) → строка не удаляется, а
+ *     отключается, и ответ объясняет, почему.
+ *
+ * Отключение записей не трогает: цена, длительность и название лежат в
+ * `appointment_services` снимками, поэтому прошлые визиты остаются такими,
+ * какими были, а будущие проходят по согласованной цене. Услуга лишь уходит
+ * из каталога и из выбора при записи.
  */
 router.delete('/services/:id', (req, res) => {
   const id = requireIdParam(req.params.id);
-  const existing = db.one('SELECT id FROM services WHERE id = ? AND is_active = 1', [id]);
+  const existing = db.one('SELECT id, name FROM services WHERE id = ?', [id]);
   if (!existing) throw notFound('Услуга не найдена');
 
+  // Считаются ВСЕ записи, а не только будущие: состав прошлого визита тоже
+  // ссылается на услугу, и удалить её — значит сломать историю.
   const used = db.one(
+    'SELECT COUNT(*) AS n FROM appointment_services WHERE service_id = ?', [id],
+  ).n;
+  const upcoming = db.one(
     `SELECT COUNT(*) AS n FROM appointment_services aps
        JOIN appointments a ON a.id = aps.appointment_id
       WHERE aps.service_id = ? AND a.status IN (${ACTIVE_STATUSES.map(() => '?').join(',')})
         AND a.starts_at_utc > ?`,
     [id, ...ACTIVE_STATUSES, nowUtc()],
-  );
-  if (used.n > 0) {
-    throw conflict('С услугой есть активные записи — сначала перенесите или отмените их',
-      { active_appointments: used.n });
+  ).n;
+
+  if (used === 0) {
+    db.transaction(() => {
+      db.run('DELETE FROM master_services WHERE service_id = ?', [id]);
+      db.run('DELETE FROM services WHERE id = ?', [id]);
+    });
+    res.json({ ok: true, deleted: true, name: existing.name });
+    return;
   }
 
+  // Связь с мастерами при отключении сохраняется: услугу можно вернуть в
+  // работу, и переставлять галочки заново не придётся.
   db.run('UPDATE services SET is_active = 0, is_visible = 0 WHERE id = ?', [id]);
-  db.run('DELETE FROM master_services WHERE service_id = ?', [id]);
-  res.json({ ok: true });
+  res.json({
+    ok: true,
+    deleted: false,
+    name: existing.name,
+    appointments: used,
+    upcoming_appointments: upcoming,
+    message: `У услуги «${existing.name}» есть записи (${used}), поэтому она отключена, а не удалена.`
+      + (upcoming > 0
+        ? ` Из них предстоящих — ${upcoming}: они состоятся по прежней цене.`
+        : ' Прошлые визиты сохранили её цену и длительность.'),
+  });
 });
 
 /* ---------------------------------------------------------------- мастера */
@@ -619,6 +679,7 @@ router.patch('/masters/:id', (req, res) => {
     .string('bio', { required: false, max: 300 })
     .string('photo_url', { required: false, max: 500 })
     .bool('is_visible', { required: false })
+    .bool('is_active', { required: false })
     .int('sort_order', { required: false, min: 0, max: 9999 })
     .idArray('service_ids', { required: false, min: 0, max: 100 })
     .done();
@@ -628,7 +689,9 @@ router.patch('/masters/:id', (req, res) => {
   }
 
   db.transaction(() => {
-    const existing = db.one('SELECT id FROM masters WHERE id = ? AND is_active = 1', [id]);
+    // Отключённый мастер тоже правится — иначе его нельзя было бы вернуть
+    // в работу, а отключает его сервер сам, когда на него ссылаются записи.
+    const existing = db.one('SELECT id FROM masters WHERE id = ?', [id]);
     if (!existing) throw notFound('Мастер не найден');
 
     const fields = [];
@@ -646,6 +709,7 @@ router.patch('/masters/:id', (req, res) => {
     assign('bio', input.bio);
     assign('photo_url', input.photo_url);
     assign('is_visible', input.is_visible === undefined ? undefined : (input.is_visible ? 1 : 0));
+    assign('is_active', input.is_active === undefined ? undefined : (input.is_active ? 1 : 0));
     assign('sort_order', input.sort_order);
 
     if (fields.length > 0) {
@@ -673,25 +737,52 @@ router.patch('/masters/:id', (req, res) => {
   res.json({ master: masterWithServices(id) });
 });
 
-/** DELETE /api/admin/masters/:id — мягкое удаление; активные записи блокируют операцию. */
+/**
+ * DELETE /api/admin/masters/:id — удалить мастера.
+ *
+ * Правило то же, что у услуги, и решает его сервер:
+ *   - на мастера не ссылается ни одна запись → строка удаляется из базы
+ *     совсем (вместе с его графиком, исключениями и блокировками — они
+ *     связаны внешним ключом ON DELETE CASCADE);
+ *   - записи есть → строка не удаляется, а отключается: мастер уходит с
+ *     сайта и из выбора при записи, а его визиты остаются в истории.
+ *
+ * Аккаунт мастера при удалении карточки не трогается: `masters.user_id`
+ * объявлен ON DELETE SET NULL, то есть человек остаётся в `users`, просто
+ * рабочего места у него больше нет.
+ */
 router.delete('/masters/:id', (req, res) => {
   const id = requireIdParam(req.params.id);
-  const existing = db.one('SELECT id FROM masters WHERE id = ? AND is_active = 1', [id]);
+  const existing = db.one('SELECT id, first_name, last_name FROM masters WHERE id = ?', [id]);
   if (!existing) throw notFound('Мастер не найден');
 
-  const active = db.one(
+  const name = `${existing.first_name} ${existing.last_name}`;
+  const used = db.one('SELECT COUNT(*) AS n FROM appointments WHERE master_id = ?', [id]).n;
+  const upcoming = db.one(
     `SELECT COUNT(*) AS n FROM appointments
       WHERE master_id = ? AND status IN (${ACTIVE_STATUSES.map(() => '?').join(',')})
         AND starts_at_utc > ?`,
     [id, ...ACTIVE_STATUSES, nowUtc()],
-  );
-  if (active.n > 0) {
-    throw conflict('У мастера есть активные записи — сначала перенесите или отмените их',
-      { active_appointments: active.n });
+  ).n;
+
+  if (used === 0) {
+    db.run('DELETE FROM masters WHERE id = ?', [id]);
+    res.json({ ok: true, deleted: true, name });
+    return;
   }
 
   db.run('UPDATE masters SET is_active = 0, is_visible = 0 WHERE id = ?', [id]);
-  res.json({ ok: true });
+  res.json({
+    ok: true,
+    deleted: false,
+    name,
+    appointments: used,
+    upcoming_appointments: upcoming,
+    message: `У мастера ${name} есть записи (${used}), поэтому он отключён, а не удалён.`
+      + (upcoming > 0
+        ? ` Предстоящих — ${upcoming}: их нужно перенести на другого мастера или отменить.`
+        : ' Прошлые визиты остались в истории.'),
+  });
 });
 
 /* ------------------------------------------------- график работы мастера */
@@ -869,6 +960,42 @@ router.delete('/masters/:id/exceptions/:exceptionId', (req, res) => {
   );
   if (info.changes === 0) throw notFound('Исключение не найдено');
   res.json({ ok: true });
+});
+
+/**
+ * GET /api/admin/time-blocks?date=YYYY-MM-DD&master_id= — заблокированное
+ * время за день: перерывы, отгулы, отпуска и больничные всех мастеров.
+ *
+ * Нужен сетке дня: администратор должен видеть, почему у мастера нет
+ * свободного времени, а не только то, что его нет. Для клиента это время
+ * просто не существует — расчёт доступности вычитает блокировки, и в
+ * `GET /masters/:id/availability` такие слоты не попадают вовсе.
+ */
+router.get('/time-blocks', (req, res) => {
+  const input = new Validator(req.query)
+    .date('date')
+    .int('master_id', { required: false, min: 1 })
+    .done();
+
+  const settings = db.settings();
+  const fromUtc = toUtcIso(zonedToUtc(input.date, 0, settings.timezone));
+  const toUtc = toUtcIso(zonedToUtc(addDays(input.date, 1), 0, settings.timezone));
+
+  res.json({
+    date: input.date,
+    timezone: settings.timezone,
+    time_blocks: listTimeBlocksInRange(fromUtc, toUtc, input.master_id || null)
+      .map((block) => ({
+        id: block.id,
+        master_id: block.master_id,
+        master_name: `${block.master_first_name} ${block.master_last_name}`,
+        type: block.type,
+        type_label: BLOCK_LABELS[block.type],
+        starts_at: presentInstant(block.starts_at_utc, settings.timezone),
+        ends_at: presentInstant(block.ends_at_utc, settings.timezone),
+        comment: block.comment,
+      })),
+  });
 });
 
 /**

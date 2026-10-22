@@ -89,6 +89,7 @@ async function request(method, path, { params, body } = {}) {
 
 const get = (path, params) => request('GET', path, { params });
 const post = (path, body) => request('POST', path, { body });
+const patch = (path, body) => request('PATCH', path, { body });
 const del = (path) => request('DELETE', path);
 
 /* ------------------------------------------------------------- каталог */
@@ -322,4 +323,178 @@ export async function createAppointment({
     consent,
   });
   return appointment;
+}
+
+/* ------------------------------------------- админ: услуги и мастера */
+
+/**
+ * Поля формы называются по-русски дважды: в разметке и в API. Перевод
+ * камелКейса в змеиный регистр лежит здесь, как и у клиентских функций выше
+ * (`serviceIds` → `service_ids`), — страницы о написании в запросе не думают.
+ *
+ * В тело уходят только заполненные поля: PATCH меняет ровно то, что прислали,
+ * а `undefined` означает «не трогать», и отличать его от «очистить» важно.
+ */
+const apiFields = (map, fields) => Object.fromEntries(
+  Object.entries(fields)
+    .filter(([key, value]) => value !== undefined && map[key])
+    .map(([key, value]) => [map[key], value]),
+);
+
+const SERVICE_FIELDS = {
+  categoryId: 'category_id',
+  name: 'name',
+  description: 'description',
+  durationMin: 'duration_min',
+  bufferAfterMin: 'buffer_after_min',
+  priceKopecks: 'price_kopecks',
+  isVisible: 'is_visible',
+  isActive: 'is_active',
+};
+
+const MASTER_FIELDS = {
+  firstName: 'first_name',
+  lastName: 'last_name',
+  specialization: 'specialization',
+  experienceYears: 'experience_years',
+  bio: 'bio',
+  photoUrl: 'photo_url',
+  sortOrder: 'sort_order',
+  serviceIds: 'service_ids',
+  isVisible: 'is_visible',
+  isActive: 'is_active',
+};
+
+/**
+ * GET /api/admin/services — весь прайс, включая отключённые услуги.
+ *
+ * `include_inactive=1` стоит по умолчанию намеренно: администратор должен
+ * видеть всё, в том числе отключённое, иначе строка просто исчезнет и вернуть
+ * её будет неоткуда. Клиентский `GET /services` отключённые не отдаёт вовсе.
+ */
+export async function getAdminServices({ includeInactive = true } = {}) {
+  const { services } = await get('/admin/services', { include_inactive: includeInactive });
+  return services;
+}
+
+/** POST /api/admin/services — завести услугу. Цену примет только владелец. */
+export async function createService(fields) {
+  const { service } = await post('/admin/services', apiFields(SERVICE_FIELDS, fields));
+  return service;
+}
+
+/** PATCH /api/admin/services/:id — изменить услугу, включить или отключить. */
+export async function updateService(id, fields) {
+  const { service } = await patch(`/admin/services/${id}`, apiFields(SERVICE_FIELDS, fields));
+  return service;
+}
+
+/**
+ * DELETE /api/admin/services/:id — попросить удалить услугу.
+ *
+ * Решение принимает сервер, поэтому ответ возвращается целиком: `deleted`
+ * говорит, удалил он строку или отключил, а `message` — почему. Экран это
+ * сообщение показывает, а не придумывает своё.
+ */
+export function deleteService(id) {
+  return del(`/admin/services/${id}`);
+}
+
+/** GET /api/admin/masters — все мастера, включая отключённых. */
+export async function getAdminMasters({ includeInactive = true } = {}) {
+  const { masters } = await get('/admin/masters', { include_inactive: includeInactive });
+  return masters;
+}
+
+/** POST /api/admin/masters — завести мастера вместе со списком его услуг. */
+export async function createMaster(fields) {
+  const { master } = await post('/admin/masters', apiFields(MASTER_FIELDS, fields));
+  return master;
+}
+
+/**
+ * PATCH /api/admin/masters/:id — изменить мастера.
+ * `serviceIds` заменяет список его услуг целиком — это та самая связь, по
+ * которой клиенту подбираются мастера на шаге 2 воронки.
+ */
+export async function updateMaster(id, fields) {
+  const { master } = await patch(`/admin/masters/${id}`, apiFields(MASTER_FIELDS, fields));
+  return master;
+}
+
+/** DELETE /api/admin/masters/:id — то же правило, что у услуги: решает сервер. */
+export function deleteMaster(id) {
+  return del(`/admin/masters/${id}`);
+}
+
+/* -------------------------------------------- админ: записи и блокировки */
+
+/**
+ * GET /api/admin/appointments — записи студии за день.
+ *
+ * Время в ответе уже в поясе студии: у каждой метки есть `at_utc` и
+ * разложенные `local_date` / `local_time`. Экран показывает местное и ничего
+ * не пересчитывает — пояс знает сервер (`salon_settings.timezone`).
+ *
+ * Вместе с записями приходит их история (`history`): кто создал, кто перенёс
+ * откуда и куда, кто отменил и почему.
+ */
+export async function getAdminAppointments({ date, masterId, status, limit } = {}) {
+  return get('/admin/appointments', {
+    date_from: date, date_to: date, master_id: masterId, status, limit,
+  });
+}
+
+/**
+ * POST /api/appointments — запись за клиента.
+ *
+ * `isOverride` — осознанное наложение: его присылают ТОЛЬКО после того, как
+ * сервер уже ответил 409 и администратор подтвердил. Проверка занятости при
+ * этом не отключается: без признака она срабатывает как обычно, а с ним
+ * сервер разрешает наложение и помечает им запись.
+ */
+export async function createAppointmentForClient({
+  clientUserId, masterId, serviceIds, startsAt, clientComment, source, isOverride,
+}) {
+  const { appointment } = await post('/appointments', {
+    client_user_id: clientUserId,
+    master_id: masterId,
+    service_ids: serviceIds,
+    starts_at: startsAt,
+    ...(clientComment ? { client_comment: clientComment } : {}),
+    ...(source ? { source } : {}),
+    ...(isOverride ? { is_override: true } : {}),
+  });
+  return appointment;
+}
+
+/** GET /api/admin/clients — поиск клиента по имени, телефону или e-mail. */
+export async function searchClients(query) {
+  const { clients } = await get('/admin/clients', { q: query, limit: 10 });
+  return clients;
+}
+
+/**
+ * GET /api/admin/time-blocks — заблокированное время за день: перерывы,
+ * выходные, отпуска и больничные. Для клиента этого времени не существует —
+ * расчёт доступности вычитает блокировки.
+ */
+export async function getAdminTimeBlocks({ date, masterId } = {}) {
+  const { time_blocks: blocks } = await get('/admin/time-blocks', {
+    date, master_id: masterId,
+  });
+  return blocks;
+}
+
+/** POST /api/admin/masters/:id/time-blocks — закрыть мастеру часы или день. */
+export async function blockTime(masterId, { type, startsAt, endsAt, comment }) {
+  const { time_block: block } = await post(`/admin/masters/${masterId}/time-blocks`, {
+    type, starts_at: startsAt, ends_at: endsAt, ...(comment ? { comment } : {}),
+  });
+  return block;
+}
+
+/** DELETE /api/admin/masters/:id/time-blocks/:blockId — снять блокировку. */
+export function unblockTime(masterId, blockId) {
+  return del(`/admin/masters/${masterId}/time-blocks/${blockId}`);
 }

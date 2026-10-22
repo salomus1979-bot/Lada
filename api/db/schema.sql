@@ -237,6 +237,36 @@ CREATE TABLE IF NOT EXISTS appointment_services (
 );
 CREATE INDEX IF NOT EXISTS idx_appointment_services ON appointment_services (appointment_id);
 
+-- История записи: кто, когда и что с ней сделал.
+--
+-- Отмена и перенос не стирают и не подменяют строку визита: `appointments`
+-- хранит ТЕКУЩЕЕ состояние, а здесь лежит то, как оно менялось. Поэтому
+-- отменённая запись остаётся в списках с пометкой, а перенесённая остаётся
+-- тем же самым визитом — у неё просто другое время и новая строка истории.
+--
+-- `actor_user_id` — кто это сделал: сам клиент, администратор или владелец.
+-- ON DELETE SET NULL: аккаунт могут удалить, а история визита остаётся.
+-- `actor_role` фиксируется в момент действия: роли со временем меняются, а
+-- «отменила студия» должно остаться правдой и через год.
+--
+-- `from_starts_at_utc` / `to_starts_at_utc` заполняются только у переноса —
+-- откуда и куда. У отмены вместо них `reason`, у смены статуса — `status`.
+CREATE TABLE IF NOT EXISTS appointment_events (
+  id                 INTEGER PRIMARY KEY AUTOINCREMENT,
+  appointment_id     INTEGER NOT NULL REFERENCES appointments (id) ON DELETE CASCADE,
+  type               TEXT    NOT NULL CHECK (type IN
+                       ('created','rescheduled','cancelled','status_changed')),
+  actor_user_id      INTEGER REFERENCES users (id) ON DELETE SET NULL,
+  actor_role         TEXT    NOT NULL CHECK (actor_role IN ('client','master','admin','owner')),
+  from_starts_at_utc TEXT,
+  to_starts_at_utc   TEXT,
+  status             TEXT,
+  reason             TEXT,
+  created_at_utc     TEXT    NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_appointment_events
+  ON appointment_events (appointment_id, created_at_utc);
+
 CREATE TABLE IF NOT EXISTS slot_holds (
   id             INTEGER PRIMARY KEY AUTOINCREMENT,
   token          TEXT    NOT NULL UNIQUE,

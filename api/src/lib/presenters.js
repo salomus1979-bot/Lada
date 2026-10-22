@@ -138,11 +138,62 @@ function appointmentView(row, services, { timezone, rules = {} } = {}) {
   };
 }
 
-/** Запись для админа: добавляются данные клиента — у персонала есть на них право. */
-function appointmentAdminView(row, services, { timezone } = {}) {
+/** Кто сделал действие — подпись для журнала изменений. */
+const ACTOR_TITLES = {
+  client: 'клиент',
+  master: 'мастер',
+  admin: 'администратор',
+  owner: 'владелец',
+};
+
+/**
+ * Строка истории визита: что произошло, когда и кто это сделал.
+ *
+ * Текст собирает сервер, а не экран: по сырым полям («type: rescheduled»)
+ * каждая страница писала бы свою формулировку, и они разошлись бы.
+ */
+function appointmentEventView(row, { timezone } = {}) {
+  const who = `${ACTOR_TITLES[row.actor_role] || row.actor_role}${row.actor_name ? ` ${row.actor_name}` : ''}`;
+  const at = (iso) => (iso ? formatForDisplay(iso, timezone) : null);
+
+  let text;
+  if (row.type === 'created') {
+    text = `Создана (${who})`;
+    if (row.reason) text += `, ${row.reason}`;
+  } else if (row.type === 'rescheduled') {
+    text = `Перенесена с ${at(row.from_starts_at_utc)} на ${at(row.to_starts_at_utc)} (${who})`;
+  } else if (row.type === 'cancelled') {
+    text = `Отменена (${who})`;
+    if (row.reason) text += `, причина: «${row.reason}»`;
+  } else {
+    text = `Статус: ${STATUS_LABELS[row.status] || row.status} (${who})`;
+  }
+
+  return {
+    type: row.type,
+    actor_role: row.actor_role,
+    actor_name: row.actor_name,
+    from: row.from_starts_at_utc ? presentInstant(row.from_starts_at_utc, timezone) : null,
+    to: row.to_starts_at_utc ? presentInstant(row.to_starts_at_utc, timezone) : null,
+    status: row.status,
+    reason: row.reason,
+    at: presentInstant(row.created_at_utc, timezone),
+    text,
+  };
+}
+
+/**
+ * Запись для админа: добавляются данные клиента — у персонала есть на них
+ * право, — и история визита, если её передали.
+ */
+function appointmentAdminView(row, services, { timezone, events = null } = {}) {
   const base = appointmentView(row, services, { timezone });
   return {
     ...base,
+    // История: кто создал, кто переносил откуда и куда, кто отменил и почему.
+    // Пустой массив и отсутствие истории — разные вещи, поэтому `null`
+    // означает «не запрашивали».
+    history: events ? events.map((event) => appointmentEventView(event, { timezone })) : null,
     // Признак осознанного наложения виден только персоналу: клиенту
     // не нужно знать, что его визит поставили поверх другого.
     is_override: row.is_override === 1,
@@ -329,6 +380,7 @@ module.exports = {
   masterAdminView,
   appointmentView,
   appointmentAdminView,
+  appointmentEventView,
   appointmentMasterView,
   masterClientView,
   clientAdminView,

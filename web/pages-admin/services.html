@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Лада — админ: услуги</title>
+<meta name="description" content="Админ-панель студии «Лада»: услуги и прайс.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/tokens.css">
+<!-- Админка — светлая тема дизайн-системы, поэтому landing.css (тёмная база)
+     здесь не подключается. Почему — в начале css/admin.css. -->
+<link rel="stylesheet" href="/css/admin.css">
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js" defer></script>
+<script type="module" src="/js/admin-services.js"></script>
+</head>
+<body class="adm">
+
+<!-- ─── Сайдбар админ-панели ───────────────────────────────────────────────
+     Образец — `31. Админ - Услуги.dc.html`; сайдбар тот же, что на остальных
+     административных экранах прототипа.
+──────────────────────────────────────────────────────────────────────────── -->
+<aside class="adm-side">
+  <a class="adm-side__logo" href="/admin/appointments">Лада</a>
+  <span class="adm-side__role">Администратор</span>
+
+  <nav class="adm-nav" aria-label="Разделы админ-панели">
+    <a class="adm-nav__item" href="/admin/appointments">
+      <i class="icon" data-lucide="list" aria-hidden="true"></i>Записи
+    </a>
+    <a class="adm-nav__item adm-nav__item--current" href="/admin/services" aria-current="page">
+      <i class="icon" data-lucide="droplet" aria-hidden="true"></i>Услуги
+    </a>
+    <a class="adm-nav__item" href="/admin/masters">
+      <i class="icon" data-lucide="user-cog" aria-hidden="true"></i>Мастера
+    </a>
+  </nav>
+
+  <div class="adm-user" data-user="block" aria-busy="true">
+    <span class="adm-user__avatar" data-user="initials" aria-hidden="true"></span>
+    <div class="adm-user__text">
+      <span class="adm-user__name" data-user="name"></span>
+      <!-- «Выйти» — не ссылка: это запрос POST /auth/logout, после него лендинг. -->
+      <button class="adm-user__logout" type="button" data-action="logout">Выйти</button>
+    </div>
+  </div>
+</aside>
+
+<div class="adm__body">
+
+  <header class="adm-top">
+    <h1 class="adm-top__title">Услуги</h1>
+    <a class="adm-top__site" href="/">На сайт →</a>
+  </header>
+
+  <main class="adm__content">
+    <p class="load-error" data-error="me" role="status" hidden></p>
+
+    <div class="adm-toolbar">
+      <!-- Отключённые услуги администратор видит наравне с остальными: табы
+           только сужают список, по умолчанию показаны все. -->
+      <div class="adm-tabs" role="tablist" aria-label="Какие услуги показывать">
+        <button class="adm-tabs__tab" type="button" role="tab" data-tab="all" aria-selected="true">Все</button>
+        <button class="adm-tabs__tab" type="button" role="tab" data-tab="on" aria-selected="false">В каталоге</button>
+        <button class="adm-tabs__tab" type="button" role="tab" data-tab="off" aria-selected="false">Отключённые</button>
+      </div>
+      <button class="adm-btn" type="button" data-action="new">
+        <i class="icon" data-lucide="plus" aria-hidden="true"></i>Добавить услугу
+      </button>
+    </div>
+
+    <!-- Ответ сервера на «Удалить»: удалил он строку или отключил и почему. -->
+    <p class="adm-note" data-note role="status" hidden></p>
+    <p class="load-error" data-error="services" role="status" hidden></p>
+
+    <div class="adm-groups" data-list="services" aria-busy="true">
+      <div class="adm-table">
+        <div class="adm-row"><span class="adm-skeleton"></span></div>
+        <div class="adm-row"><span class="adm-skeleton"></span></div>
+        <div class="adm-row"><span class="adm-skeleton"></span></div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- ─── Форма услуги ─────────────────────────────────────────────────────
+     Образец — `32. Админ - Услуга (форма).dc.html`: модалка поверх списка.
+     Одна форма на создание и на правку — поля те же.
+──────────────────────────────────────────────────────────────────────────── -->
+<div class="adm-modal" data-modal hidden>
+  <div class="adm-modal__box" role="dialog" aria-modal="true" aria-labelledby="form-title">
+    <div class="adm-modal__head">
+      <h2 class="adm-modal__title" id="form-title" data-form-title>Новая услуга</h2>
+      <button class="adm-link" type="button" data-action="close" aria-label="Закрыть">✕</button>
+    </div>
+
+    <form class="adm-form" id="service-form" novalidate>
+      <p class="form-error" data-form-error role="alert" hidden>
+        <span data-form-error-text></span>
+      </p>
+
+      <div class="field">
+        <label class="field__label" for="name">Название</label>
+        <input id="name" name="name" type="text" maxlength="200" placeholder="Маникюр с покрытием">
+        <span class="field__hint" data-error-for="name" hidden></span>
+      </div>
+
+      <div class="adm-form__row">
+        <div class="field">
+          <label class="field__label" for="category_id">Категория</label>
+          <select id="category_id" name="category_id"></select>
+          <span class="field__hint" data-error-for="category_id" hidden></span>
+        </div>
+        <div class="field">
+          <label class="field__label" for="duration_min">Длительность, мин</label>
+          <input id="duration_min" name="duration_min" type="number" min="5" max="600" step="5" placeholder="90">
+          <span class="field__note">Кратно 5 минутам</span>
+          <span class="field__hint" data-error-for="duration_min" hidden></span>
+        </div>
+      </div>
+
+      <div class="adm-form__row">
+        <div class="field">
+          <label class="field__label" for="price">Цена, ₽</label>
+          <!-- Поле выключается, если вошёл не владелец: цену назначает он
+               (`403` из API). Так же сделано в прототипе на экране 32. -->
+          <input id="price" name="price" type="number" min="1" step="1" placeholder="1800">
+          <span class="field__note" data-price-note></span>
+          <span class="field__hint" data-error-for="price_kopecks" hidden></span>
+        </div>
+        <div class="field">
+          <label class="field__label" for="buffer_after_min">Буфер после услуги, мин</label>
+          <input id="buffer_after_min" name="buffer_after_min" type="number" min="0" max="120" placeholder="10">
+          <span class="field__note">Время на уборку, клиенту не показывается</span>
+          <span class="field__hint" data-error-for="buffer_after_min" hidden></span>
+        </div>
+      </div>
+
+      <div class="field">
+        <label class="field__label" for="description">Описание для каталога</label>
+        <textarea id="description" name="description" maxlength="160" rows="2"></textarea>
+        <span class="field__hint" data-error-for="description" hidden></span>
+      </div>
+
+      <label class="adm-check">
+        <input id="is_visible" name="is_visible" type="checkbox" checked>
+        Показывать клиентам в каталоге и при записи
+      </label>
+
+      <p class="field__note">
+        Изменение цены и длительности не затронет уже созданные записи: в них
+        лежат значения на момент оформления.
+      </p>
+
+      <div class="adm-modal__foot">
+        <button class="adm-btn adm-btn--ghost" type="button" data-action="close">Отмена</button>
+        <button class="adm-btn" type="submit">Сохранить</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ─── Шаблоны строк ─────────────────────────────────────────────────── -->
+
+<template id="tpl-group">
+  <section class="adm-group">
+    <h2 class="adm-group__title"></h2>
+    <div class="adm-table">
+      <div class="adm-row adm-row--head">
+        <span>Название</span><span>Длительность</span><span>Цена</span>
+        <span>Выполняют</span><span>Действия</span>
+      </div>
+    </div>
+  </section>
+</template>
+
+<template id="tpl-service">
+  <div class="adm-row">
+    <div>
+      <span class="adm-row__name">
+        <span data-cell="name"></span>
+        <span class="adm-badge" data-cell="state"></span>
+      </span>
+      <span class="adm-row__note" data-cell="description"></span>
+    </div>
+    <span class="adm-cell adm-cell--num" data-cell="duration"></span>
+    <span class="adm-cell adm-cell--num" data-cell="price"></span>
+    <span class="adm-cell" data-cell="masters"></span>
+    <span class="adm-row__actions">
+      <button class="adm-switch" type="button" role="switch" data-action="toggle"></button>
+      <button class="adm-link" type="button" data-action="edit">Изменить</button>
+      <button class="adm-link adm-link--danger" type="button" data-action="delete">Удалить</button>
+    </span>
+  </div>
+</template>
+
+</body>
+</html>

@@ -47,7 +47,7 @@
  */
 
 const db = require('./db');
-const { isStaff } = require('./auth');
+const { isStaff, isOwner } = require('./auth');
 const { Validator } = require('./validate');
 const { ApiError, badRequest, conflict, forbidden, notFound } = require('./errors');
 const {
@@ -83,6 +83,72 @@ function fetchAppointment(id) {
       WHERE a.id = ?`,
     [id],
   );
+}
+
+/**
+ * Роль, от имени которой действует человек. Фиксируется в момент действия:
+ * роли со временем меняются, а «отменила студия» должно остаться правдой.
+ */
+function actorRole(user, actor) {
+  // Кабинет мастера называет себя сам: у человека может быть и роль
+  // администратора, но действие он сделал как мастер, со своей страницы.
+  if (actor === 'master') return 'master';
+  if (actor === 'staff' || isStaff(user)) return isOwner(user) ? 'owner' : 'admin';
+  return 'client';
+}
+
+/**
+ * Строка истории визита.
+ *
+ * Пишется ТОЛЬКО отсюда, как и всё остальное про `appointments`: иначе
+ * появился бы второй путь, на котором историю легко забыть. Отмена и перенос
+ * от этого и становятся разными событиями одной записи, а не исчезновением
+ * одной строки и появлением другой.
+ */
+function recordEvent(appointmentId, { type, user, actor, fromUtc, toUtc, status, reason }) {
+  db.run(
+    `INSERT INTO appointment_events
+       (appointment_id, type, actor_user_id, actor_role,
+        from_starts_at_utc, to_starts_at_utc, status, reason, created_at_utc)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [appointmentId, type, user ? user.id : null, actorRole(user, actor),
+      fromUtc || null, toUtc || null, status || null, reason || null, nowUtc()],
+  );
+}
+
+/** История визита по возрастанию времени — «Журнал изменений» со страницы 25. */
+function fetchEvents(appointmentId) {
+  return db.all(
+    `SELECT e.id, e.type, e.actor_role, e.from_starts_at_utc, e.to_starts_at_utc,
+            e.status, e.reason, e.created_at_utc, u.name AS actor_name
+       FROM appointment_events e
+       LEFT JOIN users u ON u.id = e.actor_user_id
+      WHERE e.appointment_id = ?
+      ORDER BY e.created_at_utc, e.id`,
+    [appointmentId],
+  );
+}
+
+/** История сразу по нескольким визитам: для списка записей за день. */
+function fetchEventsFor(appointmentIds) {
+  const byAppointment = new Map();
+  if (appointmentIds.length === 0) return byAppointment;
+
+  const rows = db.all(
+    `SELECT e.appointment_id, e.type, e.actor_role, e.from_starts_at_utc,
+            e.to_starts_at_utc, e.status, e.reason, e.created_at_utc,
+            u.name AS actor_name
+       FROM appointment_events e
+       LEFT JOIN users u ON u.id = e.actor_user_id
+      WHERE e.appointment_id IN (${appointmentIds.map(() => '?').join(',')})
+      ORDER BY e.created_at_utc, e.id`,
+    appointmentIds,
+  );
+  for (const row of rows) {
+    if (!byAppointment.has(row.appointment_id)) byAppointment.set(row.appointment_id, []);
+    byAppointment.get(row.appointment_id).push(row);
+  }
+  return byAppointment;
 }
 
 function fetchServices(appointmentId) {
@@ -313,6 +379,16 @@ function createAppointment(user, body) {
       );
     }
 
+    recordEvent(newId, {
+      type: 'created',
+      user,
+      actor: forClient ? 'staff' : undefined,
+      toUtc: input.starts_at,
+      // Наложение — часть истории визита: по ней потом видно, что время было
+      // занято и администратор поставил визит осознанно.
+      reason: applyOverride ? 'поверх занятого времени' : null,
+    });
+
     // Свои удержания снимаем — оформление закончено. Удержания клиента на
     // админском пути не трогаем: он мог держать слот для другого визита,
     // и администратор об этом ничего не знает.
@@ -418,6 +494,18 @@ function rescheduleAppointment(user, id, body) {
         WHERE id = ?`,
       [input.starts_at, endAtUtc, applyOverride ? 1 : 0, nowUtc(), id],
     );
+
+    // Перенос — событие ОДНОГО визита: запись та же, меняется только время.
+    // Поэтому в истории остаётся «откуда, куда и кем», а не отмена с новой
+    // записью (клиент получил бы два уведомления вместо одного).
+    recordEvent(id, {
+      type: 'rescheduled',
+      user,
+      actor,
+      fromUtc: row.starts_at_utc,
+      toUtc: input.starts_at,
+    });
+
     db.run('DELETE FROM slot_holds WHERE user_id = ?', [user.id]);
     return actor;
   });
@@ -493,12 +581,26 @@ function cancelAppointment(user, id, body, { asStudio = false } = {}) {
 
     const status = actor === 'client' ? 'cancelled_by_client' : 'cancelled_by_studio';
     const timestamp = nowUtc();
+    // Строка визита остаётся — меняется только её состояние. Запись не
+    // удаляется ни здесь, ни где-либо ещё: она должна остаться видимой и в
+    // списке администратора, и в кабинете клиента, с пометкой «отменена».
+    // Время при этом освобождается само: отменённый статус не входит в
+    // ACTIVE_STATUSES, по которым считается занятость.
     db.run(
       `UPDATE appointments
           SET status = ?, cancel_reason = ?, cancelled_at_utc = ?, updated_at_utc = ?
         WHERE id = ?`,
       [status, input.cancel_reason || null, timestamp, timestamp, id],
     );
+    // Кто отменил и почему. Статус говорит сторону (клиент или студия),
+    // история — конкретного человека.
+    recordEvent(id, {
+      type: 'cancelled',
+      user,
+      actor,
+      status,
+      reason: input.cancel_reason || null,
+    });
     return { actor, status };
   });
 
@@ -564,6 +666,12 @@ function changeAppointmentStatus(user, id, body, { masterId = null } = {}) {
       'UPDATE appointments SET status = ?, updated_at_utc = ? WHERE id = ?',
       [input.status, nowUtc(), id],
     );
+    recordEvent(id, {
+      type: 'status_changed',
+      user,
+      actor: masterId === null ? 'staff' : 'master',
+      status: input.status,
+    });
 
     if (input.status === 'no_show') {
       db.run('UPDATE users SET no_show_count = no_show_count + 1 WHERE id = ?',
@@ -599,6 +707,8 @@ module.exports = {
   MASTER_STATUSES,
   fetchAppointment,
   fetchServices,
+  fetchEvents,
+  fetchEventsFor,
   assertMayModify,
   createAppointment,
   rescheduleAppointment,

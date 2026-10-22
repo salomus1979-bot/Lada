@@ -138,20 +138,21 @@ npm run smoke     # сквозная проверка на отдельной в
 | GET | `/api/admin/clients` | Клиенты студии; `?q=` имя, телефон или e-mail, `?status=active\|blocked`, `?limit`, `?offset` |
 | POST | `/api/admin/clients` | Создать клиента: имя, телефон, e-mail, `consent`. Пароль не задаётся |
 | PATCH | `/api/admin/clients/:id` | Контакты клиента и `is_blocked` — блокировка и разблокировка онлайн-записи |
-| GET | `/api/admin/appointments` | Все записи с фильтрами и постраничным выводом |
+| GET | `/api/admin/appointments` | Все записи с фильтрами и постраничным выводом; вместе с историей каждой (`history`) |
 | POST | `/api/admin/appointments/:id/status` | Подтвердить, завершить, отметить неявку, отменить |
 | GET | `/api/admin/services` | Все услуги, включая скрытые |
 | POST | `/api/admin/services` | Создать услугу |
 | PATCH | `/api/admin/services/:id` | Изменить услугу |
-| DELETE | `/api/admin/services/:id` | Мягко удалить услугу |
+| DELETE | `/api/admin/services/:id` | Удалить услугу: без ссылок — из базы, со ссылками — отключить |
 | GET | `/api/admin/masters` | Все мастера |
 | POST | `/api/admin/masters` | Создать мастера |
 | PATCH | `/api/admin/masters/:id` | Изменить мастера и список его услуг |
-| DELETE | `/api/admin/masters/:id` | Мягко удалить мастера |
+| DELETE | `/api/admin/masters/:id` | Удалить мастера: без записей — из базы, с записями — отключить |
 | GET | `/api/admin/masters/:id/schedule` | График и исключения |
 | PUT | `/api/admin/masters/:id/schedule` | Заменить недельный график |
 | POST | `/api/admin/masters/:id/exceptions` | Отпуск, больничный, выходной, смена часов |
 | DELETE | `/api/admin/masters/:id/exceptions/:exceptionId` | Снять исключение |
+| GET | `/api/admin/time-blocks` | Заблокированное время за день: `?date=`, `?master_id=` |
 | POST | `/api/admin/masters/:id/time-blocks` | Заблокировать интервал |
 | DELETE | `/api/admin/masters/:id/time-blocks/:blockId` | Снять блокировку |
 
@@ -163,7 +164,7 @@ npm run smoke     # сквозная проверка на отдельной в
 | Операция | Функция | Что пишет |
 |---|---|---|
 | создание | `createAppointment` | единственный `INSERT INTO appointments` |
-| перенос | `rescheduleAppointment` | `starts_at_utc`, `ends_at_utc`, `is_override`, `reschedule_count` |
+| перенос | `rescheduleAppointment` | `starts_at_utc`, `ends_at_utc`, `is_override`, `reschedule_count` (строка та же — новой записи не появляется) |
 | отмена | `cancelAppointment` | `status`, `cancel_reason`, `cancelled_at_utc` |
 | смена статуса | `changeAppointmentStatus` | только `status` |
 
@@ -192,6 +193,24 @@ npm run smoke     # сквозная проверка на отдельной в
 Так же устроены блокировки времени: `time_blocks` меняет только
 [lib/blocks.js](src/lib/blocks.js), одна функция на администратора
 (страница 30) и мастера (страница 39).
+
+**Каждая из четырёх операций пишет строку истории** в `appointment_events`
+(`recordEvent` в том же файле): что произошло, кто это сделал и в какой роли,
+а у переноса — откуда и куда, у отмены — причина. История возвращается
+персоналу в поле `history`: у одной записи (`GET /api/appointments/:id`) и у
+списка за день (`GET /api/admin/appointments`).
+
+Из этого следуют два свойства, на которых держится раздел «Записи»:
+
+- **отмена не удаляет строку визита.** Меняется `status`, заполняются
+  `cancel_reason` и `cancelled_at_utc`, добавляется событие. Запись остаётся в
+  списке администратора и в кабинете клиента с пометкой «Отменена», а время
+  освобождается само: отменённые статусы не входят в `ACTIVE_STATUSES`,
+  по которым считается занятость, и в условие триггеров пересечения;
+- **перенос не создаёт вторую запись.** `rescheduleAppointment` меняет время у
+  ТОЙ ЖЕ строки, поэтому у клиента в кабинете остаётся одна запись с новым
+  временем — а не отменённая плюс новая, о которых пришлось бы сообщать
+  дважды.
 
 ## Как считается свободное время
 
@@ -374,11 +393,25 @@ DEFERRED по умолчанию. Иначе между проверкой «с�
 | `/api/holds/*` | `requireAuth` | — | `WHERE user_id = ?` |
 | `/api/appointments/*` | `requireAuth` | — | `assertMayModify`: владелец записи либо персонал |
 | `/api/master/*` | `requireAuth` | `requireRole('master')` | `master_id` берётся из аккаунта, не из запроса |
-| `/api/admin/*` | `requireAuth` | `requireRole('admin','owner')` | по роли видно всё; цену правит только `owner` |
+| `/api/admin/*` | `requireAuth` | `requireStaff` | по роли видно всё; цену правит только `owner` |
 
 Клиент видит свои записи, мастер — визиты своего расписания, администратор —
 все. `master_id` в кабинете мастера приходит из `masters.user_id`, а не из
 параметров запроса, поэтому подставить чужой нельзя в принципе.
+
+**Роль раздела проверяется один раз на весь раздел, а не в эндпоинтах.**
+`requireStaff` (`lib/auth.js`) — это `requireRole('admin','owner')` под именем,
+и стоит он в двух точках входа: на префиксе при монтировании
+(`app.use('/api/admin', requireStaff, adminRoutes)`) и первой строкой самого
+роутера. Своей проверки роли у эндпоинтов нет вовсе: новый маршрут раздела
+защищён тем, что он в разделе — забыть про права на нём нельзя.
+
+Две точки — не две разные проверки, а одна функция там, где запрос может
+войти: префикс закрывает любой роутер, смонтированный под `/api/admin`,
+роутер несёт защиту с собой, если его когда-нибудь смонтируют иначе.
+Сквозной прогон следит за этим сам: он перебирает все маршруты админского
+роутера и требует с каждого `401` без сессии и `403` у клиента, поэтому
+эндпоинт, оказавшийся мимо ворот, валит проверки, а не живёт открытым.
 
 ## Роли
 

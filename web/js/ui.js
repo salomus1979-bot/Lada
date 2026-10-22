@@ -208,3 +208,50 @@ const DAY_FMT = new Intl.DateTimeFormat('ru-RU', {
 
 export const dateDisplay = (localDate) => DATE_FMT.format(asUtcDay(localDate));
 export const dayDisplay = (localDate) => DAY_FMT.format(asUtcDay(localDate));
+
+/**
+ * Насколько пояс студии отличается от UTC в этот момент.
+ * Считается через `Intl`, а не таблицей смещений: переход на летнее время и
+ * его отмену знает сама система, а не наш код.
+ */
+function zoneOffsetMs(instant, timeZone) {
+  const parts = Object.fromEntries(new Intl.DateTimeFormat('en-CA', {
+    timeZone,
+    hour12: false,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+  }).formatToParts(instant).map((part) => [part.type, part.value]));
+
+  const asIfUtc = Date.UTC(Number(parts.year), Number(parts.month) - 1, Number(parts.day),
+    Number(parts.hour) % 24, Number(parts.minute), Number(parts.second));
+  return asIfUtc - instant.getTime();
+}
+
+/**
+ * «2026-10-23» + «14:00» в поясе студии → момент в UTC, как его ждёт API
+ * (`2026-10-23T11:00:00Z`).
+ *
+ * Нужен там, где время НАЗНАЧАЮТ, а не выбирают из готовых слотов: перенос и
+ * новая запись в админ-панели. Из слота момент приходит готовым (`at_utc`), и
+ * пересчитывать его не надо.
+ *
+ * Браузер администратора может стоять в другом поясе, поэтому местное время
+ * машины здесь не участвует вовсе: «14:00» — это 14:00 в студии.
+ *
+ * Два прохода не перестраховка: смещение зависит от самого момента, а момент —
+ * от смещения. Первый проход даёт приближение, второй уточняет его по
+ * правильной дате — иначе в ночь перевода часов результат уехал бы на час.
+ */
+export function zonedToUtcIso(localDate, localTime, timeZone) {
+  const [year, month, day] = localDate.split('-').map(Number);
+  const [hours, minutes] = localTime.split(':').map(Number);
+  const asIfUtc = Date.UTC(year, month - 1, day, hours, minutes, 0);
+
+  let instant = asIfUtc - zoneOffsetMs(new Date(asIfUtc), timeZone);
+  instant = asIfUtc - zoneOffsetMs(new Date(instant), timeZone);
+  return new Date(instant).toISOString().replace(/\.\d{3}Z$/, 'Z');
+}

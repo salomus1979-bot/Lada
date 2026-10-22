@@ -2,7 +2,7 @@
 
 const express = require('express');
 const db = require('./lib/db');
-const { attachUser } = require('./lib/auth');
+const { attachUser, requireStaff } = require('./lib/auth');
 const { ApiError, badRequest, notFound } = require('./lib/errors');
 
 const authRoutes = require('./routes/auth');
@@ -46,7 +46,11 @@ function createApp() {
   app.use('/api/holds', holdRoutes);
   app.use('/api/appointments', appointmentRoutes);
   app.use('/api/master', masterRoutes);
-  app.use('/api/admin', adminRoutes);
+  // Проверка роли стоит на самом префиксе, а не внутри каждого эндпоинта:
+  // всё, что смонтировано под `/api/admin`, проходит через requireStaff —
+  // и то, что здесь сейчас, и то, что сюда добавят потом. Та же функция
+  // стоит первой строкой в самом роутере (lib/auth.js, requireStaff).
+  app.use('/api/admin', requireStaff, adminRoutes);
 
   app.use((_req, _res, next) => next(notFound('Эндпоинт не найден')));
 

@@ -29,19 +29,12 @@ const {
   masterView, appointmentMasterView, masterClientView, STATUS_LABELS,
 } = require('../lib/presenters');
 const { changeAppointmentStatus, fetchServices } = require('../lib/booking');
-const { createTimeBlock, deleteTimeBlock, listTimeBlocks } = require('../lib/blocks');
+const { createTimeBlock, deleteTimeBlock, listTimeBlocks, BLOCK_LABELS } = require('../lib/blocks');
 
 const router = express.Router();
 
 // Весь раздел — только роль master.
 router.use(requireRole('master'));
-
-const BLOCK_LABELS = {
-  break: 'Перерыв',
-  time_off: 'Отгул',
-  vacation: 'Отпуск',
-  sick_leave: 'Больничный',
-};
 
 const WEEKDAY_TITLES = ['Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота', 'Воскресенье'];
 
